@@ -2,9 +2,7 @@
 % Please edit documentation in R/compute_contrast_ci.R
 \name{compute_contrast_ci}
 \alias{compute_contrast_ci}
-\title{Compute the range over which the average effect would likely vary, to
-be added/subtracted from the main effect to get the confidence intervals
-for the contrast}
+\title{Compute the range over which the average effect would likely vary}
 \usage{
 compute_contrast_ci(cc, se_contrast)
 }
@@ -17,16 +15,16 @@ compute_contrast_ci(cc, se_contrast)
 the range of confidence, to be added to/subtracted from the effect
 }
 \description{
-Compute the range over which the average effect would likely vary, to
-be added/subtracted from the main effect to get the confidence intervals
-for the contrast
+Compute the quantity to be added/subtracted from the main effect to get
+the confidence intervals for the contrast
+}
+\details{
+Bird (2002) Confidence intervals for effect sizes in analysis of variance.
+Educational and Psychological Measurement, 62(2).
+https://doi.org/10.1177/00131644020620020
 }
 \examples{
 x <- 2.5
 y <- 1.2
 compute_contrast_ci(x, y)
-
-#' see Bird (2002) Confidence intervals for effect sizes in analysis of variance.
-Educational and Psychological Measurement, 62(2).
-https://doi.org/10.1177/00131644020620020
 }
