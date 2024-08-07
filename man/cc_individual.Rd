@@ -7,9 +7,14 @@
 cc_individual(v_e, alpha = 0.05)
 }
 \arguments{
-\item{v_e}{single value}
+\item{v_e}{single value - residual degrees of freedom from the ANOVA model}
 
-\item{alpha}{}
+\item{alpha}{single value - alpha rate (acceptable rate of type 1 error).
+Default = 0.05.}
+}
+\value{
+a single value - the critical constant (as referenced in eq 3 of
+Bird (2002))
 }
 \description{
 Compute the critical constant for an individual planned
@@ -25,4 +30,11 @@ WARNING: if you are using this method for more than one contrast
 then your family-wise error rate will be greater than alpha
 
 See Bird (2002) https://doi.org/10.1177/0013164402062002001 p. 205.
+}
+\examples{
+N = 16 # total sample size
+J = 4 # number of groups
+v_e = N - J
+alpha = 0.05
+cc_individual(v_e, alpha)
 }

@@ -23,11 +23,11 @@
 #'
 #' @examples
 #' N = 16 # total sample size
-#' J = number of groups
+#' J = 4 # number of groups
 #' v_e = N - J
 #' alpha = 0.05
 #' cc_individual(v_e, alpha)
 cc_individual <- function(v_e, alpha = 0.05){
 
-  qt(alpha/2, v_e, lower.tail = FALSE)
+  stats::qt(alpha/2, v_e, lower.tail = FALSE)
 }
