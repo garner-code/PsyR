@@ -5,9 +5,9 @@
 #' details see equation 7 (p. 217) from Bird (2002),
 #' https://doi.org/10.1177/0013164402062002001.
 #'
-#' @param v_b - a single numeric value - df between
-#' @param v_e - a single numeric value - df residual
-#' @param alpha - a single numeric value - acceptable type 1 error rate for
+#' @param v_b a single numeric value - df between
+#' @param v_e a single numeric value - df residual
+#' @param alpha a single numeric value - acceptable type 1 error rate for
 #' the family of contrasts
 #'
 #' @return - a single numeric value that is the critical constant for use in the

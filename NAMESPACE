@@ -3,5 +3,6 @@
 export(cc_bonf_t)
 export(cc_ind_t)
 export(cc_ph_b)
+export(cc_ph_w)
 export(compute_contrast_ci)
 export(se_cont)
