@@ -20,16 +20,17 @@ a single value that is the critical constant for that family,
 using the Bonferroni-t method
 }
 \description{
-Simultaneous confidence intervals controlling for FWER
-as per Bird (2002) p. 205. https://doi.org/10.1177/0013164402062002001
+This provides a critical constant for use in the computation of
+simultaneous confidence intervals over raw effect sizes
+that uses the Bonferroni-t approach for FWER. This approach provides
+more conservative confidence intervals relative to other approaches
+when planned contrasts k <= v_b, or the between degrees of freedom.
+If k > v_b, then this approach should be preferred if it produces smaller CIs
+relative to competitors.
 }
 \details{
-This provides a critical constant that uses the Bonferroni-t
-approach. This approach provides more conservative confidence
-intervals relative to other approaches when planned contrasts
-k <= v_b, or the between degrees of freedom. If k > v_b, then
-this approach should be preferred if it produces smaller CIs
-relative to competitors
+#' Simultaneous confidence intervals controlling for FWER
+as per Bird (2002) p. 205. https://doi.org/10.1177/0013164402062002001
 }
 \examples{
 N = 16 # total sample size
