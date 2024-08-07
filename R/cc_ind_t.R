@@ -26,8 +26,8 @@
 #' J = 4 # number of groups
 #' v_e = N - J
 #' alpha = 0.05
-#' cc_individual(v_e, alpha)
-t_indiv <- function(v_e, alpha = 0.05){
+#' cc_ind_t(v_e, alpha)
+cc_ind_t <- function(v_e, alpha = 0.05){
 
   stats::qt(alpha/2, v_e, lower.tail = FALSE)
 }
