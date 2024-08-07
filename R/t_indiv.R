@@ -27,7 +27,7 @@
 #' v_e = N - J
 #' alpha = 0.05
 #' cc_individual(v_e, alpha)
-cc_individual <- function(v_e, alpha = 0.05){
+t_indiv <- function(v_e, alpha = 0.05){
 
   stats::qt(alpha/2, v_e, lower.tail = FALSE)
 }
