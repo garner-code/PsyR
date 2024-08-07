@@ -14,14 +14,19 @@
 #' @param n_k a single numeric value, total number of contrasts
 #' for that family (between, within, between x within are each a family)
 #' @param alpha a single numeric value - the acceptable type 1 error rate
-#' for each family of contrasts
+#' for each family of contrasts. Default = 0.05.
 #'
 #' @return a single value that is the critical constant for that family,
 #' using the Bonferroni-t method
 #' @export
 #'
 #' @examples
-#'
+#' N = 16 # total sample size
+#' J = 4 # number of groups
+#' v_e = N - J
+#' n_k = 3 # number of contrasts in that family
+#' alpha = 0.05
+#' cc_bonf_t(v_e, n_k, alpha)
 cc_bonf_t <- function(v_e, n_k, alpha = 0.05){
 
   stats::qt(alpha/(2*n_k), v_e, lower.tail = FALSE)
