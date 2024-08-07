@@ -2,23 +2,31 @@
 % Please edit documentation in R/compute_contrast_ci.R
 \name{compute_contrast_ci}
 \alias{compute_contrast_ci}
-\title{Compute the confidence interval for a contrast}
+\title{Compute the range over which the average effect would likely vary, to
+be added/subtracted from the main effect to get the confidence intervals
+for the contrast}
 \usage{
 compute_contrast_ci(cc, se_contrast)
 }
 \arguments{
-\item{cc}{The critical constant, given the effect (see Bird(2002), eq 3, term CC)}
+\item{cc}{The critical constant, given the effect (Bird (2002), eq 3, term CC)}
 
-\item{se_contrast}{The standard error of the contrast (Bird(2002), eq 3, sigma)}
+\item{se_contrast}{The standard error of the contrast (Bird (2002), eq 3, sigma)}
 }
 \value{
 the range of confidence, to be added to/subtracted from the effect
 }
 \description{
-Compute the confidence interval for a contrast
+Compute the range over which the average effect would likely vary, to
+be added/subtracted from the main effect to get the confidence intervals
+for the contrast
 }
 \examples{
-cc <- 2.5
-se_contrast <- 1.2
-compute_contrast_ci(cc, se_contrast)
+x <- 2.5
+y <- 1.2
+compute_contrast_ci(x, y)
+
+#' see Bird (2002) Confidence intervals for effect sizes in analysis of variance.
+Educational and Psychological Measurement, 62(2).
+https://doi.org/10.1177/00131644020620020
 }
