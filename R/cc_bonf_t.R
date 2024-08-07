@@ -1,0 +1,28 @@
+#' Compute critical constant using bonferroni t procedure
+#'
+#' Simultaneous confidence intervals controlling for FWER
+#' as per Bird (2002) p. 205. https://doi.org/10.1177/0013164402062002001
+#'
+#' This provides a critical constant that uses the Bonferroni-t
+#' approach. This approach provides more conservative confidence
+#' intervals relative to other approaches when planned contrasts
+#' k <= v_b, or the between degrees of freedom. If k > v_b, then
+#' this approach should be preferred if it produces smaller CIs
+#' relative to competitors
+#'
+#' @param v_e a single numeric value that is the df residual
+#' @param n_k a single numeric value, total number of contrasts
+#' for that family (between, within, between x within are each a family)
+#' @param alpha a single numeric value - the acceptable type 1 error rate
+#' for each family of contrasts
+#'
+#' @return a single value that is the critical constant for that family,
+#' using the Bonferroni-t method
+#' @export
+#'
+#' @examples
+#'
+cc_bonf_t <- function(v_e, n_k, alpha = 0.05){
+
+  stats::qt(alpha/(2*n_k), v_e, lower.tail = FALSE)
+}
