@@ -7,18 +7,12 @@
 cc_ph_b(v_b, v_e, alpha = 0.05)
 }
 \arguments{
-\item{v_b}{\itemize{
-\item a single numeric value - df between
-}}
+\item{v_b}{a single numeric value - df between}
 
-\item{v_e}{\itemize{
-\item a single numeric value - df residual
-}}
+\item{v_e}{a single numeric value - df residual}
 
-\item{alpha}{\itemize{
-\item a single numeric value - acceptable type 1 error rate for
-the family of contrasts
-}}
+\item{alpha}{a single numeric value - acceptable type 1 error rate for
+the family of contrasts}
 }
 \value{
 \itemize{

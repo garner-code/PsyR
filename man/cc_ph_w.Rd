@@ -8,30 +8,22 @@ contrasts}
 cc_ph_w(v_w, v_e, alpha)
 }
 \arguments{
-\item{v_w}{\itemize{
-\item single numeric value - within subjects df: e.g. for a
+\item{v_w}{single numeric value - within subjects df: e.g. for a
 single within subjects factor with 3 levels, v_w = 3-1, for a 2 x 2
 within subjects design, with 4 levels for the first factor, and 2 levels for
-the second factor, v_e = (4-1)(2-1) = 6
-}}
+the second factor, v_e = (4-1)(2-1) = 6}
 
-\item{v_e}{\itemize{
-\item single numeric value - residual degrees of freedom - N - J,
+\item{v_e}{single numeric value - residual degrees of freedom - N - J,
 where N is the total sample size, and J = the number of between subjects
-groups
-}}
+groups}
 
-\item{alpha}{\itemize{
-\item single numeric value - acceptable type 1 error rate at the
-family level (aka all within-subjects contrasts)
-}}
+\item{alpha}{single numeric value - acceptable type 1 error rate at the
+family level (aka all within-subjects contrasts)}
 }
 \value{
-\itemize{
-\item single numeric value - critical constant to be used to construct
+single numeric value - critical constant to be used to construct
 simultaneous, within subject, post-hoc confidence intervals for a given
 contrast
-}
 }
 \description{
 Produce the critical constant for use in calculating simultaneous post-hoc
