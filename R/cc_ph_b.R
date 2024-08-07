@@ -21,9 +21,9 @@
 #' v_b = J-1
 #' v_e = N - J
 #' alpha = 0.05
-#' cc_between(v_b, v_e, alpha)
-cc_between <- function(v_b, v_e, alpha = 0.05){
+#' cc_ph_b(v_b, v_e, alpha)
+cc_ph_b <- function(v_b, v_e, alpha = 0.05){
 
-  crit_F <- stat::qf(alpha, v_b, v_e, lower.tail = FALSE)
+  crit_F <- stats::qf(alpha, v_b, v_e, lower.tail = FALSE)
   sqrt(v_b * crit_F)
 }
