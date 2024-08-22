@@ -21,6 +21,7 @@
 #' x <- 0.4 # a theta to be evaluated
 #' a <- 5 # alpha parameter (i.e. N hits)
 #' b <- 10 # beta parameter (i.e. N not hits)
+#' ibeta(x, a, b)
 ibeta <- function(x,a,b){
   pbeta(x,a,b)*beta(a,b)
 }
