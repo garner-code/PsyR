@@ -37,7 +37,7 @@ https://doi.org/10.1177/0013164402062002001
 # 100 participants
 s <- 1
 m <- -0.5
-n < 96
+n <- 96
 theta <- 0.4
 gcr_cdf(s,m,n,theta)
 
