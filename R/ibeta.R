@@ -23,5 +23,6 @@
 #' b <- 10 # beta parameter (i.e. N not hits)
 #' ibeta(x, a, b)
 ibeta <- function(x,a,b){
-  pbeta(x,a,b)*beta(a,b)
+
+  stats::pbeta(x,a,b)*beta(a,b)
 }
