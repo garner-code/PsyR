@@ -3,7 +3,7 @@
 #' from a long form data frame, get the number of levels
 #' in the factor specified by factor
 #' @param data a longform dataframe. Predictor variables should be factors
-#' @param factor a single string which matches the name of the factor in the
+#' @param fctr a single string which matches the name of the factor in the
 #' dataframe
 #'
 #' @return a single numeric value which is the number of levels in factor fctr
