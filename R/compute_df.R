@@ -6,34 +6,48 @@
 #' https://doi.org/10.1177/0013164402062002001.
 #'
 #' @param model an anova model object of the afex_aov class
+#' @param data instead of the anova model you can use a long form data frame
 #' @param fctrs a list of characters or strings - list of relevant factor names
 #'
 #' @return a single value which is the degrees of freedom for that family
 #' @export
 #'
 #' @examples
-#' data(spacing)
-#' mod <- aov_ez("subj", "yield", spacing,
-#'                within = "spacing", between = "group")
-#' compute_df(mod, list("group")) # get the degrees of freedom for the
-#' between family
-#' compute_df(mod, list("spacing")) # get df for the within family
+#' data("spacing")
+#' spacing$group <- as.factor(spacing$group)
+#' spacing$spacing <- as.factor(spacing$spacing)
+#'  # get the degrees of freedom for the between family
+#' compute_df(model = NA, data = spacing, list("group"))
+#' # get df for the within family
+#' compute_df(model = NA, data = spacing, list("spacing"))
 #'
-#' or aritrary example to show you can add more than one factor to the list:
-#' mod <- aov_ez(some data and inputs)
-#' fctrs <- list("groupA", "groupB", "groupC")
-#' compute_df(mod, fctrs)
-compute_df <- function(model, fctrs){
+#' # or arbitrary example to show you can add more than one factor to the list,
+#' # but note the below is illegal because the two factors are from
+#' # different families:
+#' fctrs <- list("group", "spacing")
+#' compute_df(model=NA, data=spacing, fctrs)
+compute_df <- function(model, data = NA, fctrs){
 
-  if(!class(model) == "afex_aov"){
-    stop("Error: model needs to be of class afex_aov")
+  if (!is.na(model)){
+    if(!inherits(model, "afex_aov")){
+      stop("Error: model needs to be of class afex_aov")
+    }
+  }
+  if (is.na(model)){
+    if(!inherits(data, "data.frame")){
+      stop("Error: data needs to be of class data.frame")
+    }
   }
   if(!is.list(fctrs)){
     stop("Error: factor names should be provided as a list")
   }
 
   fctrs = unlist(fctrs)
-  data = model$data$long
+  if (!is.na(model)) {
+      data = model$data$long
+  } else if (!is.na(data)){
+      data = data
+  }
   N = unlist(lapply(fctrs, get_levels, data = data))
   df = N-1
   prod(df)
