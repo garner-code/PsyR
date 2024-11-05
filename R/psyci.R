@@ -41,6 +41,9 @@ psyci <- function(contrast_table, method, family = NA, alpha = 0.05){
 
     } else if (family %in% "bw") {
 
+      v_b = #
+      v_e = #
+      critical_constant = cc_ph_bw(v_w, v_b, v_e, alpha)
     }
   }
 
