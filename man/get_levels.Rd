@@ -9,7 +9,7 @@ get_levels(data, fctr)
 \arguments{
 \item{data}{a longform dataframe. Predictor variables should be factors}
 
-\item{factor}{a single string which matches the name of the factor in the
+\item{fctr}{a single string which matches the name of the factor in the
 dataframe}
 }
 \value{

@@ -9,7 +9,7 @@ compute_df(model, fctrs)
 \arguments{
 \item{model}{an anova model object of the afex_aov class}
 
-\item{fctrs}{a list of characters/strings - list of relevant factor names}
+\item{fctrs}{a list of characters or strings - list of relevant factor names}
 }
 \value{
 a single value which is the degrees of freedom for that family
@@ -25,7 +25,7 @@ data(spacing)
 mod <- aov_ez("subj", "yield", spacing,
                within = "spacing", between = "group")
 compute_df(mod, list("group")) # get the degrees of freedom for the
-between factor/family
+between family
 compute_df(mod, list("spacing")) # get df for the within family
 
 or aritrary example to show you can add more than one factor to the list:
