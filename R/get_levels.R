@@ -16,7 +16,7 @@
 #' get_levels(data, fctr)
 #'
 get_levels <- function(data, fctr){
-  if (!is.factor(data[,fctr])){
+  if (!is.factor(data[,fctr][[1]])){
     stop(sprintf("Error: '%s' is not of type factor", fctr))
   }
 
