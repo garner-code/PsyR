@@ -20,5 +20,5 @@ get_levels <- function(data, fctr){
     stop(sprintf("Error: '%s' is not of type factor", fctr))
   }
 
-  length(levels(data[,fctr]))
+  length(levels(data[,fctr][[1]]))
 }
