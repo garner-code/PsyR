@@ -27,12 +27,12 @@
 #' compute_df(model=NA, data=spacing, fctrs=list("group", "spacing"))
 compute_df <- function(model, data = NA, fctrs){
 
-  if (!is.na(model)){
+  if (!is.na(model[1])){
     if(!inherits(model, "afex_aov")){
       stop("Error: model needs to be of class afex_aov")
     }
   }
-  if (is.na(model)){
+  if (is.na(model[1])){
     if(!inherits(data, "data.frame")){
       stop("Error: data needs to be of class data.frame")
     }
@@ -42,9 +42,9 @@ compute_df <- function(model, data = NA, fctrs){
   }
 
   fctrs = unlist(fctrs)
-  if (!is.na(model)) {
+  if (!is.na(model[1])) {
       data = model$data$long
-  } else if (is.na(model)){
+  } else if (is.na(model[1])){
       data = data
   }
   N = unlist(lapply(fctrs, get_levels, data = data))
