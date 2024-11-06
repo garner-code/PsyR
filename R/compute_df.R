@@ -40,7 +40,7 @@ compute_df <- function(model, data = NA, fctrs){
   fctrs = unlist(fctrs)
   if (!is.na(model)) {
       data = model$data$long
-  } else if (!is.na(data)){
+  } else if (is.na(model)){
       data = data
   }
   N = unlist(lapply(fctrs, get_levels, data = data))
