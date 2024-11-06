@@ -17,15 +17,6 @@
 #' spacing$group <- as.factor(spacing$group)
 #' spacing$spacing <- as.factor(spacing$spacing)
 #'  # get the degrees of freedom for the between family
-#' compute_df(model = NA, data = spacing, list("group"))
-#' # get df for the within family
-#' compute_df(model = NA, data = spacing, list("spacing"))
-#'
-#' # or arbitrary example to show you can add more than one factor to the list,
-#' # but note the below is illegal because the two factors are from
-#' # different families:
-#' fctrs <- list("group", "spacing")
-#' compute_df(model=NA, data=spacing, fctrs)
 compute_df <- function(model, data = NA, fctrs){
 
   if (!is.na(model)){
