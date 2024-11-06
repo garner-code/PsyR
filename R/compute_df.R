@@ -21,6 +21,10 @@
 #'  spacing$group <- as.factor(spacing$group)
 #'  spacing$spacing <- as.factor(spacing$spacing)
 #'  compute_df(model=NA, data=spacing, fctrs=list("group"))
+#' # here is an example for multiple factor inputs, which is illegal
+#'  # due to the factors being from both between and within families
+#' # use the example with caution
+#' compute_df(model=NA, data=spacing, fctrs=list("group", "spacing"))
 compute_df <- function(model, data = NA, fctrs){
 
   if (!is.na(model)){
