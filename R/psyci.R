@@ -41,8 +41,9 @@ psyci <- function(model, contrast_table, method, family = NA,
     stop("Error: model needs to be of class afex_aov")
   }
 
-  if (!inherits(contrast_table, "emmGrid") |
-        !inherits(contrast_table, "summary_emm")){
+  if (inherits(contrast_table, "emmGrid") |
+        inherits(contrast_table, "summary_emm")){
+  } else {
     stop("Error: contrast table needs to be of class emmGrid or summary_emm")
   }
   if (!method %in% c("ind", "bf", "ph")){
