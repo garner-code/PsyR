@@ -27,4 +27,8 @@ data("spacing")
 spacing$group <- as.factor(spacing$group)
 spacing$spacing <- as.factor(spacing$spacing)
  # get the degrees of freedom for the between family
+ data("spacing")
+ spacing$group <- as.factor(spacing$group)
+ spacing$spacing <- as.factor(spacing$spacing)
+ compute_df(data=spacing, fctrs=list("group"))
 }
