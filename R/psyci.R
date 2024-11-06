@@ -95,7 +95,7 @@ psyci <- function(model, contrast_table, method, family = NA,
   } else if (method %in% "bf") {
 
     nk = nrow(contrast_table)
-    crtical_constant = cc_bonf_t(v_e=v_e, n_k=nk, alpha=alpha)
+    critical_constant = cc_bonf_t(v_e=v_e, n_k=nk, alpha=alpha)
   } else if (method %in% "ph"){
 
     if (family %in% "b"){
