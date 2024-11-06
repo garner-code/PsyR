@@ -30,5 +30,5 @@ spacing$spacing <- as.factor(spacing$spacing)
  data("spacing")
  spacing$group <- as.factor(spacing$group)
  spacing$spacing <- as.factor(spacing$spacing)
- compute_df(data=spacing, fctrs=list("group"))
+ compute_df(model=NA, data=spacing, fctrs=list("group"))
 }
