@@ -29,7 +29,7 @@ If k > v_b, then this approach should be preferred if it produces smaller CIs
 relative to competitors.
 }
 \details{
-#' Simultaneous confidence intervals controlling for FWER
+Simultaneous confidence intervals controlling for FWER
 as per Bird (2002) p. 205. https://doi.org/10.1177/0013164402062002001
 }
 \examples{

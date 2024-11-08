@@ -32,7 +32,7 @@ compute_df <- function(model, data = NA, fctrs){
       stop("Error: model needs to be of class afex_aov")
     }
   }
-  if (anyNA(model1)){
+  if (anyNA(model)){
     if(!inherits(data, "data.frame")){
       stop("Error: data needs to be of class data.frame")
     }
