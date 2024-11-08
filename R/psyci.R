@@ -52,23 +52,23 @@ psyci <- function(model, contrast_table, method, family = NA,
   if (method %in% "ph" & is.na(family)){
     stop("Error: define family if using ph method (b, w, or bw)")
   }
-  if (method != "ph" & !is.na(family)){
+  if (method != "ph" & !anyNA(family)){
     warning("Warning: family is defined but not with ph method.
             Ignoring family.")
   }
-  if (!is.na(family) & !family %in% c("b", "w", "bw")){
+  if (!anyNA(family) & !family %in% c("b", "w", "bw")){
     stop("Error: family should be b, w, or bw")
   }
 
   if (method %in% "w" | method %in% "bw"){
-    if (is.na(within_factors)){
+    if (!inherits(within_factors, "list")){
       stop("Error: within method required but no list of within factors
            supplied")
     }
   }
 
   if (method %in% "b" | method %in% "bw"){
-    if (is.na(between_factors)){
+    if (!inherits(between_factors, "list")){
       stop("Error: within method required but no list of between factors
            supplied")
     }

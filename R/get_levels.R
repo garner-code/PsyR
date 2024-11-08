@@ -16,9 +16,9 @@
 #' get_levels(data, fctr)
 #'
 get_levels <- function(data, fctr){
-  if (!is.factor(data[,fctr][[1]])){
+  if (!attributes(data[,fctr])$class %in% "factor"){
     stop(sprintf("Error: '%s' is not of type factor", fctr))
   }
 
-  length(levels(data[,fctr][[1]]))
+  length(attributes(data[,fctr])$levels)
 }
