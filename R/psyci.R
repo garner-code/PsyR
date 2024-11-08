@@ -81,11 +81,11 @@ psyci <- function(model, contrast_table, method, family = NA,
   if (method %in% "ph"){
     if (family %in% "b" | family %in% "bw"){
 
-      v_b = compute_df(model, between_factors)
+      v_b = compute_df(model, fctrs = between_factors)
     }
     if (family %in% "w" | family %in% "bw"){
 
-      v_e = compute_df(model, between_factors)
+      v_w = compute_df(model, fctrs = within_factors)
     }
   }
 
