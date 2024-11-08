@@ -120,6 +120,5 @@ psyci <- function(model, contrast_table, method, family = NA,
   cis = unlist(lapply(se_cont, compute_contrast_ci, critical_constant))
   contrast_table$lower = contrast_table$estimate - cis
   contrast_table$upper = contrast_table$estimate + cis
-  print(contrast_table)
   contrast_table
 }
