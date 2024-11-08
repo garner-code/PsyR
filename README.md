@@ -15,7 +15,7 @@ You can install the development version of PsyR from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("kel-github/PsyR")
+devtools::install_github("garner-code/PsyR")
 ```
 
 ## Example
