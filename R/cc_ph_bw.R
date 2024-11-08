@@ -27,7 +27,7 @@
 cc_ph_bw <- function(v_w, v_b, v_e, alpha){
 
   s = min(v_b, v_w)
-  m = (abs(v_b - v_e)-1)/2
+  m = (abs(v_b - v_w)-1)/2
   n = (v_e - v_w - 1)/2
 
   theta = gcr_crit(alpha, s, m, n)

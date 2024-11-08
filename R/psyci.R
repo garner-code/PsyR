@@ -100,19 +100,15 @@ psyci <- function(model, contrast_table, method, family = NA,
 
     if (family %in% "b"){
 
-      v_b = # this needs to be defined, ideally within the code
       critical_constant = cc_ph_b(v_b=v_b, v_e=v_e, alpha=alpha)
 
     } else if (family %in% "w") {
 
-      v_w = # this needs to be defined, ideally within the code
       critical_constant = cc_ph_w(v_w=v_w, v_e=v_e, alpha=alpha)
 
     } else if (family %in% "bw") {
 
-      v_b = v_b
-      v_w = v_w
-      critical_constant = cc_ph_bw(v_w, v_b, v_e, alpha)
+      critical_constant = cc_ph_bw(v_w=v_w, v_b=v_b, v_e=v_e, alpha=alpha)
     }
   }
 
