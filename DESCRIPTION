@@ -9,6 +9,8 @@ License: MIT + file LICENSE
 Depends: 
     R (>= 2.10)
 Imports: 
+    afex,
+    emmeans,
     stats
 Suggests: 
     testthat (>= 3.0.0)

@@ -33,7 +33,19 @@
 #' @export
 #'
 #' @examples
-#' x <- 10
+#' data(spacing)
+#' # fit model
+#' mod <- afex::aov_ez("subj","yield", spacing, within = "spacing", between = "group")
+#' sum_emm_btwn <- emmeans::emmeans(mod, "group") # get marginal means
+#' con <- list( # define some contrasts
+#'             "12vs34" = c(0.5, 0.5, -0.5, -0.5),
+#'              "1vs2" = c(1, -1, 0, 0),
+#'              "3vs4" = c(0, 0, 1, -1)
+#'              )
+#' btwn_con <- emmeans::contrast(sum_emm_btwn, con) # get contrast table
+#' # now add CI's using post-hoc method
+#' psyci(model = mod, contrast_table = btwn_con, method = "ph",
+#'         family = "b", between_factors = list("group"))
 psyci <- function(model, contrast_table, method, family = NA,
                   between_factors = NA, within_factors = NA, alpha = 0.05){
 
