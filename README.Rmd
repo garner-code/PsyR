@@ -31,9 +31,11 @@ devtools::install_github("garner-code/PsyR")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example which shows you how to obtain between subject confidence 
+intervals. All of the following examples will use the post-hoc method 
+(see Bird, 2002, for details on the post-hoc method):
 
-```{r example}
+```{r b_example}
 
 ## load relevant packages
 library(emmeans)
@@ -42,23 +44,81 @@ library(readxl)
 library(PsyR)
 
 # load some data
+dat <- spacing
+# load(spacing)?
 
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
 
-# perform an ANOVA and generate a contrasts table using emmeans
+# perform the statistical model
+mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
 
+# define some between group contrasts
+emm_btwn <- emmeans(mod, "group")
+con_b <- list(
+  "12vs34" = c(0.5, 0.5, -0.5, -0.5), # groups 1 & 2 vs groups 3 & 4
+  "1vs2" = c(1, -1, 0, 0), # and so on...
+  "3vs4" = c(0, 0, 1, -1)
+)
+btwn_con <- contrast(emm_btwn, con_b)
 
-# feed the contrast table into psyci() with the chosen method
-
+# feed the contrast table into psyci() with the chosen method, family, and factor
+# names
+psyci(model=mod, contrast_table = btwn_con, method="ph", family="b", 
+      between_factors = list("group"))
 
 
 
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
 
-```{r cars}
-summary(cars)
+Here is an example, that carries on from the last, for obtaining within subject 
+confidence intervals:
+
+```{r w_example}
+
+# define some within group contrasts.
+# and get emm table of contrast effects
+emm_win <- emmeans(mod, "spacing")
+con_w <- list(
+  "20vs40" = c(1, -1, 0),
+  "20vs60" = c(1, 0, -1),
+  "Quad" = c(0.5, -1, 0.5)
+)
+con_win <- contrast(emm_win, con_w)
+
+# generate 95% CIs for the within subjects contrasts
+psyci(model=mod, contrast_table = con_win, method="ph", family="w", 
+      within_factors = list("spacing"))
+
+
 ```
+
+And finally, here is an example of how to generate CIs for between x within 
+contrasts, using the same post-hoc method:
+
+```{r bw_example}
+
+# get emms for each cell from the between x within design
+emm_int <- emmeans(mod, c("group", "spacing"))
+
+# sometimes defining the between x within contrast is a little more involved,
+# but here is one way. You need to wind up with a contrast vector that has
+# as many elements as there are rows in your table of emms for each cell in 
+# the between x within design
+n_within = 3
+n_group = 4
+win_full <- lapply(con_w, function(x) rep(x, each = n_group))
+btwn_full <- lapply(con_b, function(x) rep(x, times = n_within))
+con_i <- lapply(btwn_full, function(x) lapply(win_full, function(y) x * y))
+con_int <- contrast(emm_int, con_i)
+
+# generate 95% CIs for the between x within subjects contrasts
+psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
+      within_factors = list("spacing"), between_factors=list("group"))
+
+```
+
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
 
