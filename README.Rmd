@@ -26,7 +26,7 @@ You can install the development version of PsyR from [GitHub](https://github.com
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("kel-github/PsyR")
+devtools::install_github("garner-code/PsyR")
 ```
 
 ## Example
@@ -34,8 +34,24 @@ devtools::install_github("kel-github/PsyR")
 This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
-#library(PsyR)
-## basic example code
+
+## load relevant packages
+library(emmeans)
+library(afex)
+library(readxl)
+library(PsyR)
+
+# load some data
+
+
+# perform an ANOVA and generate a contrasts table using emmeans
+
+
+# feed the contrast table into psyci() with the chosen method
+
+
+
+
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
