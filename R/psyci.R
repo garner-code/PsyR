@@ -86,7 +86,10 @@ psyci <- function(model, contrast_table, method, family = NA,
     }
   }
 
+  # make sure we can work with the contrast table
   contrast_table = summary(contrast_table)
+
+  # get the error df
   v_e = contrast_table$df[1]
 
   # if required, get v_b and v_w
@@ -101,13 +104,17 @@ psyci <- function(model, contrast_table, method, family = NA,
     }
   }
 
+  # now get the appropriate critical constant, given requested
+  # method
   if (method %in% "ind"){
 
-    critical_constant = cc_ind_t(v_e=v_e)
+    critical_constant = cc_ind_t(v_e=v_e, alpha=alpha)
+
   } else if (method %in% "bf") {
 
     nk = nrow(contrast_table)
     critical_constant = cc_bonf_t(v_e=v_e, n_k=nk, alpha=alpha)
+
   } else if (method %in% "ph"){
 
     if (family %in% "b"){
@@ -124,9 +131,14 @@ psyci <- function(model, contrast_table, method, family = NA,
     }
   }
 
+  # now get se, compute CIs and add to the table
   se_cont = contrast_table[,"SE"]
   cis = unlist(lapply(se_cont, compute_contrast_ci, critical_constant))
   contrast_table$lower = contrast_table$estimate - cis
   contrast_table$upper = contrast_table$estimate + cis
+
+  # now I want to add information about what happened as an attribute to the
+  # contrast table, before spitting it back out to the user
+
   contrast_table
 }
