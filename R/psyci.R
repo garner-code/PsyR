@@ -139,6 +139,54 @@ psyci <- function(model, contrast_table, method, family = NA,
 
   # now I want to add information about what happened as an attribute to the
   # contrast table, before spitting it back out to the user
+  # so if the method is ind or bf, then all other factors should be set to NA
+  if (method %in% c("ind", "bf")){
+
+    contrast_table <- update_attributes(contrast_table,
+                                        method=method,
+                                        v_e=v_e,
+                                        alpha=alpha,
+                                        critical_constant=round(critical_constant,3))
+  } else if (method %in% "ph") {
+
+    if (family %in% "b"){
+
+      contrast_table <- update_attributes(contrast_table,
+                                          method=method,
+                                          family=family,
+                                          between_factors = between_factors,
+                                          v_e=v_e,
+                                          v_b=v_b,
+                                          alpha=alpha,
+                                          critical_constant=round(critical_constant,3))
+
+    } else if (family %in% "w") {
+
+      contrast_table <- update_attributes(contrast_table,
+                                          method=method,
+                                          family=family,
+                                          within_factors = within_factors,
+                                          v_e=v_e,
+                                          v_w=v_w,
+                                          alpha=alpha,
+                                          critical_constant=round(critical_constant,3))
+
+
+    } else if (family %in% "bw") {
+
+      contrast_table <- update_attributes(contrast_table,
+                                          method=method,
+                                          family=family,
+                                          between_factors = between_factors,
+                                          within_factors = within_factors,
+                                          v_e=v_e,
+                                          v_w=v_w,
+                                          v_b=v_b,
+                                          alpha=alpha,
+                                          critical_constant=round(critical_constant,3))
+
+    }
+  }
 
   contrast_table
 }

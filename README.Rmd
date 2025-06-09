@@ -120,7 +120,7 @@ con_int <- contrast(emm_int, con_i)
 # generate 95% CIs for the between x within subjects contrasts
 psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
       within_factors = list("spacing"), between_factors=list("group"))
-# add an output message re: the methods used and how to read p-values
+
 ```
 
 
