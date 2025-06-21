@@ -24,8 +24,11 @@ The goal of PsyR is to ...
 
 You can install the development version of PsyR from [GitHub](https://github.com/) with:
 
-``` r
+``` {r}
 # install.packages("devtools")
+
+
+
 devtools::install_github("garner-code/PsyR")
 ```
 
@@ -51,6 +54,7 @@ dat <- spacing
 afex_options(emmeans_model = "multivariate")
 
 # perform the statistical model
+# check which model objects can be used
 mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
 
 # define some between group contrasts
@@ -64,6 +68,8 @@ btwn_con <- contrast(emm_btwn, con_b)
 
 # feed the contrast table into psyci() with the chosen method, family, and factor
 # names
+# extra documentation needed re: mapping of method to specific. Potentially
+# add Sidak
 psyci(model=mod, contrast_table = btwn_con, method="ph", family="b", 
       between_factors = list("group"))
 

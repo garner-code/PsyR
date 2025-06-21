@@ -4,6 +4,7 @@
 # PsyR
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of PsyR is to …
@@ -15,7 +16,42 @@ You can install the development version of PsyR from
 
 ``` r
 # install.packages("devtools")
+
+
+
 devtools::install_github("garner-code/PsyR")
+#> Downloading GitHub repo garner-code/PsyR@HEAD
+#> stringi      (1.8.4  -> 1.8.7 ) [CRAN]
+#> rlang        (1.1.5  -> 1.1.6 ) [CRAN]
+#> cli          (3.6.4  -> 3.6.5 ) [CRAN]
+#> utf8         (1.2.4  -> 1.2.6 ) [CRAN]
+#> Rdpack       (2.6.2  -> 2.6.4 ) [CRAN]
+#> pillar       (1.10.1 -> 1.10.2) [CRAN]
+#> ggplot2      (3.5.1  -> 3.5.2 ) [CRAN]
+#> Deriv        (4.1.6  -> 4.2.0 ) [CRAN]
+#> tibble       (3.2.1  -> 3.3.0 ) [CRAN]
+#> generics     (0.1.3  -> 0.1.4 ) [CRAN]
+#> MatrixModels (0.5-3  -> 0.5-4 ) [CRAN]
+#> doBy         (4.6.26 -> 4.6.27) [CRAN]
+#> broom        (1.0.7  -> 1.0.8 ) [CRAN]
+#> reformulas   (0.4.0  -> 0.4.1 ) [CRAN]
+#> nloptr       (2.1.1  -> 2.2.1 ) [CRAN]
+#> scales       (1.3.0  -> 1.4.0 ) [CRAN]
+#> lme4         (1.1-36 -> 1.1-37) [CRAN]
+#> quantreg     (6.00   -> 6.1   ) [CRAN]
+#> emmeans      (1.10.7 -> 1.11.1) [CRAN]
+#> Installing 19 packages: stringi, rlang, cli, utf8, Rdpack, pillar, ggplot2, Deriv, tibble, generics, MatrixModels, doBy, broom, reformulas, nloptr, scales, lme4, quantreg, emmeans
+#> Installing packages into '/tmp/RtmpND5nSd/temp_libpath43d41d22d2d5'
+#> (as 'lib' is unspecified)
+#> ── R CMD build ─────────────────────────────────────────────────────────────────
+#> * checking for file ‘/tmp/RtmpYcnpzN/remotes495542cf5729/garner-code-PsyR-f42f537/DESCRIPTION’ ... OK
+#> * preparing ‘PsyR’:
+#> * checking DESCRIPTION meta-information ... OK
+#> * checking for LF line-endings in source and make files and shell scripts
+#> * checking for empty or unneeded directories
+#> * building ‘PsyR_0.0.0.9000.tar.gz’
+#> Installing package into '/tmp/RtmpND5nSd/temp_libpath43d41d22d2d5'
+#> (as 'lib' is unspecified)
 ```
 
 ## Example
@@ -31,6 +67,9 @@ library(emmeans)
 #> Welcome to emmeans.
 #> Caution: You lose important information if you filter this package's results.
 #> See '? untidy'
+```
+
+``` r
 library(afex)
 #> Loading required package: lme4
 #> Loading required package: Matrix
@@ -48,6 +87,9 @@ library(afex)
 #> The following object is masked from 'package:lme4':
 #> 
 #>     lmer
+```
+
+``` r
 library(readxl)
 library(PsyR)
 
@@ -59,9 +101,13 @@ dat <- spacing
 afex_options(emmeans_model = "multivariate")
 
 # perform the statistical model
+# check which model objects can be used
 mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
 #> Converting to factor: group
 #> Contrasts set to contr.sum for the following variables: group
+```
+
+``` r
 
 # define some between group contrasts
 emm_btwn <- emmeans(mod, "group")
@@ -74,6 +120,8 @@ btwn_con <- contrast(emm_btwn, con_b)
 
 # feed the contrast table into psyci() with the chosen method, family, and factor
 # names
+# extra documentation needed re: mapping of method to specific. Potentially
+# add Sidak
 psyci(model=mod, contrast_table = btwn_con, method="ph", family="b", 
       between_factors = list("group"))
 #>  contrast estimate   SE df t.ratio p.value  lower upper
@@ -104,7 +152,7 @@ psyci(model=mod, contrast_table = con_win, method="ph", family="w",
       within_factors = list("spacing"))
 #>  contrast estimate    SE df t.ratio p.value lower   upper
 #>  20vs40      -1.75 0.832 12  -2.103  0.0573 -4.20  0.7033
-#>  20vs60      -3.00 1.014 12  -2.958  0.0120 -5.99 -0.0104
+#>  20vs60      -3.00 1.010 12  -2.958  0.0120 -5.99 -0.0104
 #>  Quad        -0.25 0.459 12  -0.545  0.5956 -1.60  1.1017
 #> 
 #> Results are averaged over the levels of: group
@@ -134,7 +182,7 @@ psyci(model=mod, contrast_table = con_win, method="ph", family="bw",
       within_factors = list("spacing"), between_factors=list("group"))
 #>  contrast estimate    SE df t.ratio p.value lower upper
 #>  20vs40      -1.75 0.832 12  -2.103  0.0573 -5.24  1.74
-#>  20vs60      -3.00 1.014 12  -2.958  0.0120 -7.25  1.25
+#>  20vs60      -3.00 1.010 12  -2.958  0.0120 -7.25  1.25
 #>  Quad        -0.25 0.459 12  -0.545  0.5956 -2.17  1.67
 #> 
 #> Results are averaged over the levels of: group
