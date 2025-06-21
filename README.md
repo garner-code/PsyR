@@ -130,6 +130,9 @@ psyci(model=mod, contrast_table = btwn_con, method="ph", family="b",
 #>  3vs4        -2.50 2.99 12  -0.836  0.4197 -12.18  7.18
 #> 
 #> Results are averaged over the levels of: spacing
+# add attributes to the table about the method used to compute CIs
+# think about adding the critical constant as an attribute
+# specify df also as attributes
 ```
 
 Here is an example, that carries on from the last, for obtaining within
@@ -175,8 +178,11 @@ n_group = 4
 win_full <- lapply(con_w, function(x) rep(x, each = n_group))
 btwn_full <- lapply(con_b, function(x) rep(x, times = n_within))
 con_i <- lapply(btwn_full, function(x) lapply(win_full, function(y) x * y))
-con_int <- contrast(emm_int, con_i)
+con_int <- contrast(emm_int, con_i) 
 
+# check mean difference option in Psy (go back to win app and doc)
+# potentially add a scheffe function 
+# add p values from gcr etc procedures to the table
 # generate 95% CIs for the between x within subjects contrasts
 psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
       within_factors = list("spacing"), between_factors=list("group"))
@@ -186,6 +192,7 @@ psyci(model=mod, contrast_table = con_win, method="ph", family="bw",
 #>  Quad        -0.25 0.459 12  -0.545  0.5956 -2.17  1.67
 #> 
 #> Results are averaged over the levels of: group
+# add an output message re: the methods used and how to read p-values
 ```
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`

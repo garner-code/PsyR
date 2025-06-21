@@ -72,8 +72,9 @@ btwn_con <- contrast(emm_btwn, con_b)
 # add Sidak
 psyci(model=mod, contrast_table = btwn_con, method="ph", family="b", 
       between_factors = list("group"))
-
-
+# add attributes to the table about the method used to compute CIs
+# think about adding the critical constant as an attribute
+# specify df also as attributes
 
 ```
 
@@ -117,8 +118,11 @@ n_group = 4
 win_full <- lapply(con_w, function(x) rep(x, each = n_group))
 btwn_full <- lapply(con_b, function(x) rep(x, times = n_within))
 con_i <- lapply(btwn_full, function(x) lapply(win_full, function(y) x * y))
-con_int <- contrast(emm_int, con_i)
+con_int <- contrast(emm_int, con_i) 
 
+# check mean difference option in Psy (go back to win app and doc)
+# potentially add a scheffe function 
+# add p values from gcr etc procedures to the table
 # generate 95% CIs for the between x within subjects contrasts
 psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
       within_factors = list("spacing"), between_factors=list("group"))
