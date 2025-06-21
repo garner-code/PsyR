@@ -26,9 +26,6 @@ You can install the development version of PsyR from [GitHub](https://github.com
 
 ``` {r}
 # install.packages("devtools")
-
-
-
 devtools::install_github("garner-code/PsyR")
 ```
 
@@ -109,22 +106,18 @@ contrasts, using the same post-hoc method:
 # get emms for each cell from the between x within design
 emm_int <- emmeans(mod, c("group", "spacing"))
 
-# sometimes defining the between x within contrast is a little more involved,
-# but here is one way. You need to wind up with a contrast vector that has
-# as many elements as there are rows in your table of emms for each cell in 
-# the between x within design
-n_within = 3
-n_group = 4
-win_full <- lapply(con_w, function(x) rep(x, each = n_group))
-btwn_full <- lapply(con_b, function(x) rep(x, times = n_within))
-con_i <- lapply(btwn_full, function(x) lapply(win_full, function(y) x * y))
-con_int <- contrast(emm_int, con_i) 
+# the handy thing about emmeans is that you can use the already defined between 
+# and within contrasts to generate your interaction contrasts. The extra 
+# delightful thing is that, when used this way, emmeans will scale the contrasts
+# appropriately so that you can interpret the estimated effect as the size of 
+# the effect (aka it is scaled appropriately).
 
+con_int <- contrast(emm_int, interaction=list(con_b, con_w))
 # check mean difference option in Psy (go back to win app and doc)
 # potentially add a scheffe function 
 # add p values from gcr etc procedures to the table
 # generate 95% CIs for the between x within subjects contrasts
-psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
+psyci(model=mod, contrast_table = con_int, method="ph", family="bw", 
       within_factors = list("spacing"), between_factors=list("group"))
 
 ```

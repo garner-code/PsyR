@@ -16,9 +16,6 @@ You can install the development version of PsyR from
 
 ``` r
 # install.packages("devtools")
-
-
-
 devtools::install_github("garner-code/PsyR")
 #> Downloading GitHub repo garner-code/PsyR@HEAD
 #> stringi      (1.8.4  -> 1.8.7 ) [CRAN]
@@ -41,16 +38,16 @@ devtools::install_github("garner-code/PsyR")
 #> quantreg     (6.00   -> 6.1   ) [CRAN]
 #> emmeans      (1.10.7 -> 1.11.1) [CRAN]
 #> Installing 19 packages: stringi, rlang, cli, utf8, Rdpack, pillar, ggplot2, Deriv, tibble, generics, MatrixModels, doBy, broom, reformulas, nloptr, scales, lme4, quantreg, emmeans
-#> Installing packages into '/tmp/RtmpND5nSd/temp_libpath43d41d22d2d5'
+#> Installing packages into '/tmp/RtmpND5nSd/temp_libpath43d4350acd4b'
 #> (as 'lib' is unspecified)
 #> ── R CMD build ─────────────────────────────────────────────────────────────────
-#> * checking for file ‘/tmp/RtmpYcnpzN/remotes495542cf5729/garner-code-PsyR-f42f537/DESCRIPTION’ ... OK
+#> * checking for file ‘/tmp/RtmpVLO3ul/remotes74db4b4038b6/garner-code-PsyR-0206f63/DESCRIPTION’ ... OK
 #> * preparing ‘PsyR’:
 #> * checking DESCRIPTION meta-information ... OK
 #> * checking for LF line-endings in source and make files and shell scripts
 #> * checking for empty or unneeded directories
 #> * building ‘PsyR_0.0.0.9000.tar.gz’
-#> Installing package into '/tmp/RtmpND5nSd/temp_libpath43d41d22d2d5'
+#> Installing package into '/tmp/RtmpND5nSd/temp_libpath43d4350acd4b'
 #> (as 'lib' is unspecified)
 ```
 
@@ -130,6 +127,9 @@ psyci(model=mod, contrast_table = btwn_con, method="ph", family="b",
 #>  3vs4        -2.50 2.99 12  -0.836  0.4197 -12.18  7.18
 #> 
 #> Results are averaged over the levels of: spacing
+```
+
+``` r
 # add attributes to the table about the method used to compute CIs
 # think about adding the critical constant as an attribute
 # specify df also as attributes
@@ -169,30 +169,29 @@ within contrasts, using the same post-hoc method:
 # get emms for each cell from the between x within design
 emm_int <- emmeans(mod, c("group", "spacing"))
 
-# sometimes defining the between x within contrast is a little more involved,
-# but here is one way. You need to wind up with a contrast vector that has
-# as many elements as there are rows in your table of emms for each cell in 
-# the between x within design
-n_within = 3
-n_group = 4
-win_full <- lapply(con_w, function(x) rep(x, each = n_group))
-btwn_full <- lapply(con_b, function(x) rep(x, times = n_within))
-con_i <- lapply(btwn_full, function(x) lapply(win_full, function(y) x * y))
-con_int <- contrast(emm_int, con_i) 
+# the handy thing about emmeans is that you can use the already defined between 
+# and within contrasts to generate your interaction contrasts. The extra 
+# delightful thing is that, when used this way, emmeans will scale the contrasts
+# appropriately so that you can interpret the estimated effect as the size of 
+# the effect (aka it is scaled appropriately).
 
+con_int <- contrast(emm_int, interaction=list(con_b, con_w))
 # check mean difference option in Psy (go back to win app and doc)
 # potentially add a scheffe function 
 # add p values from gcr etc procedures to the table
 # generate 95% CIs for the between x within subjects contrasts
-psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
+psyci(model=mod, contrast_table = con_int, method="ph", family="bw", 
       within_factors = list("spacing"), between_factors=list("group"))
-#>  contrast estimate    SE df t.ratio p.value lower upper
-#>  20vs40      -1.75 0.832 12  -2.103  0.0573 -5.24  1.74
-#>  20vs60      -3.00 1.010 12  -2.958  0.0120 -7.25  1.25
-#>  Quad        -0.25 0.459 12  -0.545  0.5956 -2.17  1.67
-#> 
-#> Results are averaged over the levels of: group
-# add an output message re: the methods used and how to read p-values
+#>  group_custom spacing_custom estimate    SE df t.ratio p.value  lower  upper
+#>  12vs34       20vs40           -8.000 1.660 12  -4.806  0.0004 -14.98  -1.02
+#>  1vs2         20vs40            5.000 2.350 12   2.124  0.0551  -4.87  14.87
+#>  3vs4         20vs40           -3.000 2.350 12  -1.274  0.2267 -12.87   6.87
+#>  12vs34       20vs60          -19.250 2.030 12  -9.490  <.0001 -27.75 -10.75
+#>  1vs2         20vs60            8.750 2.870 12   3.050  0.0101  -3.28  20.78
+#>  3vs4         20vs60           -6.750 2.870 12  -2.353  0.0365 -18.78   5.28
+#>  12vs34       Quad              1.625 0.917 12   1.772  0.1018  -2.22   5.47
+#>  1vs2         Quad              0.625 1.300 12   0.482  0.6386  -4.81   6.06
+#>  3vs4         Quad              0.375 1.300 12   0.289  0.7774  -5.06   5.81
 ```
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
