@@ -1,0 +1,163 @@
+---
+title: "psyci-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{psyci-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, echo = FALSE, results = "hide", message = FALSE}
+library("tidyverse")
+library("afex")
+library("PsyR")
+library("emmeans")
+knitr::opts_chunk$set(fig.width = 4.5, class.output = "ro")
+```
+
+
+<!-- @index Vignettes!psyci -->
+
+## Contents {#contents}
+
+  1. [Installation](#installation) 
+  2. [Example](#example) 
+
+
+## Installation {#installation}
+
+You can install the development version of PsyR from [GitHub](https://github.com/) with:
+
+
+```{r, results = "hide"}
+# install.packages("devtools")
+# devtools::install_github("garner-code/PsyR")
+```
+## Example
+
+This is a basic example which shows you how to obtain between subject confidence 
+intervals. All of the following examples will use the post-hoc method 
+(see Bird, 2002, for details on the post-hoc method):
+
+As an illustration, consider the `spacing` dataset provided with the package. The data contains ...
+
+```{r, echo = FALSE, message = FALSE}
+data(spacing)
+spacing %>% 
+  ggplot2::ggplot(aes(x = as.factor(spacing), y = yield, color = as.factor(group))) +
+  geom_point() +
+  stat_summary(fun.data = "mean_cl_boot", geom = "line", aes(group = group)) +
+  coord_cartesian() + # coord
+  labs(
+    x = "Spacing",
+    y = "Yield",
+    color ="Group"
+  ) 
+dat <- spacing
+```
+
+First, let’s set emmeans() option to multivariate and fit a mixed ANOVA model that includes a between-subject factor `group` and a within-subject factor `spacing`:
+
+```{r}
+afex_options(emmeans_model = "multivariate")
+
+mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
+```
+
+To obtaining between-subject confidence intervals, we first define between-group contrasts. 
+
+```{r}
+emm_btwn <- emmeans(mod, "group")
+con_b <- list(
+  "12vs34" = c(0.5, 0.5, -0.5, -0.5), # groups 1 & 2 vs groups 3 & 4
+  "1vs2" = c(1, -1, 0, 0), # and so on...
+  "3vs4" = c(0, 0, 1, -1)
+)
+btwn_con <- contrast(emm_btwn, con_b)
+```
+
+After setting the contrast tabel `con_b`, feed it into psyci() with the chosen method, family, and factor, names. Methods can be found in ?psci().
+```{r}
+psyci(model=mod, contrast_table = btwn_con, method="ph", family="b", between_factors = list("group"))
+```
+
+Within-subject confidence intervals can also be defined as follows:
+```{r}
+emm_win <- emmeans(mod, "spacing")
+con_w <- list(
+  "20vs40" = c(1, -1, 0),
+  "20vs60" = c(1, 0, -1),
+  "Quad" = c(0.5, -1, 0.5)
+)
+con_win <- contrast(emm_win, con_w)
+```
+
+The also feed it into psyci() to generate 95% CIs for the within subjects contrasts.
+```{r}
+psyci(model=mod, contrast_table = con_win, method="ph", family="w", 
+      within_factors = list("spacing"))
+```
+
+And finally, here is an example of how to generate CIs for between x within 
+contrasts, using the same post-hoc method.
+```{r}
+# get emms for each cell from the between x within design
+emm_int <- emmeans(mod, c("group", "spacing"))
+
+# sometimes defining the between x within contrast is a little more involved,
+# but here is one way. You need to wind up with a contrast vector that has
+# as many elements as there are rows in your table of emms for each cell in 
+# the between x within design
+n_within = 3
+n_group = 4
+win_full <- lapply(con_w, function(x) rep(x, each = n_group))
+btwn_full <- lapply(con_b, function(x) rep(x, times = n_within))
+con_i <- lapply(btwn_full, function(x) lapply(win_full, function(y) x * y))
+con_int <- contrast(emm_int, con_i)
+
+# check mean difference option in Psy (go back to win app and doc)
+# potentially add a scheffe function 
+# add p values from gcr etc procedures to the table
+# generate 95% CIs for the between x within subjects contrasts
+psyci(model=mod, contrast_table = con_win, method="ph", family="bw", 
+      within_factors = list("spacing"), between_factors=list("group"))
+
+```
+
+
+Another example with a dataset of three-level repeated measures. 
+```{r, echo = FALSE, message = FALSE}
+data(priming)
+
+priming %>% 
+  ggplot2::ggplot(aes(x = as.factor(Prime), y = ReactionTime)) +
+  geom_point() +
+  geom_smooth(method = lm, se = TRUE) +
+  coord_cartesian() + # coord
+  labs(
+    x = "Prime",
+    y = "Reaction Time"
+  ) 
+dat_3level <- priming
+```
+
+```{r}
+afex_options(emmeans_model = "multivariate")
+
+mod_3level <- aov_ez("Subject", "ReactionTime", dat_3level, within = "Prime")
+emm_within <- emmeans(mod_3level, "Prime")
+withinContrasts = list(
+"Other-Stereo" = c(-2, 1, 1)/2,
+"Atyp-Neut" =c(0, 1, -1)
+)
+con_within <- contrast(emm_within, withinContrasts)
+psyci(model = mod_3level, contrast_table = con_within, method="ph", family="w", within_factors = list("Prime"))
+```
+
