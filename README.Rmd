@@ -51,7 +51,6 @@ dat <- spacing
 afex_options(emmeans_model = "multivariate")
 
 # perform the statistical model
-# check which model objects can be used
 mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
 
 # define some between group contrasts

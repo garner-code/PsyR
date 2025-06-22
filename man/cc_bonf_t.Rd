@@ -4,7 +4,7 @@
 \alias{cc_bonf_t}
 \title{Compute critical constant using bonferroni t procedure}
 \usage{
-cc_bonf_t(v_e, n_k, alpha = 0.05)
+cc_bonf_t(v_e, n_k, alpha)
 }
 \arguments{
 \item{v_e}{a single numeric value that is the df residual}
