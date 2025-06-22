@@ -32,3 +32,27 @@
 #'   ...
 #' }
 "experience"
+
+#' Priming lexical decision task data
+#'
+#' A synthetic dataset modeling a lexical decision task used to investigate automatic activation of stereotypes through priming. Participants are subliminally primed with a social category label (e.g., ‘unemployed’ or ‘elderly’) before responding to target words. The target words are either stereotypical attributes, atypical attributes, or neutral words. The dependent variable is reaction time (in tenths of a second).
+#'
+#' Priming is hypothesized to enhance recognition for stereotypical attributes (i.e., faster reaction times), and inhibit recognition for atypical attributes, relative to neutral words.
+#'
+#' Contrasts of interest include:
+#' \itemize{
+#'   \item{"Other-Stereo" = c(-2, 1, 1)/2} — comparing stereotypical words against the average of atypical and neutral words
+#'   \item{"Atyp-Neut" = c(0, 1, -1)} — directly comparing atypical and neutral words
+#' }
+#'
+#' @format ## `priming`
+#' A data frame with 15 rows and 4 columns:
+#' \describe{
+#'   \item{subj}{subject ID}
+#'   \item{Condition}{within-subjects factor with 3 levels: STEREO, ATYPICAL, NEUTRAL}
+#'   \item{WordType}{same as Condition, possibly labeled differently}
+#'   \item{RT}{reaction time in tenths of a second}
+#' }
+#' @source <https://www.unsw.edu.au/science/our-schools/psychology/our-research/research-tools/psy-statistical-program>
+"priming"
+
