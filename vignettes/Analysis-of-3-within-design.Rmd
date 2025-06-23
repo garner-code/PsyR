@@ -7,137 +7,165 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
+This vignette demonstrates how to use the `psyci()` function from the `PsyR` package to compute simultaneous confidence intervals (SCIs) for planned contrasts in a **within-subjects lexical decision priming experiment**.
+
+```{r include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Loading Packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+
 ```{r setup}
-# Load required packages
 library(PsyR)
-library(afex)
+library(tidyverse)
 library(emmeans)
+library(afex)
+library(ggplot2)
 ```
 
-# Overview
+## The Data
 
-`PsyR` provides tools for computing **simultaneous confidence intervals (SCIs)** for planned and post-hoc contrasts, particularly in factorial experimental designs common in psychology. This approach addresses known limitations of traditional omnibus-then-posthoc workflows (see Bird, 2002), and helps shift focus from binary decisions to meaningful effect size estimation.
+The study investigates whether subliminal priming with a social category label (e.g., “unemployed” or “elderly”) automatically activates associated stereotypes. Participants (N = 15) complete a lexical decision task under three conditions:
 
----
+- **Stereotypical** attributes
+- **Atypical** attributes
+- **Neutral** words
 
-## Installation
+Priming is hypothesized to:
+- Facilitate recognition of stereotypical words
+- Inhibit recognition of atypical words relative to neutral words
 
-Install the development version of `PsyR` from GitHub:
+The dependent variable is **ReactionTime** in tenths of a second.
 
-```{r install, eval=FALSE}
-# Install if not already installed
-if (!requireNamespace("PsyR", quietly = TRUE)) {
-  devtools::install_github("garner-code/PsyR")
-}
-```
+We will define and test two planned contrasts:
+- `"Stereo_vs_Other"`: Compares stereotypical attributes vs. the average of atypical and neutral words
+- `"Atyp_vs_Neut"`: Compares atypical vs. neutral words
 
----
-
-## Example: Priming Dataset
-
-This example demonstrates `PsyR` on a **within-subject lexical decision priming task**.
-
-### Study Description
-
-Participants are subliminally primed with a **social category** label (e.g., *elderly*, *unemployed*). They then complete a lexical decision task where the word type is:
-
-* **Stereotypical attribute**
-* **Atypical attribute**
-* **Neutral word**
-
-**Reaction time** (RT) in tenths of a second is the outcome. Hypotheses:
-
-* RTs are faster for **stereotypical** words (facilitation)
-* RTs are slower for **atypical** words compared to **neutral** words (inhibition)
-
----
-
-### Load Data
 
 ```{r}
 data(priming)
 head(priming)
 ```
 
----
-
-### Fit a Repeated-Measures ANOVA
+Let’s also convert variables to factors for clarity.
 
 ```{r}
-# Set multivariate mode for emmeans
+priming <- priming %>%
+  mutate(
+    Subject = as.factor(Subject),
+    Prime = factor(Prime, levels = c("Stereotypical", "Atypical", "Neutral"))
+  )
+```
+
+## Exploratory Visualization
+
+```{r, fig.width=5, fig.height=4}
+priming %>%
+  group_by(Prime) %>%
+  summarise(mean_RT = mean(ReactionTime)) %>%
+  ggplot(aes(x = Prime, y = mean_RT, fill = Prime)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Average Reaction Time by Prime Condition",
+       y = "Reaction Time (tenths of seconds)")
+```
+
+---
+
+## Statistical Analysis
+
+We first fit a **repeated-measures ANOVA**.
+
+```{r}
 afex_options(emmeans_model = "multivariate")
 
-# Fit model with within-subject factor
 mod <- aov_ez("Subject", "ReactionTime", priming, within = "Prime")
 ```
 
----
+## Estimated Marginal Means and Planned Contrasts
 
-### Define Within-Subject Contrasts
-
-We define two contrasts:
-
-1. **Other-Stereo**: stereotypical vs. (atypical + neutral) / 2
-2. **Atyp-Neut**: atypical vs. neutral
+Get the estimated marginal means and define **planned contrasts**:
 
 ```{r}
-emm <- emmeans(mod, "Prime")
+emm <- emmeans(mod, ~ Prime)
 
-con_w <- list(
-  "Other-Stereo" = c(-2, 1, 1)/2,
-  "Atyp-Neut" = c(0, 1, -1)
+planned_contrasts <- list(
+  "Stereo_vs_Other" = c(-2, 1, 1)/2,  # Stereotypical vs. average of Atypical & Neutral
+  "Atyp_vs_Neut" = c(0, 1, -1)        # Atypical vs. Neutral
 )
 
-con_table <- contrast(emm, con_w)
+contrast_table <- contrast(emm, planned_contrasts)
 ```
 
----
-
-### Compute Simultaneous Confidence Intervals
+## Compute Simultaneous Confidence Intervals
 
 ```{r}
-psyci(
+scis <- psyci(
   model = mod,
-  contrast_table = con_table,
-  method = "ph",       # Post-hoc correction (e.g., Scheffé)
-  family = "w",        # Within-subjects
+  contrast_table = contrast_table,
+  method = "bf",         # Bonferroni correction
   within_factors = list("Prime")
 )
+scis
+```
+
+## Visualize Confidence Intervals
+
+```{r, fig.width = 7, fig.height = 4}
+scis_df <- as.data.frame(scis)
+
+scis_df$contrast <- c(
+  "Stereotypical vs (Atypical + Neutral)", 
+  "Atypical vs Neutral"
+)
+
+ggplot(scis_df, aes(x = contrast, y = estimate)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+  labs(
+    title = "Simultaneous Confidence Intervals for Planned Contrasts",
+    y = "Contrast Estimate (RT difference)",
+    x = "Planned Contrast"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+
 ```
 
 ---
 
-### Interpretation
+## Interpretation
 
-The output includes:
+Two planned contrasts were tested using simultaneous confidence intervals (SCIs) with Bonferroni correction:
 
-* **Estimated contrast effects**
-* **Standard errors**
-* **Simultaneous confidence intervals** (adjusted for multiplicity)
-* **p-values** (optional reference)
+1. **Stereotypical vs (Atypical + Neutral)**
 
-**Tip:** A confidence interval that excludes zero implies statistical significance, but also conveys **effect size** and **direction**, aiding richer interpretation.
+   * Estimate: 3.5 (tenths of a second)
+   * 95% SCI: \[2.09, 4.91]
+   * p < .0001
+   * **Interpretation:** Reaction times were significantly **faster** for stereotypical words compared to the average of atypical and neutral words. The confidence interval excludes 0, indicating a reliable facilitation effect due to priming.
 
----
+2. Atypical vs Neutral
 
-## Summary
+   * Estimate: 1.0 (tenths of a second)
+   * 95% SCI: \[−1.32, 3.32]
+   * p = 0.2983
+   * **Interpretation:** While atypical words had numerically slower reaction times than neutral words, the confidence interval includes 0, indicating **no statistically significant difference**. This contrast does not provide strong evidence for an inhibitory priming effect on atypical attributes.
 
-This vignette demonstrated:
-
-* How to use `afex::aov_ez()` for repeated-measures ANOVA
-* How to define and extract contrasts using `emmeans`
-* How to compute simultaneous CIs using `PsyR::psyci()`
-
-These tools allow for statistically rigorous, interpretable, and reproducible contrast analysis in psychology and beyond.
-
----
 
 ## References
 
@@ -149,4 +177,3 @@ Bird, K. D. (2002). *Confidence Intervals for Effect Sizes in Analysis of Varian
 
 * PsyR GitHub: [https://github.com/garner-code/PsyR](https://github.com/garner-code/PsyR)
 * [UNSW Psychology Research Tools](https://www.unsw.edu.au/science/our-schools/psychology/our-research/research-tools/psy-statistical-program)
-
