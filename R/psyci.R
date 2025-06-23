@@ -20,7 +20,7 @@
 #' are met (see Bird, 2002, pg. 217, eqs. 7-9).
 #'
 #' @param model an anova model made using the afex package (class afex_aov)
-#' @param contrast_table a table of contrasts generated using emmeans contrast()
+#' @param contrast_tables a LIST of contrast tables generated using emmeans contrast()
 #' @param method a single string - method for confidence interval computation -
 #' "ind", "bf", or "ph" - see further details below
 #' @param family a single string - family of contrasts - "b", "w" or "bw" - see
@@ -44,20 +44,15 @@
 #'              )
 #' btwn_con <- emmeans::contrast(sum_emm_btwn, con) # get contrast table
 #' # now add CI's using post-hoc method
-#' psyci(model = mod, contrast_table = btwn_con, method = "ph",
+#' psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
 #'         family = "b", between_factors = list("group"))
-psyci <- function(model, contrast_table, method, family = NA,
+psyci <- function(model, contrast_tables, method, family = NA,
                   between_factors = NA, within_factors = NA, alpha = 0.05){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
   }
 
-  if (inherits(contrast_table, "emmGrid") |
-        inherits(contrast_table, "summary_emm")){
-  } else {
-    stop("Error: contrast table needs to be of class emmGrid or summary_emm")
-  }
   if (!method %in% c("ind", "bf", "ph")){
     stop("Error: method should be ind, bf, or ph")
   }
@@ -71,14 +66,12 @@ psyci <- function(model, contrast_table, method, family = NA,
   if (!anyNA(family) & !family %in% c("b", "w", "bw")){
     stop("Error: family should be b, w, or bw")
   }
-
   if (method %in% "w" | method %in% "bw"){
     if (!inherits(within_factors, "list")){
       stop("Error: within method required but no list of within factors
            supplied")
     }
   }
-
   if (method %in% "b" | method %in% "bw"){
     if (!inherits(between_factors, "list")){
       stop("Error: within method required but no list of between factors
@@ -87,10 +80,25 @@ psyci <- function(model, contrast_table, method, family = NA,
   }
 
   # make sure we can work with the contrast table
-  contrast_table = summary(contrast_table)
+
+  # note that contrast tables will have had some updates performed on it
+  # prior to this point
+  # now I am getting the model info, so that I can get the error df
+  # future me needs to deal with the below
+  # test_emmGrids <- sum(sapply(contrast_tables, inherits, "emmGrid"))
+  # test_summary_emm <- sum(sapply(contrast_tables, inherits, "summary_emm"))
+  # if (test_emmGrids < length(contrast_tables) |
+  #     test_summary_emm < length(contrast_tables)){
+  # } else {
+  #   stop("Error: contrast table needs to be of class emmGrid or summary_emm")
+  # }
+
+  contrast_info <- do.call(rbind, contrast_tables)
+  contrast_table <- contrast_info
 
   # get the error df
-  v_e = contrast_table$df[1]
+  v_e = contrast_table@dfargs
+  v_e = unlist(v_e)
 
   # if required, get v_b and v_w
   if (method %in% "ph"){
@@ -112,7 +120,8 @@ psyci <- function(model, contrast_table, method, family = NA,
 
   } else if (method %in% "bf") {
 
-    nk = nrow(contrast_table)
+    cs <- lapply(contrast_tables, stats::coef)
+    nk = sum(unlist(lapply(cs, function(x) ncol(x[,grep("c.*", names(x))]))))
     critical_constant = cc_bonf_t(v_e=v_e, n_k=nk, alpha=alpha)
 
   } else if (method %in% "ph"){
@@ -132,6 +141,7 @@ psyci <- function(model, contrast_table, method, family = NA,
   }
 
   # now get se, compute CIs and add to the table
+  contrast_table = summary(contrast_table)
   se_cont = contrast_table[,"SE"]
   cis = unlist(lapply(se_cont, compute_contrast_ci, critical_constant))
   contrast_table$lower = contrast_table$estimate - cis

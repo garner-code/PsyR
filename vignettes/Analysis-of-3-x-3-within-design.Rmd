@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-# Analysis of a 3 (between) x 3 (wthin) analysis design
+# Analysis of a 3 (between) x 3 (within) analysis design
 
 This vignette shows how to use the Psy function (psyci) to obtain confidence intervals over contrast effects, that are calculated as part of a planned simple effects analysis of data collected from a 3 (between) x 3 (within) factorial design.
 
@@ -96,7 +96,7 @@ emms
 
 ### Contrasts of Interest
 
-Now that we have a table of estimated means for each cell of the design, we are well placed to specify our contrasts of interest that we will apply to the table. 
+Now that we have a table of estimated means for each cell of the design, we are well placed to specify our contrasts of interest that we will apply to the table.
 
 Note that these contrasts were planned, which means they were defined independently of the data and the results of the ANOVA - so we could have performed the step of defining the contrasts before we get the estimated marginal means (and we did, theoretically, we just practically implement it after this time around).
 
@@ -106,12 +106,12 @@ So, we need to specify contrasts for the between comparisons we care about, and 
 
 For the between subjects comparisons, we compare about the following things, which maps to the list of contrast vectors defined in the code below -
 
-* Between Group Comparisons
-+ The average of the two Treatment Groups relative to the Control Group
-+ Treatment 1 Group vs Treatment 2 Group
-+ The simple effect of the Treatment 1 Group (the theoretical significance of this contrast will be revealed in due course, hang on in there!)
-+ The simple effect of the Treatment 2 Group
-+ As above, for the Control Group
+-   Between Group Comparisons
+-   The average of the two Treatment Groups relative to the Control Group
+-   Treatment 1 Group vs Treatment 2 Group
+-   The simple effect of the Treatment 1 Group (the theoretical significance of this contrast will be revealed in due course, hang on in there!)
+-   The simple effect of the Treatment 2 Group
+-   As above, for the Control Group
 
 Lets code these contrasts into a list.
 
@@ -138,7 +138,7 @@ btwn_fx <- contrast(emms_grp, between_contrasts[1:2])
 btwn_fx
 ```
 
-Now we know that if you were in a Treatment Group, you will score on average 3 points happier, than if you were in the Control Group. Also, if you were in the Treatment 1 Group, you would on average score 2 points lower on the happiness scale, than if you were in the Treatment 2 Group. 
+Now we know that if you were in a Treatment Group, you will score on average 3 points happier, than if you were in the Control Group. Also, if you were in the Treatment 1 Group, you would on average score 2 points lower on the happiness scale, than if you were in the Treatment 2 Group.
 
 But what we really want to know is the range of what that average difference could be, over the long run. This is where computing confidence intervals over the estimated effects helps us. Time to use the `psyci` function.
 
@@ -146,11 +146,11 @@ But what we really want to know is the range of what that average difference cou
 
 Now we lay out what we are thinking regarding the comparisons we will make among the different time points. The product of these contrast vectors with our between subject ones (defined above) will give us our interaction contrasts that we want to know about.
 
-* Within Subject Comparisons
-+ Post-treatment vs Pre
-+ Follow-up vs Post
-+ The simple effect of Post-treatment
-+ The simple effect of Follow-Up
+-   Within Subject Comparisons
+-   Post-treatment vs Pre
+-   Follow-up vs Post
+-   The simple effect of Post-treatment
+-   The simple effect of Follow-Up
 
 ```{r within_contrasts}
 
@@ -178,20 +178,7 @@ interaction_fx
 
 We don't actually want the non-interacting contrasts in the above mentioned table, so lets remove them now.
 
-```{r}
-
-interaction_fx = summary(interaction_fx)
-interaction_fx = interaction_fx %>% filter(!(Group_custom == "T1*" & Time_custom == "Post*"),
-                                           !(Group_custom == "T2*" & Time_custom == "Post*"),
-                                           !(Group_custom == "Ctrl*" & Time_custom == "Post*"),
-                                           !(Group_custom == "T1*" & Time_custom == "FU*"),
-                                           !(Group_custom == "T2*" & Time_custom == "FU*"),
-                                           !(Group_custom == "Ctrl*" & Time_custom == "FU*"))
-```
-
-We also want to estimate the main effects of each set of between and within contrasts,
-and combine the contrast tables together. For each of the between and within, I am going to compute
-the appropriate contrasts, and then join the tables together.
+We also want to estimate the main effects of each set of between and within contrasts, and combine the contrast tables together. For each of the between and within, I am going to compute the appropriate contrasts, and then join the tables together.
 
 ```{r}
 
@@ -200,21 +187,16 @@ between_fx = contrast(emm_btwn, between_contrasts[1:2])
 emm_win = emmeans(mod, c("Time"))
 within_fx = contrast(emm_win, within_contrasts[1:2])
 
-all_fx = rbind(interaction_fx, summary(between_fx), summary(within_fx))
+all_fx = list(interaction_fx, between_fx, within_fx)
 
 ```
 
-
 ## Obtaining Confidence Intervals over the Contrast Effects
-
 
 Now that we have our table of interaction contrasts and associated simple effects, we can use Psy to compute our confidence intervals over all our estimated effects.
 
 ```{r}
 
 this_alpha = 3*0.05
-psyci(mod, all_fx, method="bf", alpha=this_alpha)
+psyci(mod, contrast_tables=all_fx, method="bf", alpha=this_alpha)
 ```
-
-
-As this method is planned, we use 

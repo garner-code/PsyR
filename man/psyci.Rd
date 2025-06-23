@@ -6,7 +6,7 @@
 \usage{
 psyci(
   model,
-  contrast_table,
+  contrast_tables,
   method,
   family = NA,
   between_factors = NA,
@@ -17,7 +17,7 @@ psyci(
 \arguments{
 \item{model}{an anova model made using the afex package (class afex_aov)}
 
-\item{contrast_table}{a table of contrasts generated using emmeans contrast()}
+\item{contrast_tables}{a LIST of contrast tables generated using emmeans contrast()}
 
 \item{method}{a single string - method for confidence interval computation -
 "ind", "bf", or "ph" - see further details below}
@@ -72,6 +72,6 @@ con <- list( # define some contrasts
              )
 btwn_con <- emmeans::contrast(sum_emm_btwn, con) # get contrast table
 # now add CI's using post-hoc method
-psyci(model = mod, contrast_table = btwn_con, method = "ph",
+psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
         family = "b", between_factors = list("group"))
 }
