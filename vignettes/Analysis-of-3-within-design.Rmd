@@ -1,0 +1,152 @@
+---
+title: "Analysis-of-3-within-design"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{psyr-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+# Load required packages
+library(PsyR)
+library(afex)
+library(emmeans)
+```
+
+# Overview
+
+`PsyR` provides tools for computing **simultaneous confidence intervals (SCIs)** for planned and post-hoc contrasts, particularly in factorial experimental designs common in psychology. This approach addresses known limitations of traditional omnibus-then-posthoc workflows (see Bird, 2002), and helps shift focus from binary decisions to meaningful effect size estimation.
+
+---
+
+## Installation
+
+Install the development version of `PsyR` from GitHub:
+
+```{r install, eval=FALSE}
+# Install if not already installed
+if (!requireNamespace("PsyR", quietly = TRUE)) {
+  devtools::install_github("garner-code/PsyR")
+}
+```
+
+---
+
+## Example: Priming Dataset
+
+This example demonstrates `PsyR` on a **within-subject lexical decision priming task**.
+
+### Study Description
+
+Participants are subliminally primed with a **social category** label (e.g., *elderly*, *unemployed*). They then complete a lexical decision task where the word type is:
+
+* **Stereotypical attribute**
+* **Atypical attribute**
+* **Neutral word**
+
+**Reaction time** (RT) in tenths of a second is the outcome. Hypotheses:
+
+* RTs are faster for **stereotypical** words (facilitation)
+* RTs are slower for **atypical** words compared to **neutral** words (inhibition)
+
+---
+
+### Load Data
+
+```{r}
+data(priming)
+head(priming)
+```
+
+---
+
+### Fit a Repeated-Measures ANOVA
+
+```{r}
+# Set multivariate mode for emmeans
+afex_options(emmeans_model = "multivariate")
+
+# Fit model with within-subject factor
+mod <- aov_ez("Subject", "ReactionTime", priming, within = "Prime")
+```
+
+---
+
+### Define Within-Subject Contrasts
+
+We define two contrasts:
+
+1. **Other-Stereo**: stereotypical vs. (atypical + neutral) / 2
+2. **Atyp-Neut**: atypical vs. neutral
+
+```{r}
+emm <- emmeans(mod, "Prime")
+
+con_w <- list(
+  "Other-Stereo" = c(-2, 1, 1)/2,
+  "Atyp-Neut" = c(0, 1, -1)
+)
+
+con_table <- contrast(emm, con_w)
+```
+
+---
+
+### Compute Simultaneous Confidence Intervals
+
+```{r}
+psyci(
+  model = mod,
+  contrast_table = con_table,
+  method = "ph",       # Post-hoc correction (e.g., Scheffé)
+  family = "w",        # Within-subjects
+  within_factors = list("Prime")
+)
+```
+
+---
+
+### Interpretation
+
+The output includes:
+
+* **Estimated contrast effects**
+* **Standard errors**
+* **Simultaneous confidence intervals** (adjusted for multiplicity)
+* **p-values** (optional reference)
+
+**Tip:** A confidence interval that excludes zero implies statistical significance, but also conveys **effect size** and **direction**, aiding richer interpretation.
+
+---
+
+## Summary
+
+This vignette demonstrated:
+
+* How to use `afex::aov_ez()` for repeated-measures ANOVA
+* How to define and extract contrasts using `emmeans`
+* How to compute simultaneous CIs using `PsyR::psyci()`
+
+These tools allow for statistically rigorous, interpretable, and reproducible contrast analysis in psychology and beyond.
+
+---
+
+## References
+
+Bird, K. D. (2002). *Confidence Intervals for Effect Sizes in Analysis of Variance*. Educational and Psychological Measurement, 62(2), 197–226.
+
+---
+
+## Learn More
+
+* PsyR GitHub: [https://github.com/garner-code/PsyR](https://github.com/garner-code/PsyR)
+* [UNSW Psychology Research Tools](https://www.unsw.edu.au/science/our-schools/psychology/our-research/research-tools/psy-statistical-program)
+
