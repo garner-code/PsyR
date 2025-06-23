@@ -32,6 +32,29 @@
 #' }
 #' @source <UNSW: Dr. Melanie Gleitzman>
 "experience"
+#' Priming lexical decision task data
+#'
+#' A synthetic dataset modeling a lexical decision task 
+#' used to investigate automatic activation of stereotypes through priming. 
+#' Participants are subliminally primed with a social category label 
+#' (e.g., ‘unemployed’ or ‘elderly’) before responding to target words. 
+#' The target words are either stereotypical attributes, atypical attributes, 
+#' or neutral words. The dependent variable is reaction time (in tenths of a second).
+#'
+#' Priming is hypothesized to enhance recognition for stereotypical attributes 
+#' (i.e., faster reaction times), and inhibit recognition for atypical attributes, 
+#' relative to neutral words.
+#'
+#' @format ## `priming`
+#' A data frame with 15 rows and 4 columns:
+#' \describe{
+#'   \item{subj}{subject ID}
+#'   \item{Condition}{within-subjects factor with 3 levels: STEREO, ATYPICAL, NEUTRAL}
+#'   \item{WordType}{same as Condition, possibly labeled differently}
+#'   \item{RT}{reaction time in tenths of a second}
+#' }
+#' @source Dr. Melanie Gleitzman, UNSW
+"priming"
 #' depression - patient happiness scores from pre to post and to follow up
 #'
 #' Data showing happiness scores from 15 patients. Scores taken at Pre, Post and
