@@ -38,16 +38,16 @@ devtools::install_github("garner-code/PsyR")
 #> quantreg     (6.00   -> 6.1   ) [CRAN]
 #> emmeans      (1.10.7 -> 1.11.1) [CRAN]
 #> Installing 19 packages: stringi, rlang, cli, utf8, Rdpack, pillar, ggplot2, Deriv, tibble, generics, MatrixModels, doBy, broom, reformulas, nloptr, scales, lme4, quantreg, emmeans
-#> Installing packages into '/tmp/RtmpND5nSd/temp_libpath43d4350acd4b'
+#> Installing packages into '/tmp/RtmpBkYDYw/temp_libpathc3ed7e1a584a'
 #> (as 'lib' is unspecified)
 #> ── R CMD build ─────────────────────────────────────────────────────────────────
-#> * checking for file ‘/tmp/RtmpVLO3ul/remotes74db4b4038b6/garner-code-PsyR-0206f63/DESCRIPTION’ ... OK
+#> * checking for file ‘/tmp/RtmpIbwuBI/remotes102697bae37d2/garner-code-PsyR-6932a1c/DESCRIPTION’ ... OK
 #> * preparing ‘PsyR’:
 #> * checking DESCRIPTION meta-information ... OK
 #> * checking for LF line-endings in source and make files and shell scripts
 #> * checking for empty or unneeded directories
 #> * building ‘PsyR_0.0.0.9000.tar.gz’
-#> Installing package into '/tmp/RtmpND5nSd/temp_libpath43d4350acd4b'
+#> Installing package into '/tmp/RtmpBkYDYw/temp_libpathc3ed7e1a584a'
 #> (as 'lib' is unspecified)
 ```
 
@@ -98,7 +98,6 @@ dat <- spacing
 afex_options(emmeans_model = "multivariate")
 
 # perform the statistical model
-# check which model objects can be used
 mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
 #> Converting to factor: group
 #> Contrasts set to contr.sum for the following variables: group

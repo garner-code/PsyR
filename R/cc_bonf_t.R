@@ -28,7 +28,7 @@
 #' n_k = 3 # number of contrasts in that family
 #' alpha = 0.05
 #' cc_bonf_t(v_e, n_k, alpha)
-cc_bonf_t <- function(v_e, n_k, alpha = 0.05){
+cc_bonf_t <- function(v_e, n_k, alpha){
 
   stats::qt(alpha/(2*n_k), v_e, lower.tail = FALSE)
 }

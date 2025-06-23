@@ -1,0 +1,220 @@
+---
+title: "Analysis-of-3-between-x-3-within-design"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Analysis-of-3-x-3-within-design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Analysis of a 3 (between) x 3 (wthin) analysis design
+
+This vignette shows how to use the Psy function (psyci) to obtain confidence intervals over contrast effects, that are calculated as part of a planned simple effects analysis of data collected from a 3 (between) x 3 (within) factorial design.
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Loading packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r setup}
+library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
+```
+
+## The data
+
+We will be using the 'depression' dataset that comes with the PsyR package. The data is from an experimental design where 15 individuals being treated for depression are assigned to one of three treatment groups. Happiness ratings are collected pre and post treatment, and once again at follow up.
+
+Let's take a look at the data.
+
+```{r loaddata}
+
+data(depression)
+head(depression, 5)
+```
+
+To get a better idea of what the variables are coding, we can run `?depression` to get some further, useful information -
+
+```{r whatdepression}
+
+?depression
+```
+
+Let's define some factors and their corresponding levels in the dataset. This will make our life easier when it comes to plotting and analysing the data.
+
+```{r sortdep}
+
+depression <- depression %>%
+               mutate(Group = fct_relevel(Group, 'Ctrl', 'Tmt1', 'Tmt2'),
+                      Time = fct_relevel(Time, 'Pre', 'Post', 'FU'),
+                      Subject = as_factor(Subject))
+```
+
+Now that we have a better idea about what the data is, let's make a plot to take a look at the impact of treatment on happiness scores over time.
+
+```{r plothappiness}
+
+depression %>% group_by(Group, Time) %>%
+  summarise(mean_happiness = mean(Happiness)) %>%
+  ggplot(aes(x=Time, y=mean_happiness, 
+             group=Group, colour=Group)) +
+  geom_line() + theme_classic()
+```
+
+We can see that the Control Group don't change much over the course of treatment and follow-up, Treatment Group 1 show a large improvement at Post, which is not sustained at Follow Up, whereas Treatment Group 2 show a sustained improvement in happiness levels.
+
+## The Statistical Analysis
+
+Let's see if these visual intuitions map to a statistical interpretation of the data.
+
+We want to obtain a table of **estimated marginal means** which tells us the average effect of treatment on happiness, at each time point.
+
+To do this, we create an ANOVA model object which we feed in to `emmeans`, to get our table of estimated marginal means. Note that we ask emmeans to group the data by Group and Time, as we are going to consider product contrasts in the final section.
+
+```{r aov}
+
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
+# perform the statistical model
+mod <- aov_ez("Subject", 
+              "Happiness", 
+              depression, 
+              within = "Time", 
+              between = "Group")
+
+emms <- emmeans(mod, c("Group", "Time"))
+emms
+```
+
+### Contrasts of Interest
+
+Now that we have a table of estimated means for each cell of the design, we are well placed to specify our contrasts of interest that we will apply to the table. 
+
+Note that these contrasts were planned, which means they were defined independently of the data and the results of the ANOVA - so we could have performed the step of defining the contrasts before we get the estimated marginal means (and we did, theoretically, we just practically implement it after this time around).
+
+So, we need to specify contrasts for the between comparisons we care about, and same for the within comparisons. We will then use some supremely handy witchery of the emmeans `contrast` function, which will helpfully create our product contrast vectors for us.
+
+#### Between subjects contrasts
+
+For the between subjects comparisons, we compare about the following things, which maps to the list of contrast vectors defined in the code below -
+
+* Between Group Comparisons
++ The average of the two Treatment Groups relative to the Control Group
++ Treatment 1 Group vs Treatment 2 Group
++ The simple effect of the Treatment 1 Group (the theoretical significance of this contrast will be revealed in due course, hang on in there!)
++ The simple effect of the Treatment 2 Group
++ As above, for the Control Group
+
+Lets code these contrasts into a list.
+
+```{r btwn_contrasts}
+
+between_contrasts = list(
+  "Ts_v_Ctrl" = c(-1, 0.5, 0.5),
+  "T1_v_T2" = c(0, 1, -1),
+  "T1*" = c(0, 1, 0),
+  "T2*" = c(0, 0, 1),
+  "Ctrl*" = c(1, 0, 0)
+)
+between_contrasts
+```
+
+Before we move on to consider further contrasts, we do want to know the overall effect of receiving Treatment relative to being in the control group, and we want to know the overall effect of being in each Treatment Group (1 vs 2). This is the first two contrasts in the list above. Fortunately, we have all the things we need to find that out now.
+
+First we create an `emmeans` table that considers the overall effect of being in each group, which we apply our key between subjects contrasts to.
+
+```{r, between_fx}
+
+emms_grp <- emmeans(mod, c("Group"))
+btwn_fx <- contrast(emms_grp, between_contrasts[1:2])
+btwn_fx
+```
+
+Now we know that if you were in a Treatment Group, you will score on average 3 points happier, than if you were in the Control Group. Also, if you were in the Treatment 1 Group, you would on average score 2 points lower on the happiness scale, than if you were in the Treatment 2 Group. 
+
+But what we really want to know is the range of what that average difference could be, over the long run. This is where computing confidence intervals over the estimated effects helps us. Time to use the `psyci` function.
+
+#### Within-subjects contrasts
+
+Now we lay out what we are thinking regarding the comparisons we will make among the different time points. The product of these contrast vectors with our between subject ones (defined above) will give us our interaction contrasts that we want to know about.
+
+* Within Subject Comparisons
++ Post-treatment vs Pre
++ Follow-up vs Post
++ The simple effect of Post-treatment
++ The simple effect of Follow-Up
+
+```{r within_contrasts}
+
+within_contrasts = list(
+  "Post_vs_Pre" = c(-1, 1, 0),
+  "FU_vs_Post" = c(0, -1, 1),
+  "Post*" = c(0, 1, 0),
+  "FU*" = c(0, 0, 1)
+)
+within_contrasts
+```
+
+### Interaction Effects
+
+We have defined how we would want to compare the groups, and how we want to compare across the time points, but of course, what we really want to know about is a difference of differences. How do the groups compare when we compare their happiness trajectories across the time points?
+
+Defining these contrasts by hand is tricky. Luckily we can use the emmeans `contrast` function to not only define them for us, but also to calculate the contrast effects themselves - huzzah!
+
+```{r int_contrasts}
+
+interaction_fx = contrast(emms, interaction=list(between_contrasts,
+                                                 within_contrasts))
+interaction_fx
+```
+
+We don't actually want the non-interacting contrasts in the above mentioned table, so lets remove them now.
+
+```{r}
+
+interaction_fx = summary(interaction_fx)
+interaction_fx = interaction_fx %>% filter(!(Group_custom == "T1*" & Time_custom == "Post*"),
+                                           !(Group_custom == "T2*" & Time_custom == "Post*"),
+                                           !(Group_custom == "Ctrl*" & Time_custom == "Post*"),
+                                           !(Group_custom == "T1*" & Time_custom == "FU*"),
+                                           !(Group_custom == "T2*" & Time_custom == "FU*"),
+                                           !(Group_custom == "Ctrl*" & Time_custom == "FU*"))
+```
+
+We also want to estimate the main effects of each set of between and within contrasts,
+and combine the contrast tables together. For each of the between and within, I am going to compute
+the appropriate contrasts, and then join the tables together.
+
+```{r}
+
+emm_btwn = emmeans(mod, c("Group"))
+between_fx = contrast(emm_btwn, between_contrasts[1:2])
+emm_win = emmeans(mod, c("Time"))
+within_fx = contrast(emm_win, within_contrasts[1:2])
+
+all_fx = rbind(interaction_fx, summary(between_fx), summary(within_fx))
+
+```
+
+
+## Obtaining Confidence Intervals over the Contrast Effects
+
+
+Now that we have our table of interaction contrasts and associated simple effects, we can use Psy to compute our confidence intervals over all our estimated effects.
+
+```{r}
+
+this_alpha = 3*0.05
+psyci(mod, all_fx, method="bf", alpha=this_alpha)
+```
+
+
+As this method is planned, we use 
