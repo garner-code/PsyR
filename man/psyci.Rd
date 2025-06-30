@@ -8,7 +8,6 @@ psyci(
   model,
   contrast_tables,
   method,
-  family = NA,
   between_factors = NA,
   within_factors = NA,
   alpha = 0.05
@@ -21,8 +20,6 @@ psyci(
 
 \item{method}{a single string - method for confidence interval computation -
 "ind", "bf", or "ph" - see further details below}
-
-\item{family}{a single string - family of contrasts - "b", "w" or "bw" - see}
 
 \item{between_factors}{\itemize{
 \item a list of between subject factor names, default = NA
