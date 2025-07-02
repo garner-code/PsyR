@@ -36,8 +36,6 @@ see "?psyci" for further details}
 \item{v_b}{single value. df between. default = NA}
 
 \item{alpha}{single value. applied alpha rate. default = .05}
-
-\item{critical_constant}{single value. critical constant computed by psyci}
 }
 \value{
 an emmeans contrast table with attributes updated

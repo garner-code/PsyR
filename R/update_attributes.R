@@ -19,7 +19,6 @@
 #' @param v_w single value. df within. default = NA
 #' @param v_b single value. df between. default = NA
 #' @param alpha single value. applied alpha rate. default = .05
-#' @param critical_constant single value. critical constant computed by psyci
 #'
 #' @returns an emmeans contrast table with attributes updated
 #' @export

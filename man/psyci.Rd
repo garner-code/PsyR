@@ -76,5 +76,5 @@ con <- list( # define some contrasts
 btwn_con <- emmeans::contrast(sum_emm_btwn, con) # get contrast table
 # now add CI's using post-hoc method
 psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
-        family = "b", between_factors = list("group"))
+        family_list = list("b"), between_factors = list("group"))
 }
