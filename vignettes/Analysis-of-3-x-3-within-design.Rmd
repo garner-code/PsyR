@@ -176,9 +176,7 @@ interaction_fx = contrast(emms, interaction=list(between_contrasts,
 interaction_fx
 ```
 
-We don't actually want the non-interacting contrasts in the above mentioned table, so lets remove them now.
-
-We also want to estimate the main effects of each set of between and within contrasts, and combine the contrast tables together. For each of the between and within, I am going to compute the appropriate contrasts, and then join the tables together.
+We also want to estimate the main effects of each set of between and within contrasts, and combine the contrast tables together. For each of the between and within, I am going to compute the appropriate contrasts, and then join the tables together in a list, which is the way `psyci` asks for them to be entered into the function.
 
 ```{r}
 
@@ -188,7 +186,7 @@ emm_win = emmeans(mod, c("Time"))
 within_fx = contrast(emm_win, within_contrasts[1:2])
 
 all_fx = list(interaction_fx, between_fx, within_fx)
-
+family_list = list("bw", "b", "w") # to be documented
 ```
 
 ## Obtaining Confidence Intervals over the Contrast Effects
@@ -198,5 +196,7 @@ Now that we have our table of interaction contrasts and associated simple effect
 ```{r}
 
 this_alpha = 3*0.05
-psyci(mod, contrast_tables=all_fx, method="bf", alpha=this_alpha)
+contrasts_w_cis = psyci(mod, contrast_tables=all_fx, family_list=family_list, method="bf", alpha=this_alpha)
 ```
+
+Let's take a look at the interaction contrasts

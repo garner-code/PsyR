@@ -13,8 +13,7 @@ update_attributes(
   v_e,
   v_w = NA,
   v_b = NA,
-  alpha = 0.05,
-  critical_constant
+  alpha = 0.05
 )
 }
 \arguments{
@@ -69,6 +68,5 @@ v_b = compute_df(mod, fctrs=list("group"))
 critical_constant = cc_ph_b(v_b=v_b, v_e=v_e, alpha=0.05)
 update_attributes(contrast_table, method="ph", family="b",
   between_factors=list("group"), v_e=v_e,
-  v_b=v_b, alpha=.05,
-  critical_constant=cc_ph_b(v_b=v_b, v_e=v_e))
+  v_b=v_b, alpha=.05)
 }

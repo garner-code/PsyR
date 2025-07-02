@@ -23,6 +23,8 @@
 #' @param contrast_tables a LIST of contrast tables generated using emmeans contrast()
 #' @param method a single string - method for confidence interval computation -
 #' "ind", "bf", or "ph" - see further details below
+#' @param family_list - a LIST the same length of contrast tables that specifies
+#' if the associated contrast table is of the family "b", "w", or "bw"
 #' @param between_factors - a list of between subject factor names, default = NA
 #' @param within_factors - a list of within subject factor names, default = NA
 #' @param alpha - desired type 1 error rate
@@ -44,7 +46,7 @@
 #' # now add CI's using post-hoc method
 #' psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
 #'         family = "b", between_factors = list("group"))
-psyci <- function(model, contrast_tables, method,
+psyci <- function(model, contrast_tables, method, family_list,
                   between_factors = NA, within_factors = NA, alpha = 0.05){
 
   if(!inherits(model, "afex_aov")){
@@ -52,6 +54,10 @@ psyci <- function(model, contrast_tables, method,
   }
   if (!method %in% c("ind", "bf", "ph")){
     stop("Error: method should be ind, bf, or ph")
+  }
+
+  if (!is.list(family_list)){
+    stop("Error: family_list should be a list of family codes") # may update this later
   }
 
   test_emmGrids <- sum(sapply(contrast_tables, inherits, "emmGrid"))
@@ -75,8 +81,19 @@ psyci <- function(model, contrast_tables, method,
   # which designates which table from the list of contrast_tables contains
   # which type of contrasts
 
+  # before proceeding, I am going to check all contrast vectors sums == 0,
+  # if I find any that exceed 0, throw an error
+  # KG. To cross reference this with Psy
+  # junk = junk_check(contrast_tables)
+  # junk_test <- sapply(junk, function(x) length(x) == 0)
+  # if (!all(junk_test)){
+  #   stop(sprintf("Error: list element %d has contrasts that sum to > zero. Please remove and try again",
+  #                which(!junk_test)))
+  # }
 
   # if required, get v_b and v_w
+  v_b = NA # setting these as NA, in case
+  v_w = NA
   if (method %in% "ph"){
     if (any(family_list == "b") | any(family_list == "bw")){
 
@@ -140,57 +157,25 @@ psyci <- function(model, contrast_tables, method,
   # cc, and save results to a concatenated summary table
   contrasts_w_cis <- mapply(get_cis, contrast_tables, critical_constant)
 
+  # now I want to add information about what happened as an attribute to the
+  # list of contrast tables
+  n_c_tables = length(contrast_tables)
+  methods = as.list(rep(method, n_c_tables))
+  families = family_list
+  btwn_fctrs = wthn_fctrs = v_ws = v_bs = as.list(rep(NA, n_c_tables))
+  names(btwn_fctrs) = names(wthn_fctrs) = names(v_ws) = names(v_bs) = families
+  btwn_fctrs[names(btwn_fctrs) %in% c("b", "bw")] = between_factors
+  wthn_fctrs[names(wthn_fctrs) %in% c("w", "bw")] = within_factors
+  v_bs[names(v_bs) %in% c("b", "bw")] = v_b
+  v_ws[names(v_ws) %in% c("w", "bw")] = v_w
+  v_es = as.list(rep(v_e, n_c_tables))
+  alphas = as.list(rep(alpha, n_c_tables))
 
-  # # now I want to add information about what happened as an attribute to the
-  # # contrast table, before spitting it back out to the user
-  # # so if the method is ind or bf, then all other factors should be set to NA
-  # if (method %in% c("ind", "bf")){
-  #
-  #   contrast_table <- update_attributes(contrast_table,
-  #                                       method=method,
-  #                                       v_e=v_e,
-  #                                       alpha=alpha,
-  #                                       critical_constant=round(critical_constant,3))
-  # } else if (method %in% "ph") {
-  #
-  #   if (family %in% "b"){
-  #
-  #     contrast_table <- update_attributes(contrast_table,
-  #                                         method=method,
-  #                                         family=family,
-  #                                         between_factors = between_factors,
-  #                                         v_e=v_e,
-  #                                         v_b=v_b,
-  #                                         alpha=alpha,
-  #                                         critical_constant=round(critical_constant,3))
-  #
-  #   } else if (family %in% "w") {
-  #
-  #     contrast_table <- update_attributes(contrast_table,
-  #                                         method=method,
-  #                                         family=family,
-  #                                         within_factors = within_factors,
-  #                                         v_e=v_e,
-  #                                         v_w=v_w,
-  #                                         alpha=alpha,
-  #                                         critical_constant=round(critical_constant,3))
-  #
-  #
-  #   } else if (family %in% "bw") {
-  #
-  #     contrast_table <- update_attributes(contrast_table,
-  #                                         method=method,
-  #                                         family=family,
-  #                                         between_factors = between_factors,
-  #                                         within_factors = within_factors,
-  #                                         v_e=v_e,
-  #                                         v_w=v_w,
-  #                                         v_b=v_b,
-  #                                         alpha=alpha,
-  #                                         critical_constant=round(critical_constant,3))
-  #
-  #   }
-  # }
+  contrasts_w_cis <- mapply(update_attributes, contrasts_w_cis, method = methods,
+                            family=families, between_factors=btwn_fctrs,
+                            within_factors=wthn_fctrs, v_b=v_bs, v_w=v_ws,
+                            v_e=v_es, alpha=alphas)
+  names(contrasts_w_cis) = families
 
-  contrasts_w_cis
+  return(contrasts_w_cis)
 }

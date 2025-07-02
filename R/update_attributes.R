@@ -41,23 +41,19 @@
 #' critical_constant = cc_ph_b(v_b=v_b, v_e=v_e, alpha=0.05)
 #' update_attributes(contrast_table, method="ph", family="b",
 #'   between_factors=list("group"), v_e=v_e,
-#'   v_b=v_b, alpha=.05,
-#'   critical_constant=cc_ph_b(v_b=v_b, v_e=v_e))
+#'   v_b=v_b, alpha=.05)
 update_attributes <- function(contrast_table, method, family = NA,
                               between_factors = NA, within_factors = NA,
                               v_e, v_w = NA, v_b = NA,
-                              alpha = 0.05,
-                              critical_constant){
+                              alpha = 0.05){
 
   attributes(contrast_table)$psyci <- list(method = method,
-                                           family = family,
-                                           between_factors = between_factors,
-                                           within_factors = within_factors,
-                                           df_error = v_e,
-                                           df_between = v_b,
-                                           df_within = v_w,
-                                           alpha = alpha,
-                                           critical_constant = critical_constant)
-
+                                             df_error = v_e,
+                                             alpha = alpha,
+                                             family=family,
+                                             between_factors = between_factors,
+                                             within_factors = within_factors,
+                                             df_between = v_b,
+                                             df_within = v_w)
   contrast_table
 }
