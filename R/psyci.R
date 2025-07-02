@@ -155,7 +155,7 @@ psyci <- function(model, contrast_tables, method, family_list,
 
   # now get SE from each contrast table in contrast_tables, compute CIs using appropriate
   # cc, and save results to a concatenated summary table
-  contrasts_w_cis <- mapply(get_cis, contrast_tables, critical_constant)
+  contrasts_w_cis <- mapply(get_cis, contrast_tables, critical_constant, SIMPLIFY=FALSE)
 
   # now I want to add information about what happened as an attribute to the
   # list of contrast tables
@@ -174,7 +174,7 @@ psyci <- function(model, contrast_tables, method, family_list,
   contrasts_w_cis <- mapply(update_attributes, contrasts_w_cis, method = methods,
                             family=families, between_factors=btwn_fctrs,
                             within_factors=wthn_fctrs, v_b=v_bs, v_w=v_ws,
-                            v_e=v_es, alpha=alphas)
+                            v_e=v_es, alpha=alphas, SIMPLIFY = FALSE)
   names(contrasts_w_cis) = families
 
   return(contrasts_w_cis)
