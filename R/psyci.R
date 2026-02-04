@@ -83,7 +83,7 @@ psyci <- function(model, contrast_tables, method, family_list,
 
   # before proceeding, I am going to check all contrast vectors sums == 0,
   # if I find any that exceed 0, throw an error
-  # KG. To cross reference this with Psy
+  # KG. To cross reference this with Psy/work out why it was commented out
   # junk = junk_check(contrast_tables)
   # junk_test <- sapply(junk, function(x) length(x) == 0)
   # if (!all(junk_test)){

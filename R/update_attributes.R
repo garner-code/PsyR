@@ -46,13 +46,61 @@ update_attributes <- function(contrast_table, method, family = NA,
                               v_e, v_w = NA, v_b = NA,
                               alpha = 0.05){
 
-  attributes(contrast_table)$psyci <- list(method = method,
-                                             df_error = v_e,
-                                             alpha = alpha,
-                                             family=family,
-                                             between_factors = between_factors,
-                                             within_factors = within_factors,
-                                             df_between = v_b,
-                                             df_within = v_w)
+  btwn_msg = FALSE
+  wthn_msg = FALSE
+  # set full family names for messages
+  if (family == "b"){
+    family_full = "between subject contrasts"
+    btwn_msg = TRUE
+  } else if (family == "w"){
+    family_full = "within subject contrasts"
+    wthn_msg = TRUE
+  } else if (family == "bw"){
+    family_full = "between x within subject contrasts"
+    btwn_msg = TRUE
+    wthn_msg = TRUE
+  } else {
+    family_full = "unknown family" #prob not necessary as earlier messages should catch this
+  }
+
+  # set full names for method for messages
+  if (method == "ind"){
+    method = "independent"
+  } else if (method == "bf"){
+    method = "Bonferroni"
+  } else if (method == "ph"){
+    if (family == "b"){
+      method = "Scheffe"
+    } else if (family == "w"){
+      method = "post-hoc within"
+    } else if (family == "bw"){
+      method = "post-hoc between x within (Roy's GCR)"
+    } else
+    method = "post-hoc"
+  } else {
+    method = "unknown method" #prob not necessary as earlier messages should catch this
+  }
+
+  # apply message update that will be applied to all contrast tables
+  attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                    paste("PsyR CI method:", method, "has been applied"),
+                                    paste("Family-wise correction assumes current contrasts are:", family_full),
+                                    paste("PsyR used an alpha rate of:", alpha),
+                                    paste("PsyR used df error of:", v_e)
+                                    )
+  # now apply specific attributes depending on currently used family
+  if (btwn_msg){
+    attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                      paste("PsyR assumed between subject factor(s) are:", between_factors),
+                                      paste("PsyR used df between of:", v_b)
+    )
+  }
+
+  if (wthn_msg){
+    attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                      paste("PsyR assumed within subject factor(s) are:", within_factors),
+                                      paste("PsyR used df within of:", v_w)
+    )
+  }
   contrast_table
 }
