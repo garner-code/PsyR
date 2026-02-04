@@ -150,6 +150,7 @@ psyci <- function(model, contrast_tables, method, family_list,
 
       cc_bw = cc_ph_bw(v_w=v_w, v_b=v_b, v_e=v_e, alpha=alpha)
       critical_constant[["bw"]] = cc_bw
+
     }
   }
 
