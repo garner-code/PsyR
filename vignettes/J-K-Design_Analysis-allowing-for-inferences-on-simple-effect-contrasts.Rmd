@@ -1,0 +1,133 @@
+---
+title: "J-K-Design_inference-on-simple-effects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{J-K-Design_inference-on-simple-effects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Title
+
+Info
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Loading packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r, loadpackages}
+
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(ggplot2)
+library(PsyR)
+```
+
+## The data
+
+```{r loaddata}
+
+data(experience)
+head(experience, 5)
+```
+
+Sort out the factors
+
+```{r sortfatigue}
+
+experience <- experience %>%
+                mutate(Experience = factor(Experience,
+                          levels=c("10yrs", "3yrs", "<1yr")),
+                       Therapy = factor(Therapy,
+                                        levels=c("Behavioural",
+                                                 "Cognitive",
+                                                 "Psychotherapy",
+                                                 "Group")))
+```
+
+
+```{r plotdata}
+
+experience %>% ggplot(aes(x=Therapy, y=Outcome, fill=Experience)) +
+  geom_boxplot() + theme_minimal()
+
+```
+```{r, aov}
+
+# perform the statistical model
+mod <- aov_ez(id="SubjID", 
+              dv="Outcome", 
+              data=experience, 
+              between = c("Experience", "Therapy"))
+
+emms <- emmeans(mod, c("Experience", "Therapy"))
+emms
+
+```
+
+First, define the factor A (Experience of therapist) contrasts
+
+```{r btwn_contrasts}
+
+experience_contrasts = list(
+  "lots_vs_little" = c(0, 1, -1),
+  "lots_vs_some" = c(1, -1, 0)
+)
+
+therapy_contrasts = list(
+  "evidence_vs_woowoo" = c(0.5, 0.5, -0.5, -0.5),
+  "behav_vs_cog" = c(1, -1, 0, 0),
+  "woo1_vs_woo2" = c(0, 0, 1, -1)
+)  
+
+```
+
+## First, let's sort the A and A(b) and AB family
+
+Calculate the main effects for factor A
+
+```{r, factor_a_fx}
+
+emms_exp <- emmeans(mod, c("Experience"))
+exp_fx <- contrast(emms_exp, experience_contrasts)
+exp_fx
+
+```
+
+Now let's get the A(b) effects
+
+```{r, A_b}
+
+Exp_g_therapy <- emmeans(mod, ~ Experience|Therapy)
+Ab_fx <- contrast(Exp_g_therapy, method=experience_contrasts)
+
+```
+
+And last, the AB effects
+
+```{r, AB}
+
+interaction_fx = contrast(emms, interaction=list(experience_contrasts,
+                                                 therapy_contrasts))
+interaction_fx
+```
+
+Now we have our 3 sets of contrasts (all appropriately scaled),
+we can feed them into psyci to get our preferred confidence intervals.
+
+```{r, get_cis}
+
+all_fx <- c(exp_fx, Ab_fx, interaction_fx)
+family_list = list("b") # to be documented
+
+psyci()
+
+```
