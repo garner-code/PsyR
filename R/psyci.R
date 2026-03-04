@@ -27,7 +27,10 @@
 #' if the associated contrast table is of the family "b", "w", or "bw"
 #' @param between_factors - a list of between subject factor names, default = NA
 #' @param within_factors - a list of within subject factor names, default = NA
-#' @param alpha - desired type 1 error rate
+#' @param alpha - desired type 1 error rate. Either a single value (e.g. alpha = .05)
+#' that will be applied to each family, or a list of alphas of length
+#' contrast_tables. Assumes that the alphas are provided in the order as should be
+#' applied to contrast_tables. default = .05.
 #'
 #' @return an emmeans contrast table with confidence intervals added
 #' @export
@@ -73,23 +76,10 @@ psyci <- function(model, contrast_tables, method, family_list,
   contrast_tables <- contrast_tables # keeping list
   # get the error df
   v_e = unique(all_contrast_tables$df)
+
   if (length(v_e) > 1){
     stop("Error: more than one contrast analysis passed in")
   }
-
-  # here I am assuming I get a list, called 'family_list' for now
-  # which designates which table from the list of contrast_tables contains
-  # which type of contrasts
-
-  # before proceeding, I am going to check all contrast vectors sums == 0,
-  # if I find any that exceed 0, throw an error
-  # KG. To cross reference this with Psy/work out why it was commented out
-  # junk = junk_check(contrast_tables)
-  # junk_test <- sapply(junk, function(x) length(x) == 0)
-  # if (!all(junk_test)){
-  #   stop(sprintf("Error: list element %d has contrasts that sum to > zero. Please remove and try again",
-  #                which(!junk_test)))
-  # }
 
   # if required, get v_b and v_w
   v_b = NA # setting these as NA, in case
@@ -110,27 +100,44 @@ psyci <- function(model, contrast_tables, method, family_list,
   # first, make a list of critical constants, that is as long
   # as the number of contrast tables that have been passed in as
   # contrast tables
-  critical_constant = list()
-  length(critical_constant) = length(family_list)
-  names(critical_constant) = family_list
+  nfamilies = length(contrast_tables)
+  if (length(family_list) == 1 & nfamilies > 1){
+    family_list = rep(family_list, times=nfamilies)
+  } else if (length(family_list) == nfamilies) {
+    family_list = family_list
+  } else {
+    stop("Error: length of family_list is incompatible with length of contrast_tables")
+  }
+
+  # now make sure provided alphas are compatible with the number of families
+  if (length(alpha) == 1){
+    alphas = rep(list(alpha), length(contrast_tables))
+  } else {
+    alphas = alphas
+  }
+  if (length(alphas) != length(contrast_tables)){
+    stop(sprintf("Error! Provided alpha is of length > 1 and does not match
+                   length of contrast tables"))
+  }
+
 
   if (method %in% "ind"){
 
-    critical_constant[1:length(critical_constant)] = rep(cc_ind_t(v_e=v_e, alpha=alpha),
-                                                         length(critical_constant))
+    critical_constant = lapply(alphas, cc_ind_t, v_e=v_e)
 
   } else if (method %in% "bf") {
 
-    cs <- lapply(contrast_tables, stats::coef)
-    nk = sum(unlist(lapply(cs, function(x) ncol(x[,grep("c.*", names(x))]))))
-    critical_constant[1:length(critical_constant)] = rep(cc_bonf_t(v_e=v_e, n_k=nk, alpha=alpha),
-                                                         length(critical_constant))
+    # first, get the nk per family
+    cs = get_contrast_coefficients(contrast_tables)
+    nk = unlist(lapply(cs, function(x) ncol(x[,grep("c.*", names(x))])))
+    critical_constant = mapply(cc_bonf_t, n_k=nk, alpha=alphas, MoreArgs=list(v_e=v_e), SIMPLIFY=FALSE)
 
   } else if (method %in% "ph"){
 
+    # NEED TO UPDATE THIS TO HANDLE THE LIST OF ALPHAS
     # here we make a list of critical constants, to be applied to construct confidence
     # intervals for each family of interest
-
+    names(critical_constant) = family_list
 
     if (any(family_list == "b")){
 
@@ -170,7 +177,7 @@ psyci <- function(model, contrast_tables, method, family_list,
   v_bs[names(v_bs) %in% c("b", "bw")] = v_b
   v_ws[names(v_ws) %in% c("w", "bw")] = v_w
   v_es = as.list(rep(v_e, n_c_tables))
-  alphas = as.list(rep(alpha, n_c_tables))
+  alphas = alphas
 
   contrasts_w_cis <- mapply(update_attributes, contrasts_w_cis, method = methods,
                             family=families, between_factors=btwn_fctrs,

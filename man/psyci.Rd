@@ -36,7 +36,10 @@ if the associated contrast table is of the family "b", "w", or "bw"
 }}
 
 \item{alpha}{\itemize{
-\item desired type 1 error rate
+\item desired type 1 error rate. Either a single value (e.g. alpha = .05)
+that will be applied to each family, or a list of alphas of length
+contrast_tables. Assumes that the alphas are provided in the order as should be
+applied to contrast_tables. default = .05.
 }}
 }
 \value{

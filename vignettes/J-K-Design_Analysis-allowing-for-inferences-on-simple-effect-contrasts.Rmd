@@ -120,14 +120,32 @@ interaction_fx = contrast(emms, interaction=list(experience_contrasts,
 interaction_fx
 ```
 
-Now we have our 3 sets of contrasts (all appropriately scaled),
+For a priori, bonferroni method:
+
+Now we have our 3 sets of contrasts (all appropriately scaled).
+The Bonferroni adjustment must be made at 
+alpha = 0.5x2 for the A(B) family (or alpha=0.05x3, if using the all factorial model). alpha is divided by k, which = number of planned contrasts in the family.
+v2 = N-JK (df error)
 we can feed them into psyci to get our preferred confidence intervals.
+
+By my count:
+ME (A) exp: k = 2 alpha = .05
+A(b) exp @ each level of therapy k = 8, alpha = .1
+AB interaction k = 6, alpha = .1
+
 
 ```{r, get_cis}
 
 all_fx <- c(exp_fx, Ab_fx, interaction_fx)
 family_list = list("b") # to be documented
+alphas = list(.05, 2*0.05, 2*0.05)
 
-psyci()
+psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = list("b"), 
+      between_factors = list("Therapy", "Experience"), alpha = alphas)
 
 ```
+
+This doesn't match, but the critical F for a CC uses the following formula:
+$A(B) = \sqrt{F_{\frac{2 \alpha}{k}},1,v2}$
+
+
