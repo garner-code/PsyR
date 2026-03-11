@@ -31,6 +31,10 @@
 #' that will be applied to each family, or a list of alphas of length
 #' contrast_tables. Assumes that the alphas are provided in the order as should be
 #' applied to contrast_tables. default = .05.
+#' @param independent - a boolean value, default = TRUE. If TRUE, correction will
+#' be applied to each family independently. If FALSE, all contrasts will be summed
+#' together and treated as one family for the purposes of correction.
+#' This is only relevant if method = "bf" or method = "ph", and will be ignored if method = "ind".
 #'
 #' @return an emmeans contrast table with confidence intervals added
 #' @export
@@ -50,7 +54,8 @@
 #' psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
 #'         family_list = list("b"), between_factors = list("group"))
 psyci <- function(model, contrast_tables, method, family_list,
-                  between_factors = NA, within_factors = NA, alpha = 0.05){
+                  between_factors = NA, within_factors = NA, alpha = 0.05,
+                  independent = TRUE){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
@@ -82,8 +87,8 @@ psyci <- function(model, contrast_tables, method, family_list,
   }
 
   # if required, get v_b and v_w
-  v_b = NA # setting these as NA, in case
-  v_w = NA
+  v_b = 1 # setting these as 1, in case, if not they will be updated in the if statement below
+  v_w = 1
   if (method %in% "ph"){
     if (any(family_list == "b") | any(family_list == "bw")){
 
@@ -130,7 +135,11 @@ psyci <- function(model, contrast_tables, method, family_list,
     # first, get the nk per family
     cs = get_contrast_coefficients(contrast_tables)
     nk = unlist(lapply(cs, function(x) ncol(x[,grep("c.*", names(x))])))
-    critical_constant = mapply(cc_bonf_t, n_k=nk, alpha=alphas, MoreArgs=list(v_e=v_e), SIMPLIFY=FALSE)
+   if (!independent){ # if not independent families
+     nk = rep(sum(nk), length(nk))
+   }
+
+   critical_constant = mapply(cc_bonf_t, n_k=nk, alpha=alphas, MoreArgs=list(v_e=v_e), SIMPLIFY=FALSE)
 
   } else if (method %in% "ph"){
 
@@ -172,8 +181,15 @@ psyci <- function(model, contrast_tables, method, family_list,
   families = family_list
   btwn_fctrs = wthn_fctrs = v_ws = v_bs = as.list(rep(NA, n_c_tables))
   names(btwn_fctrs) = names(wthn_fctrs) = names(v_ws) = names(v_bs) = families
-  btwn_fctrs[names(btwn_fctrs) %in% c("b", "bw")] = between_factors
-  wthn_fctrs[names(wthn_fctrs) %in% c("w", "bw")] = within_factors
+  btwn_fctrs_idx = names(btwn_fctrs) %in% c("b", "bw")
+  btwn_fctrs[btwn_fctrs_idx] = lapply(btwn_fctrs[btwn_fctrs_idx], function(x){
+    unlist(between_factors)
+  })
+  wthn_fctrs_idx = names(wthn_fctrs) %in% c("w", "bw")
+   wthn_fctrs[wthn_fctrs_idx] = lapply(wthn_fctrs[wthn_fctrs_idx], function(x){
+     unlist(within_factors)
+   })
+
   v_bs[names(v_bs) %in% c("b", "bw")] = v_b
   v_ws[names(v_ws) %in% c("w", "bw")] = v_w
   v_es = as.list(rep(v_e, n_c_tables))

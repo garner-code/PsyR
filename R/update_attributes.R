@@ -85,22 +85,27 @@ update_attributes <- function(contrast_table, method, family = NA,
   attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
                                     paste("PsyR CI method:", method, "has been applied"),
                                     paste("Family-wise correction assumes current contrasts are:", family_full),
-                                    paste("PsyR used an alpha rate of:", alpha),
-                                    paste("PsyR used df error of:", v_e)
+                                    paste("PsyR used an alpha rate of:", alpha)
                                     )
   # now apply specific attributes depending on currently used family
   if (btwn_msg){
     attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
-                                      paste("PsyR assumed between subject factor(s) are:", between_factors),
+                                      paste("PsyR assumed between subject factor(s) are:",
+                                            paste(between_factors, collapse=", ")),
                                       paste("PsyR used df between of:", v_b)
     )
   }
 
   if (wthn_msg){
     attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
-                                      paste("PsyR assumed within subject factor(s) are:", within_factors),
+                                      paste("PsyR assumed within subject factor(s) are:",
+                                            paste(within_factors, collapse=", ")),
                                       paste("PsyR used df within of:", v_w)
     )
   }
+
+  attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                    paste("PsyR used df error of:", v_e)
+  )
   contrast_table
 }

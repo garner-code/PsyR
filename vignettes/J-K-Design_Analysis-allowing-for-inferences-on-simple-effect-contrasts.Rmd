@@ -60,6 +60,7 @@ experience %>% ggplot(aes(x=Therapy, y=Outcome, fill=Experience)) +
   geom_boxplot() + theme_minimal()
 
 ```
+
 ```{r, aov}
 
 # perform the statistical model
@@ -124,28 +125,30 @@ For a priori, bonferroni method:
 
 Now we have our 3 sets of contrasts (all appropriately scaled).
 The Bonferroni adjustment must be made at 
-alpha = 0.5x2 for the A(B) family (or alpha=0.05x3, if using the all factorial model). alpha is divided by k, which = number of planned contrasts in the family.
+alpha = 0.5x2 for the A(B) family (or alpha=0.05x3, if using the all factorial model). 
+alpha is divided by k, which = number of planned contrasts in the family.
+Note that the A(B) family includes A simple effects contrasts, A main effects contrasts, and AB interaction contrasts.
 v2 = N-JK (df error)
 we can feed them into psyci to get our preferred confidence intervals.
 
-By my count:
-ME (A) exp: k = 2 alpha = .05
+ME (A) exp: k = 2 alpha = .1
 A(b) exp @ each level of therapy k = 8, alpha = .1
 AB interaction k = 6, alpha = .1
+Thus k = 16, alpha = .1, for all families (as they are actually one family, as all non-independent)
 
 
 ```{r, get_cis}
 
 all_fx <- c(exp_fx, Ab_fx, interaction_fx)
 family_list = list("b") # to be documented
-alphas = list(.05, 2*0.05, 2*0.05)
+alphas = rep(list(2*.05), times=3)
 
 psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = list("b"), 
-      between_factors = list("Therapy", "Experience"), alpha = alphas)
+      between_factors = list("Therapy", "Experience"), alpha = alphas,
+      independent = FALSE)
 
 ```
 
-This doesn't match, but the critical F for a CC uses the following formula:
-$A(B) = \sqrt{F_{\frac{2 \alpha}{k}},1,v2}$
+
 
 

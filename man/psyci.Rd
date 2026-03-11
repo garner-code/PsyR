@@ -11,7 +11,8 @@ psyci(
   family_list,
   between_factors = NA,
   within_factors = NA,
-  alpha = 0.05
+  alpha = 0.05,
+  independent = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,13 @@ if the associated contrast table is of the family "b", "w", or "bw"
 that will be applied to each family, or a list of alphas of length
 contrast_tables. Assumes that the alphas are provided in the order as should be
 applied to contrast_tables. default = .05.
+}}
+
+\item{independent}{\itemize{
+\item a boolean value, default = TRUE. If TRUE, correction will
+be applied to each family independently. If FALSE, all contrasts will be summed
+together and treated as one family for the purposes of correction.
+This is only relevant if method = "bf" or method = "ph", and will be ignored if method = "ind".
 }}
 }
 \value{
