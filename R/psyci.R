@@ -21,6 +21,8 @@
 #'
 #' @param model an anova model made using the afex package (class afex_aov)
 #' @param contrast_tables a LIST of contrast tables generated using emmeans contrast()
+#' Note that this list should contain only orthogonal contrast tables, or non-orthogonal.
+#' Do not mix or match orthogonal or non-orthogonal
 #' @param method a single string - method for confidence interval computation -
 #' "ind", "bf", or "ph" - see further details below
 #' @param family_list - a LIST the same length of contrast tables that specifies
@@ -35,6 +37,9 @@
 #' be applied to each family independently. If FALSE, all contrasts will be summed
 #' together and treated as one family for the purposes of correction.
 #' This is only relevant if method = "bf" or method = "ph", and will be ignored if method = "ind".
+#' @param nu1 - if independent is set to FALSE, and method = "ph", then supply nu1 (df1) that
+#' is used to adjust the critical constant to control for type 1 error (see eqs 7, 8, 9 of
+#' Bird (2002) https://doi.org/10.1177/0013164402062002001). default = NA
 #'
 #' @return an emmeans contrast table with confidence intervals added
 #' @export
@@ -55,7 +60,7 @@
 #'         family_list = list("b"), between_factors = list("group"))
 psyci <- function(model, contrast_tables, method, family_list,
                   between_factors = NA, within_factors = NA, alpha = 0.05,
-                  independent = TRUE){
+                  independent = TRUE, nu1 = NA){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
@@ -76,6 +81,14 @@ psyci <- function(model, contrast_tables, method, family_list,
     stop("Error: contrast table needs to be of class emmGrid or summary_emm")
   }
 
+  if (!independent){
+    if (method %in% "ph"){
+      if (is.na(nu1)) {
+        stop("Error: post-hoc method with non-orthogonal families requested but nu1 remains undefined. Please supply via `nu1=` argument")
+      }
+    }
+  }
+
   contrast_info <- do.call(rbind, contrast_tables)
   all_contrast_tables <- summary(contrast_info) # create one big contrast table that one can index easily
   contrast_tables <- contrast_tables # keeping list
@@ -89,20 +102,30 @@ psyci <- function(model, contrast_tables, method, family_list,
   # if required, get v_b and v_w
   v_b = 1 # setting these as 1, in case, if not they will be updated in the if statement below
   v_w = 1
+
   if (method %in% "ph"){
     if (any(family_list == "b") | any(family_list == "bw")){
 
-      v_b = compute_df(model, fctrs = between_factors)
+      if (independent){
+        v_b = compute_df(model, fctrs = between_factors)
+      } else {
+        # here I need to get the factors, and the correct families
+        v_b = nu1
+      }
     }
     if (any(family_list == "w")  | any(family_list == "bw")){
 
-      v_w = compute_df(model, fctrs = within_factors)
+      if (independent){
+        v_w = compute_df(model, fctrs = within_factors)
+      } else {
+        v_w = nu1
+      }
     }
   }
 
   # now get the appropriate critical constant, given requested
   # method
-  # first, make a list of critical constants, that is as long
+  # first, make a list for critical constants, that is as long
   # as the number of contrast tables that have been passed in as
   # contrast tables
   nfamilies = length(contrast_tables)
@@ -118,13 +141,13 @@ psyci <- function(model, contrast_tables, method, family_list,
   if (length(alpha) == 1){
     alphas = rep(list(alpha), length(contrast_tables))
   } else {
-    alphas = alphas
+    alphas = alpha
   }
   if (length(alphas) != length(contrast_tables)){
     stop(sprintf("Error! Provided alpha is of length > 1 and does not match
                    length of contrast tables"))
   }
-
+  names(alphas) = family_list
 
   if (method %in% "ind"){
 
@@ -143,30 +166,28 @@ psyci <- function(model, contrast_tables, method, family_list,
 
   } else if (method %in% "ph"){
 
-    # NEED TO UPDATE THIS TO HANDLE THE LIST OF ALPHAS
     # here we make a list of critical constants, to be applied to construct confidence
     # intervals for each family of interest
+    critical_constant = vector("list", length(contrast_tables)) # need to make a list for the critical constants
+    # that we will collect, and we name them after the families
     names(critical_constant) = family_list
 
     if (any(family_list == "b")){
 
-      cc_b = cc_ph_b(v_b=v_b, v_e=v_e, alpha=alpha)
-      critical_constant[["b"]] = cc_b
-
+      cc_bs = lapply(alphas[names(alphas) %in% "b"], cc_ph_b, v_b=v_b, v_e=v_e)
+      critical_constant[names(critical_constant) %in% "b"] = cc_bs
     }
 
     if (any(family_list == "w")) {
 
       cc_w = cc_ph_w(v_w=v_w, v_e=v_e, alpha=alpha)
       critical_constant[["w"]] = cc_w
-
     }
 
     if (any(family_list == "bw")) {
 
       cc_bw = cc_ph_bw(v_w=v_w, v_b=v_b, v_e=v_e, alpha=alpha)
       critical_constant[["bw"]] = cc_bw
-
     }
   }
 

@@ -116,8 +116,7 @@ And last, the AB effects
 
 ```{r, AB}
 
-interaction_fx = contrast(emms, interaction=list(experience_contrasts,
-                                                 therapy_contrasts))
+interaction_fx = contrast(emms, interaction=list(experience_contrasts, therapy_contrasts))
 interaction_fx
 ```
 
@@ -150,5 +149,47 @@ psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = list("b"
 ```
 
 
+Now do the post-hoc analysis including A(B) contrasts.
+
+This is only Scheffe, as all are between.
+Alphas = 1-(1-alpha)^m (where m = number of standard factorial families contained within the non-standard simple effects family).
+
+To calculate nu1, where A has J levels and B has K levels
+
+A(B) = K*(J-1) so A relates to Experience
+B(A) = J*(K-1)
 
 
+
+```{r}
+
+alphas = rep(list(1-(1-0.05)^2), times=3)
+nu1 = length(unique(levels(experience$Therapy))) * (length(unique(levels(experience$Experience))) - 1)
+
+psyci(model=mod, contrast_tables = all_fx, method = "ph", family_list = list("b"), 
+      between_factors = list("Therapy", "Experience"), alpha = alphas,
+      independent = FALSE, nu1=nu1)
+
+```
+Now do a standard analysis with independent families, using the planned bonferonni procedure.
+
+Calculate the main effects for factor B
+
+```{r, factor_a_fx}
+
+emms_exp <- emmeans(mod, c("Therapy"))
+thrpy_fx <- contrast(emms_exp, therapy_contrasts)
+thrpy_fx
+
+stndrd_fx = list(exp_fx, thrpy_fx, interaction_fx)
+
+```
+
+Now get the CIs for the main effects and interactions, with no simple effects
+
+```{r}
+
+psyci(model=mod, contrast_tables = stndrd_fx, method = "bf", family_list = list("b"), 
+      between_factors = list("Therapy", "Experience"), alpha = 0.05)
+
+```
