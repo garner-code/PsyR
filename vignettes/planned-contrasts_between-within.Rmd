@@ -16,6 +16,9 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
 ```
 
 ## Load the data

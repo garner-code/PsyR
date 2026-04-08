@@ -1,0 +1,161 @@
+---
+title: "planned-factorial_mixed-designs_simple-effects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{planned-factorial_mixed-designs_simple-effects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
+```
+
+## The data
+
+We will be using the 'depression' dataset that comes with the PsyR package. The data is from an experimental design where 15 individuals being treated for depression are assigned to one of three treatment groups. Happiness ratings are collected pre and post treatment, and once again at follow up.
+
+Let's take a look at the data.
+
+```{r loaddata}
+
+data(depression)
+head(depression, 5)
+```
+
+To get a better idea of what the variables are coding, we can run `?depression` to get some further, useful information -
+
+```{r whatdepression, warning=FALSE}
+
+?depression
+```
+
+Let's define some factors and their corresponding levels in the dataset. This will make our life easier when it comes to plotting and analysing the data.
+
+```{r sortdep}
+
+depression <- depression %>%
+               mutate(Group = fct_relevel(Group, 'Ctrl', 'Tmt1', 'Tmt2'),
+                      Time = fct_relevel(Time, 'Pre', 'Post', 'FU'),
+                      Subject = as_factor(Subject))
+```
+
+Now that we have a better idea about what the data is, let's make a plot to take a look at the impact of treatment on happiness scores over time.
+
+```{r plothappiness}
+
+depression %>% group_by(Group, Time) %>%
+  summarise(mean_happiness = mean(Happiness)) %>%
+  ggplot(aes(x=Time, y=mean_happiness, 
+             group=Group, colour=Group)) +
+  geom_line() + theme_classic()
+```
+
+## Run the model
+
+```{r aov}
+
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
+# perform the statistical model
+mod <- aov_ez("Subject", 
+              "Happiness", 
+              depression, 
+              within = "Time", 
+              between = "Group")
+
+emms <- emmeans(mod, c("Group", "Time"))
+emms
+```
+
+## Contrasts
+
+### All contrasts not including simple effects
+
+Now we define all contrasts not including simple fx
+
+```{r all_contrasts}
+
+between_contrasts = list(
+  "Ts_v_Ctrl" = c(-1, 0.5, 0.5),
+  "T1_v_T2" = c(0, 1, -1)
+)
+
+within_contrasts = list(
+  "Post_vs_Pre" = c(-1, 1, 0),
+  "FU_vs_Post" = c(0, -1, 1)
+) 
+
+```
+
+
+```{r, win_fx}
+
+emms_win <- emmeans(mod, c("Time"))
+win_fx <- contrast(emms_win, within_contrasts)
+win_fx
+
+```
+
+```{r, btwn_fx}
+
+emms_btwn <- emmeans(mod, c("Group"))
+btwn_fx <- contrast(emms_btwn, between_contrasts)
+btwn_fx
+
+```
+
+We also care about the interaction effects, so lets get those
+
+```{r int}
+
+int_fx <- contrast(emms, interaction = list(between_contrasts, within_contrasts))
+int_fx
+```
+
+## Now, lets sort the simple effects contrasts
+
+First, lets get the effect of the within contrasts at each level of group
+
+```{r, win_at_grp}
+
+win_by_grp <- emmeans(mod, ~ Time|Group)
+win_by_grp_fx <- contrast(win_by_grp, method=within_contrasts)
+win_by_grp_fx
+```
+
+And now, lets get the effect of the between contrasts for post and follow up. Its a little different, because we only want the post and follow up timepoints.
+
+```{r, btwn_at_within}
+
+within_simple <-  list(
+  "Post*" = c(0, 1, 0),
+  "FU*" = c(0, 0, 1)
+)
+btwn_by_treat_fx <- contrast(emms, interaction=list(between_contrasts, within_simple))
+btwn_by_treat_fx
+```
+## SCIs
+
+```{r, psyci}
+
+all_fx <- c(win_fx, btwn_fx, int_fx, win_by_grp_fx, btwn_by_treat_fx)
+family_list = list("w", "b", "bw", "bw", "bw") 
+alphas = 3*.05/18 # 3 * alpha / nk
+
+psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = family_list, 
+      between_factors = list("Group"), within_factors=list("Time"), alpha = alphas,
+      independent = FALSE)
+
+
+```
