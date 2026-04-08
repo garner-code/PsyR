@@ -1,0 +1,140 @@
+---
+title: "planned-contrasts_between-within"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{planned-contrasts_between-within}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PsyR)
+```
+
+## Load the data
+
+```{r loaddata}
+
+data(depression)
+head(depression, 5)
+```
+
+
+and take a look at it
+
+```{r sortdep}
+
+depression <- depression %>%
+               mutate(Group = fct_relevel(Group, 'Ctrl', 'Tmt1', 'Tmt2'),
+                      Time = fct_relevel(Time, 'Pre', 'Post', 'FU'),
+                      Subject = as_factor(Subject))
+```
+
+Now that we have a better idea about what the data is, let's make a plot to take a look at the impact of treatment on happiness scores over time.
+
+```{r plothappiness}
+
+depression %>% group_by(Group, Time) %>%
+  summarise(mean_happiness = mean(Happiness)) %>%
+  ggplot(aes(x=Time, y=mean_happiness, 
+             group=Group, colour=Group)) +
+  geom_line() + theme_classic()
+```
+
+
+Run b*w anova model
+
+```{r aov}
+
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
+# perform the statistical model
+mod <- aov_ez("Subject", 
+              "Happiness", 
+              depression, 
+              within = "Time", 
+              between = "Group")
+
+emms <- emmeans(mod, c("Group", "Time"))
+emms
+```
+
+
+## Now define contrasts of interest
+
+### Between contrasts
+
+```{r, btwn}
+
+between_contrasts = list(
+  "Ts_v_Ctrl" = c(-1, 0.5, 0.5),
+  "T1_v_T2" = c(0, 1, -1)
+)
+between_contrasts
+
+```
+
+Now apply the between contrasts to our model
+
+```{r, getbtwn}
+
+emms_grp <- emmeans(mod, c("Group"))
+btwn_fx <- contrast(emms_grp, between_contrasts)
+btwn_fx
+
+```
+
+### Within contrasts
+
+Now do the same for within -
+
+```{r, btwn}
+
+within_contrasts = list(
+  "Post_vs_Pre" = c(-1, 1, 0),
+  "FU_vs_Post" = c(0, -1, 1)
+)
+within_contrasts
+
+```
+
+and get the within fx
+
+```{r wthn}
+
+emms_win <- emmeans(mod, "Time")
+win_fx <- contrast(emms_win, within_contrasts)
+win_fx
+
+```
+
+### Interaction contrasts
+
+```{r int_fx}
+
+emms_int <- emmeans(mod, c("Group", "Time"))
+int_fx <- contrast(emms_int, interaction=list(between_contrasts,
+                                              within_contrasts))
+int_fx
+
+```
+
+## Confidence!
+
+Now we're ready to use PsyR to get our simultaneous CIs -
+
+```{r psyci}
+
+psyci(model=mod, contrast_tables = c(btwn_fx, win_fx, int_fx), 
+      method = "bf", family_list = list("b", "w", "bw"), 
+      within_factors = list("Time"),
+      between_factors = list("Group"))
+
+```

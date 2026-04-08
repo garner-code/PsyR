@@ -22,7 +22,8 @@
 #' @param model an anova model made using the afex package (class afex_aov)
 #' @param contrast_tables a LIST of contrast tables generated using emmeans contrast()
 #' Note that this list should contain only orthogonal contrast tables, or non-orthogonal.
-#' Do not mix or match orthogonal or non-orthogonal
+#' Do not mix or match orthogonal or non-orthogonal. If there is only one table of contrasts,
+#' it is not necesssary to enter it as a list.
 #' @param method a single string - method for confidence interval computation -
 #' "ind", "bf", or "ph" - see further details below
 #' @param family_list - a LIST the same length of contrast tables that specifies
@@ -73,6 +74,14 @@ psyci <- function(model, contrast_tables, method, family_list,
     stop("Error: family_list should be a list of family codes") # may update this later
   }
 
+  # first check if a single contrast table has been entered, and if so, convert
+  # to be a list
+  types <- c("emmGrid", "summary_emm")
+  if (sum(sapply(types, inherits, x=contrast_tables))){
+    # if this is passed, then someone has entered a single object rather than a
+    # list
+    contrast_tables <- list(contrast_tables) # convert to list
+  }
   test_emmGrids <- sum(sapply(contrast_tables, inherits, "emmGrid"))
   test_summary_emm <- sum(sapply(contrast_tables, inherits, "summary_emm"))
   if (test_emmGrids == length(contrast_tables) |
