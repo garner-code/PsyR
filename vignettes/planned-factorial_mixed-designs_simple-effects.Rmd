@@ -151,7 +151,7 @@ btwn_by_treat_fx
 
 all_fx <- c(win_fx, btwn_fx, int_fx, win_by_grp_fx, btwn_by_treat_fx)
 family_list = list("w", "b", "bw", "bw", "bw") 
-alphas = 3*.05/18 # 3 * alpha / nk
+alphas = 3*.05 # 3 * alpha / nk
 
 psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = family_list, 
       between_factors = list("Group"), within_factors=list("Time"), alpha = alphas,
