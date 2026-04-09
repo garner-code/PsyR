@@ -1,0 +1,137 @@
+---
+title: "planned-contrast_A-B-within-subjects-design"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{planned-contrast_A-B-within-subjects-design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
+```
+
+## Load the data
+
+Lets load the data, define the factors, and plot 
+
+```{r loaddata}
+
+data(distraction)
+head(distraction, 5)
+```
+
+
+```{r, sortfactors}
+
+distraction <- distraction %>%
+               mutate(Auditory = fct_relevel(Auditory, 'Low', 'Medium', 'High'),
+                      Visual = fct_relevel(Visual, 'None', 'Dissimilar', 'Similar'),
+                      Subject = as_factor(Subject))
+
+```
+
+
+
+```{r plotdata}
+
+distraction %>% ggplot(aes(x=Auditory, y=Performance, fill=Visual)) +
+  geom_boxplot() + theme_minimal()
+
+```
+
+
+```{r, aov}
+
+# perform the statistical model
+mod <- aov_ez(id="Subject", 
+              dv="Performance", 
+              data=distraction, 
+              within = c("Auditory", "Visual"))
+#summary(mod)
+
+```
+
+## Define contrasts
+
+First for the auditory factor (A)
+
+```{r, audcontrasts}
+
+
+emms_aud <- emmeans(mod, c("Auditory"))
+emms_aud
+
+aud_contrasts <- list(
+  "hvlm" = c(0.5, 0.5, -1),
+  "hvl" = c(1, -1, 0)
+)
+
+aud_fx <- contrast(emms_aud, aud_contrasts)
+aud_fx
+
+
+```
+
+Now for visual (factor B)
+
+```{r, viscontrasts}
+
+
+emms_vis <- emmeans(mod, c("Visual"))
+emms_vis
+
+vis_contrasts <- list(
+  "none_vs_some" = c(1, -0.5, -0.5),
+  "sim_vs_dissim" = c(0, 1, -1)
+)
+
+vis_fx <- contrast(emms_vis, vis_contrasts)
+vis_fx
+
+
+```
+
+And now the interaction contrasts -
+
+```{r, intcontrasts}
+
+
+emms_int <- emmeans(mod, c("Auditory","Visual"))
+emms_int
+
+int_fx <- contrast(emms_int, interaction=list(aud_contrasts, vis_contrasts))
+int_fx
+
+```
+
+## Simultaneous Confidence Intervals
+
+Now we're ready to compute SCIs
+
+```{r scis}
+
+psyci(model=mod, contrast_tables = c(aud_fx, vis_fx, int_fx), 
+      method = "bf", family_list = list("w", "w", "w"), 
+      within_factors = list("Auditory", "Visual"))
+
+```
+Now run the same thing, but with individual 95% confidence intervals
+
+
+```{r scis}
+
+psyci(model=mod, contrast_tables = c(aud_fx, vis_fx, int_fx), 
+      method = "ind", family_list = list("w", "w", "w"), 
+      within_factors = list("Auditory", "Visual"))
+```
