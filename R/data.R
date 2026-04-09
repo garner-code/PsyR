@@ -90,3 +90,21 @@
 #' }
 #' @source <Bird (2004) Analysis of Variance via Confidence Intervals>
 "kevin_within"
+#' social_anxiety - investigation of treatments for social anxiety
+#'
+#' Dataset of social anxiety scores from individuals allocated to one of three treatment
+#' groups, taken at pre, post, and 2 follow ups. Data is discussed in Bird (2004)
+#' Chapter 7: Mixed Designs
+#' https://methods.sagepub.com/book/mono/analysis-of-variance-via-confidence-intervals/toc
+#'
+#' @format ## `social_anxiety`
+#' A longform data frame with 360 rows and 3 columns:
+#' \describe{
+#'   \item{Group}{Treatment Type: 1=New, 2=Standard, 3=MinContact}
+#'   \item{Subject}{Subject Number: 1-90}
+#'   \item{Session}{Session: Pre, Post, 1st Follow up (FU1), 2nd Follow Up (FU2)}
+#'   \item{Score}{Score on Social Anxiety Measure}
+#'   ...
+#' }
+#' @source <Bird (2004). Chapter 7. Analysis of Variance via Confidence Intervals>
+"social_anxiety"
