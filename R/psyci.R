@@ -188,9 +188,10 @@ psyci <- function(model, contrast_tables, method, family_list,
     }
 
     if (any(family_list == "w")) {
-
-      cc_w = cc_ph_w(v_w=v_w, v_e=v_e, alpha=alpha)
-      critical_constant[["w"]] = cc_w
+      lapply(alphas[names(alphas) %in% "w"], cc_ph_w, v_w=v_w, v_e=v_e)
+      cc_w = lapply(alphas[names(alphas) %in% "w"], cc_ph_w, v_w=v_w, v_e=v_e)
+      #cc_ph_w(v_w=v_w, v_e=v_e, alpha=alpha)
+      critical_constant[names(critical_constant) %in% "w"] = cc_w
     }
 
     if (any(family_list == "bw")) {

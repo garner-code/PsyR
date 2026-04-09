@@ -1,0 +1,90 @@
+---
+title: "post-hoc_within-subjects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{post-hoc_within-subjects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
+```
+
+Following the example in chapter 6 of Bird (2004) Analysis of Variance via Confidence Intervals
+
+## Load the data
+
+Lets load the data, make it longform, and define the factors 
+
+```{r loaddata}
+
+data(kevin_within)
+head(kevin_within, 5)
+```
+
+```{r longform}
+
+kevin_within <- kevin_within %>% pivot_longer(c("Pre", "Post", "FU"),
+                                              values_to = "Score",
+                                              names_to = "Session")
+
+kevin_within <- kevin_within %>% mutate(Session = fct_relevel(Session, 'Pre','Post','FU'))
+
+```
+
+## Model 
+
+Now run the anova
+
+```{r model}
+
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
+# perform the statistical model
+mod <- aov_ez("Subject", 
+              "Score", 
+              kevin_within, 
+              within = "Session")
+
+emms <- emmeans(mod, "Session")
+emms
+
+```
+
+## Contrasts
+
+Now lets define and compute contrasts of interest
+
+```{r phoc}
+
+contrasts <- list(
+  "Post-Pre" = c(-1, 1, 0),
+  "FU-Post" = c(0, -1, 1),
+  "FU-Pre" = c(-1, 0, 1)
+)
+
+cnt_res <- contrast(emms, contrasts)
+cnt_res
+```
+## Simultaneous Confidence Intervals
+
+Now lets compute post-hoc 95% CIs for a within subjects design
+
+```{r, scis}
+
+psyci(model=mod, contrast_tables = cnt_res, 
+      method = "ph", family_list = list("w"), 
+      within_factors = list("Session"))
+
+```

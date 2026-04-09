@@ -34,15 +34,15 @@
 "experience"
 #' Priming lexical decision task data
 #'
-#' A synthetic dataset modeling a lexical decision task 
-#' used to investigate automatic activation of stereotypes through priming. 
-#' Participants are subliminally primed with a social category label 
-#' (e.g., ‘unemployed’ or ‘elderly’) before responding to target words. 
-#' The target words are either stereotypical attributes, atypical attributes, 
+#' A synthetic dataset modeling a lexical decision task
+#' used to investigate automatic activation of stereotypes through priming.
+#' Participants are subliminally primed with a social category label
+#' (e.g., ‘unemployed’ or ‘elderly’) before responding to target words.
+#' The target words are either stereotypical attributes, atypical attributes,
 #' or neutral words. The dependent variable is reaction time (in tenths of a second).
 #'
-#' Priming is hypothesized to enhance recognition for stereotypical attributes 
-#' (i.e., faster reaction times), and inhibit recognition for atypical attributes, 
+#' Priming is hypothesized to enhance recognition for stereotypical attributes
+#' (i.e., faster reaction times), and inhibit recognition for atypical attributes,
 #' relative to neutral words.
 #'
 #' @format ## `priming`
@@ -73,3 +73,20 @@
 #' }
 #' @source <UNSW: Melanie Gleitzman>
 "depression"
+#' kevin_within - small set of scores from pre to post and to follow up
+#'
+#' Data showing scores from 5 participants. Scores taken at Pre, Post and
+#' Follow Up (FU). Dataset appears on page 123 of Bird (2004)
+#' https://methods.sagepub.com/book/mono/analysis-of-variance-via-confidence-intervals/toc
+#'
+#' @format ## `kevin_within`
+#' A data frame with 5 rows and 4 columns:
+#' \describe{
+#'   \item{Subject}{Subject Number: 1-5}
+#'   \item{Pre}{Score at Pre}
+#'   \item{Post}{Score at Post}
+#'   \item{FU}{Score at follow up (FU)}
+#'   ...
+#' }
+#' @source <Bird (2004) Analysis of Variance via Confidence Intervals>
+"kevin_within"
