@@ -16,4 +16,119 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
+```
+
+Following the example in chapter 7 of Bird (2004) Analysis of Variance via Confidence Intervals
+
+## Load the data
+
+Lets load the data, make it longform, and define the factors 
+
+```{r loaddata}
+
+data(social_anxiety)
+head(social_anxiety, 5)
+```
+
+```{r longform}
+
+social_anxiety <- social_anxiety %>% 
+  mutate(Session = fct_relevel(Session, 'Pre','Post','FU1','FU2'),
+         Group = factor(Group),
+         Group = fct_recode(
+           Group,
+           "New" = "1",
+           "Standard" = "2",
+           "MinContact" = "3"
+         ))
+
+```
+
+## Model 
+
+Now run the anova
+
+```{r model}
+
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
+# perform the statistical model
+mod <- aov_ez("Subject", 
+              "Score", 
+              social_anxiety, 
+              within = "Session",
+              between = "Group")
+
+```
+
+## Contrasts
+
+Lets define and obtain our contrast tables
+
+```{r, win}
+
+win_contrasts <- list(
+  "Pre-rest" = c(1, -1/3, -1/3, -1/3),
+  "Post-FUs" = c(0, 1, -0.5, -0.5),
+  "FU1-FU2" = c(0, 0, 1, -1)
+) 
+
+emms_win <- emmeans(mod, "Session")
+
+win_fx <- contrast(emms_win, win_contrasts)
+win_fx
+
+```
+
+```{r, btwn}
+
+btwn_contrasts <- list(
+  "Ts-C" = c(0.5, 0.5, -1),
+  "NT-ST" = c(1, -1, 0)
+) 
+
+emms_btwn <- emmeans(mod, "Group")
+
+btwn_fx <- contrast(emms_btwn, btwn_contrasts)
+btwn_fx
+
+```
+
+
+```{r, int}
+
+
+emms_int <- emmeans(mod, c("Group", "Session"))
+
+int_fx <- contrast(emms_int, interaction=list(btwn_contrasts, win_contrasts))
+int_fx
+```
+
+
+## A Priori Confidence
+
+Here we replicate the bonferroni correction first presented in chapter 7
+
+```{r, psyci}
+
+all_fx <- c(win_fx, btwn_fx, int_fx)
+family_list = list("w", "b", "bw") 
+alphas = .05 # 3 * alpha / nk
+
+psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = family_list, 
+      between_factors = list("Group"), within_factors=list("Session"), alpha = alphas)
+
+```
+
+
+
+Next, we run the exact same but using the post-hoc method
+
+```{r, psyci}
+
+psyci(model=mod, contrast_tables = all_fx, method = "ph", family_list = family_list, between_factors = list("Group"), within_factors=list("Session"), alpha = alphas)
+
 ```

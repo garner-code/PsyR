@@ -200,3 +200,5 @@ contrasts_w_cis = psyci(mod, contrast_tables=all_fx, family_list=family_list, me
 ```
 
 Let's take a look at the interaction contrasts
+
+
