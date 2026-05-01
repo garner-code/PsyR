@@ -24,7 +24,7 @@
 #' v_e = N - J
 #' alpha = 0.05
 #' cc_ph_bw(v_w, v_b, v_e, alpha)
-cc_ph_bw <- function(v_w, v_b, v_e, alpha){
+cc_ph_bw <- function(v_w, v_b, v_e, alpha = 0.05){
 
   s = min(v_b, v_w)
   m = (abs(v_b - v_w)-1)/2
