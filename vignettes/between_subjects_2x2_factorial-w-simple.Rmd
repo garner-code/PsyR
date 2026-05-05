@@ -1,0 +1,39 @@
+---
+title: "between_subjects_2x2_factorial-w-simple"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{between_subjects_2x2_factorial-w-simple}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup}
+library(PsyR)
+library(tidyverse)
+library(emmeans)
+library(afex)
+library(forcats)
+```
+
+Following the example in chapter 4 of Bird (2004) Analysis of Variance via Confidence Intervals, of a coherent analysis for a 2 x 2 between subjects design with simple effects.
+
+## Load the data
+
+Lets load the data, make it longform, and define the factors 
+
+```{r loaddata}
+
+data(drive_sleepy)
+head(drive_sleepy, 5)
+```
+
+```{r longform}
+
+drive_sleepy <- drive_sleepy %>% 
+  mutate(sleep_deprivation = factor(sleep_deprivation),
+         sleep_deprivation = fct_recode(sleep_deprivation, "None" = "0", "High" = "12"),
+         sleep_deprivation = fct_relevel(sleep_deprivation, "High", "None"),
+         nvh = factor(nvh),
+         nvh = fct_relevel(nvh, "high", "low"))
+
+```
