@@ -5,7 +5,7 @@
 \title{Critical constant for simultaneous post-hoc intervals for within-subject
 contrasts}
 \usage{
-cc_ph_w(v_w, v_e, alpha)
+cc_ph_w(v_w, v_e, alpha = 0.05)
 }
 \arguments{
 \item{v_w}{single numeric value - within subjects df: e.g. for a

@@ -108,3 +108,22 @@
 #' }
 #' @source <Bird (2004). Chapter 7. Analysis of Variance via Confidence Intervals>
 "social_anxiety"
+#' Drive sleepy data
+#'
+#' A small dataset from a 2 x 2 between subjects design. Data has performance on a driving task as the DV,
+#' and comes from a 2 (sleep deprivation: 12 hours vs none) x
+#' 2 (noise, vibration, harshness levels: high vs low) design.
+#'
+#'
+#' @format ## `drive_sleepy`
+#' A data frame with 100 rows and 5 columns:
+#' \describe{
+#'   \item{group}{group number: 1-4}
+#'   \item{performance}{driving performance score: higher is better}
+#'   \item{subID}{subject ID number}
+#'   \item{sleep_deprivation}{sleep deprivation condition: 12 = 12 hours, 0 = none}
+#'   \item{nvh}{noise, vibration, harshness condition: high vs low}
+#'   ...
+#' }
+#' @source <Bird, K. (2004). Chapter 4. Analysis of Variance via Confidence Intervals. Sage Publications.>
+"drive_sleepy"
