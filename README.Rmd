@@ -66,7 +66,7 @@ btwn_con <- contrast(emm_btwn, con_b)
 # names
 # extra documentation needed re: mapping of method to specific. Potentially
 # add Sidak
-psyci(model=mod, contrast_table = btwn_con, method="ph", family="b", 
+psyci(model=mod, contrast_tables = list(btwn_con), method="ph", family_list=list("b"), 
       between_factors = list("group"))
 # add attributes to the table about the method used to compute CIs
 # think about adding the critical constant as an attribute
@@ -91,7 +91,7 @@ con_w <- list(
 con_win <- contrast(emm_win, con_w)
 
 # generate 95% CIs for the within subjects contrasts
-psyci(model=mod, contrast_table = con_win, method="ph", family="w", 
+psyci(model=mod, contrast_tables = list(con_win), method="ph", family_list=list("w"), 
       within_factors = list("spacing"))
 
 
@@ -116,18 +116,20 @@ con_int <- contrast(emm_int, interaction=list(con_b, con_w))
 # potentially add a scheffe function 
 # add p values from gcr etc procedures to the table
 # generate 95% CIs for the between x within subjects contrasts
-psyci(model=mod, contrast_table = con_int, method="ph", family="bw", 
+psyci(model=mod, contrast_tables = list(con_int), method="ph", family=list("bw"), 
       within_factors = list("spacing"), between_factors=list("group"))
 
 ```
 
+Or even better, you can do all three at once:
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+```{r all_example}
 
-You can also embed plots, for example:
+# enter contrast tables in one long list
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+psyci(model=mod, contrast_tables = list(btwn_con, con_win, con_int), 
+      method="ph", family_list=list("b", "w", "bw"), 
+      within_factors = list("spacing"), 
+      between_factors=list("group"))
+
 ```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

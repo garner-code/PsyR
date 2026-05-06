@@ -1,0 +1,195 @@
+---
+title: "J-K-Design_inference-on-simple-effects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{J-K-Design_inference-on-simple-effects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Title
+
+Info
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Loading packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r, loadpackages}
+
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(ggplot2)
+library(PsyR)
+```
+
+## The data
+
+```{r loaddata}
+
+data(experience)
+head(experience, 5)
+```
+
+Sort out the factors
+
+```{r sortfatigue}
+
+experience <- experience %>%
+                mutate(Experience = factor(Experience,
+                          levels=c("10yrs", "3yrs", "<1yr")),
+                       Therapy = factor(Therapy,
+                                        levels=c("Behavioural",
+                                                 "Cognitive",
+                                                 "Psychotherapy",
+                                                 "Group")))
+```
+
+
+```{r plotdata}
+
+experience %>% ggplot(aes(x=Therapy, y=Outcome, fill=Experience)) +
+  geom_boxplot() + theme_minimal()
+
+```
+
+```{r, aov}
+
+# perform the statistical model
+mod <- aov_ez(id="SubjID", 
+              dv="Outcome", 
+              data=experience, 
+              between = c("Experience", "Therapy"))
+
+emms <- emmeans(mod, c("Experience", "Therapy"))
+emms
+
+```
+
+First, define the factor A (Experience of therapist) contrasts
+
+```{r btwn_contrasts}
+
+experience_contrasts = list(
+  "lots_vs_little" = c(0, 1, -1),
+  "lots_vs_some" = c(1, -1, 0)
+)
+
+therapy_contrasts = list(
+  "evidence_vs_woowoo" = c(0.5, 0.5, -0.5, -0.5),
+  "behav_vs_cog" = c(1, -1, 0, 0),
+  "woo1_vs_woo2" = c(0, 0, 1, -1)
+)  
+
+```
+
+## First, let's sort the A and A(b) and AB family
+
+Calculate the main effects for factor A
+
+```{r, factor_a_fx}
+
+emms_exp <- emmeans(mod, c("Experience"))
+exp_fx <- contrast(emms_exp, experience_contrasts)
+exp_fx
+
+```
+
+Now let's get the A(b) effects
+
+```{r, A_b}
+
+Exp_g_therapy <- emmeans(mod, ~ Experience|Therapy)
+Ab_fx <- contrast(Exp_g_therapy, method=experience_contrasts)
+
+```
+
+And last, the AB effects
+
+```{r, AB}
+
+interaction_fx = contrast(emms, interaction=list(experience_contrasts, therapy_contrasts))
+interaction_fx
+```
+
+For a priori, bonferroni method:
+
+Now we have our 3 sets of contrasts (all appropriately scaled).
+The Bonferroni adjustment must be made at 
+alpha = 0.5x2 for the A(B) family (or alpha=0.05x3, if using the all factorial model). 
+alpha is divided by k, which = number of planned contrasts in the family.
+Note that the A(B) family includes A simple effects contrasts, A main effects contrasts, and AB interaction contrasts.
+v2 = N-JK (df error)
+we can feed them into psyci to get our preferred confidence intervals.
+
+ME (A) exp: k = 2 alpha = .1
+A(b) exp @ each level of therapy k = 8, alpha = .1
+AB interaction k = 6, alpha = .1
+Thus k = 16, alpha = .1, for all families (as they are actually one family, as all non-independent)
+
+
+```{r, get_cis}
+
+all_fx <- c(exp_fx, Ab_fx, interaction_fx)
+family_list = list("b") # to be documented
+alphas = rep(list(2*.05), times=3)
+
+psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = list("b"), 
+      between_factors = list("Therapy", "Experience"), alpha = alphas,
+      independent = FALSE)
+
+```
+
+
+Now do the post-hoc analysis including A(B) contrasts.
+
+This is only Scheffe, as all are between.
+Alphas = 1-(1-alpha)^m (where m = number of standard factorial families contained within the non-standard simple effects family).
+
+To calculate nu1, where A has J levels and B has K levels
+
+A(B) = K*(J-1) so A relates to Experience
+B(A) = J*(K-1)
+
+
+
+```{r}
+
+alphas = rep(list(1-(1-0.05)^2), times=3)
+nu1 = length(unique(levels(experience$Therapy))) * (length(unique(levels(experience$Experience))) - 1)
+
+psyci(model=mod, contrast_tables = all_fx, method = "ph", family_list = list("b"), 
+      between_factors = list("Therapy", "Experience"), alpha = alphas,
+      independent = FALSE, nu1=nu1)
+
+```
+Now do a standard analysis with independent families, using the planned bonferonni procedure.
+
+Calculate the main effects for factor B
+
+```{r, factor_a_fx}
+
+emms_exp <- emmeans(mod, c("Therapy"))
+thrpy_fx <- contrast(emms_exp, therapy_contrasts)
+thrpy_fx
+
+stndrd_fx = list(exp_fx, thrpy_fx, interaction_fx)
+
+```
+
+Now get the CIs for the main effects and interactions, with no simple effects
+
+```{r}
+
+psyci(model=mod, contrast_tables = stndrd_fx, method = "bf", family_list = list("b"), 
+      between_factors = list("Therapy", "Experience"), alpha = 0.05)
+
+```

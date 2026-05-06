@@ -4,7 +4,7 @@
 \alias{cc_ph_bw}
 \title{Critical constant for post-hoc simultaneous between x within CIs}
 \usage{
-cc_ph_bw(v_w, v_b, v_e, alpha)
+cc_ph_bw(v_w, v_b, v_e, alpha = 0.05)
 }
 \arguments{
 \item{v_w}{a single numeric value - df within}

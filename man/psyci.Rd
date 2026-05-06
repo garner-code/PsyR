@@ -8,21 +8,29 @@ psyci(
   model,
   contrast_tables,
   method,
-  family = NA,
+  family_list,
   between_factors = NA,
   within_factors = NA,
-  alpha = 0.05
+  alpha = 0.05,
+  independent = TRUE,
+  nu1 = NA
 )
 }
 \arguments{
 \item{model}{an anova model made using the afex package (class afex_aov)}
 
-\item{contrast_tables}{a LIST of contrast tables generated using emmeans contrast()}
+\item{contrast_tables}{a LIST of contrast tables generated using emmeans contrast()
+Note that this list should contain only orthogonal contrast tables, or non-orthogonal.
+Do not mix or match orthogonal or non-orthogonal. If there is only one table of contrasts,
+it is not necesssary to enter it as a list.}
 
 \item{method}{a single string - method for confidence interval computation -
 "ind", "bf", or "ph" - see further details below}
 
-\item{family}{a single string - family of contrasts - "b", "w" or "bw" - see}
+\item{family_list}{\itemize{
+\item a LIST the same length of contrast tables that specifies
+if the associated contrast table is of the family "b", "w", or "bw"
+}}
 
 \item{between_factors}{\itemize{
 \item a list of between subject factor names, default = NA
@@ -33,7 +41,23 @@ psyci(
 }}
 
 \item{alpha}{\itemize{
-\item desired type 1 error rate
+\item desired type 1 error rate. Either a single value (e.g. alpha = .05)
+that will be applied to each family, or a list of alphas of length
+contrast_tables. Assumes that the alphas are provided in the order as should be
+applied to contrast_tables. default = .05.
+}}
+
+\item{independent}{\itemize{
+\item a boolean value, default = TRUE. If TRUE, correction will
+be applied to each family independently. If FALSE, all contrasts will be summed
+together and treated as one family for the purposes of correction.
+This is only relevant if method = "bf" or method = "ph", and will be ignored if method = "ind".
+}}
+
+\item{nu1}{\itemize{
+\item if independent is set to FALSE, and method = "ph", then supply nu1 (df1) that
+is used to adjust the critical constant to control for type 1 error (see eqs 7, 8, 9 of
+Bird (2002) https://doi.org/10.1177/0013164402062002001). default = NA
 }}
 }
 \value{
@@ -73,5 +97,5 @@ con <- list( # define some contrasts
 btwn_con <- emmeans::contrast(sum_emm_btwn, con) # get contrast table
 # now add CI's using post-hoc method
 psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
-        family = "b", between_factors = list("group"))
+        family_list = list("b"), between_factors = list("group"))
 }

@@ -1,0 +1,105 @@
+---
+title: "F-STP-and-Scheffe-CI-posthoc"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{F-STP-and-Scheffe-CI-posthoc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Title
+
+Info
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Loading packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r, loadpackages}
+
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(ggplot2)
+library(PsyR)
+
+```
+
+## The data
+
+```{r loaddata}
+
+data(fatigue)
+head(fatigue, 5)
+```
+
+```{r, whatfatigue}
+
+?fatigue
+```
+
+
+```{r sortfatigue}
+
+fatigue <- fatigue %>%
+             mutate(Group = factor(Group, 
+                                  levels=c(1,2,3,4),
+                                  labels=c('Alert', 
+                                           'Mild', 
+                                          'Moderate',
+                                          'Extreme')))
+```
+
+```{r boxplotit}
+
+fatigue %>% ggplot(aes(x=Group, y=Errors, fill=Group)) +
+  geom_boxplot() + theme_classic()
+
+```
+
+
+```{r, aov}
+
+# set emmeans option to multivariate
+afex_options(emmeans_model = "multivariate")
+# perform the statistical model
+mod <- aov_ez("id", 
+              "Errors", 
+              fatigue, 
+              between = "Group")
+
+emms <- emmeans(mod, "Group")
+emms
+
+```
+```{r definecontrasts}
+### note to selves - is there a way to get emmeans to do the scaling here?
+
+between_contrasts = list(
+  "Fatigue-Alert" = c(-1, 1/3, 1/3, 1/3),
+  "Extreme-Mod,Mild" = c(0, -1/2, -1/2, 1),
+  "Low-Hi" = c(1/2, 1/2, -1/2, -1/2),
+  "Alert-Mild" = c(1, -1, 0, 0)
+)
+between_contrasts
+```
+
+```{r, between_fx}
+
+btwn_fx <- contrast(emms, between_contrasts)
+btwn_fx
+```
+
+```{r, psyci}
+
+
+contrasts_w_cis = psyci(mod, contrast_tables=list(btwn_fx),  family_list=list("b"), method="ph", alpha=.05, between_factors = list("Group"))
+
+```

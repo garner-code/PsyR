@@ -34,15 +34,15 @@
 "experience"
 #' Priming lexical decision task data
 #'
-#' A synthetic dataset modeling a lexical decision task 
-#' used to investigate automatic activation of stereotypes through priming. 
-#' Participants are subliminally primed with a social category label 
-#' (e.g., ‘unemployed’ or ‘elderly’) before responding to target words. 
-#' The target words are either stereotypical attributes, atypical attributes, 
+#' A synthetic dataset modeling a lexical decision task
+#' used to investigate automatic activation of stereotypes through priming.
+#' Participants are subliminally primed with a social category label
+#' (e.g., ‘unemployed’ or ‘elderly’) before responding to target words.
+#' The target words are either stereotypical attributes, atypical attributes,
 #' or neutral words. The dependent variable is reaction time (in tenths of a second).
 #'
-#' Priming is hypothesized to enhance recognition for stereotypical attributes 
-#' (i.e., faster reaction times), and inhibit recognition for atypical attributes, 
+#' Priming is hypothesized to enhance recognition for stereotypical attributes
+#' (i.e., faster reaction times), and inhibit recognition for atypical attributes,
 #' relative to neutral words.
 #'
 #' @format ## `priming`
@@ -73,3 +73,57 @@
 #' }
 #' @source <UNSW: Melanie Gleitzman>
 "depression"
+#' kevin_within - small set of scores from pre to post and to follow up
+#'
+#' Data showing scores from 5 participants. Scores taken at Pre, Post and
+#' Follow Up (FU). Dataset appears on page 123 of Bird (2004)
+#' https://methods.sagepub.com/book/mono/analysis-of-variance-via-confidence-intervals/toc
+#'
+#' @format ## `kevin_within`
+#' A data frame with 5 rows and 4 columns:
+#' \describe{
+#'   \item{Subject}{Subject Number: 1-5}
+#'   \item{Pre}{Score at Pre}
+#'   \item{Post}{Score at Post}
+#'   \item{FU}{Score at follow up (FU)}
+#'   ...
+#' }
+#' @source <Bird (2004) Analysis of Variance via Confidence Intervals>
+"kevin_within"
+#' social_anxiety - investigation of treatments for social anxiety
+#'
+#' Dataset of social anxiety scores from individuals allocated to one of three treatment
+#' groups, taken at pre, post, and 2 follow ups. Data is discussed in Bird (2004)
+#' Chapter 7: Mixed Designs
+#' https://methods.sagepub.com/book/mono/analysis-of-variance-via-confidence-intervals/toc
+#'
+#' @format ## `social_anxiety`
+#' A longform data frame with 360 rows and 3 columns:
+#' \describe{
+#'   \item{Group}{Treatment Type: 1=New, 2=Standard, 3=MinContact}
+#'   \item{Subject}{Subject Number: 1-90}
+#'   \item{Session}{Session: Pre, Post, 1st Follow up (FU1), 2nd Follow Up (FU2)}
+#'   \item{Score}{Score on Social Anxiety Measure}
+#'   ...
+#' }
+#' @source <Bird (2004). Chapter 7. Analysis of Variance via Confidence Intervals>
+"social_anxiety"
+#' Drive sleepy data
+#'
+#' A small dataset from a 2 x 2 between subjects design. Data has performance on a driving task as the DV,
+#' and comes from a 2 (sleep deprivation: 12 hours vs none) x
+#' 2 (noise, vibration, harshness levels: high vs low) design.
+#'
+#'
+#' @format ## `drive_sleepy`
+#' A data frame with 100 rows and 5 columns:
+#' \describe{
+#'   \item{group}{group number: 1-4}
+#'   \item{performance}{driving performance score: higher is better}
+#'   \item{subID}{subject ID number}
+#'   \item{sleep_deprivation}{sleep deprivation condition: 12 = 12 hours, 0 = none}
+#'   \item{nvh}{noise, vibration, harshness condition: high vs low}
+#'   ...
+#' }
+#' @source <Bird, K. (2004). Chapter 4. Analysis of Variance via Confidence Intervals. Sage Publications.>
+"drive_sleepy"

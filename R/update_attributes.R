@@ -19,7 +19,6 @@
 #' @param v_w single value. df within. default = NA
 #' @param v_b single value. df between. default = NA
 #' @param alpha single value. applied alpha rate. default = .05
-#' @param critical_constant single value. critical constant computed by psyci
 #'
 #' @returns an emmeans contrast table with attributes updated
 #' @export
@@ -41,23 +40,72 @@
 #' critical_constant = cc_ph_b(v_b=v_b, v_e=v_e, alpha=0.05)
 #' update_attributes(contrast_table, method="ph", family="b",
 #'   between_factors=list("group"), v_e=v_e,
-#'   v_b=v_b, alpha=.05,
-#'   critical_constant=cc_ph_b(v_b=v_b, v_e=v_e))
+#'   v_b=v_b, alpha=.05)
 update_attributes <- function(contrast_table, method, family = NA,
                               between_factors = NA, within_factors = NA,
                               v_e, v_w = NA, v_b = NA,
-                              alpha = 0.05,
-                              critical_constant){
+                              alpha = 0.05){
 
-  attributes(contrast_table)$psyci <- list(method = method,
-                                           family = family,
-                                           between_factors = between_factors,
-                                           within_factors = within_factors,
-                                           df_error = v_e,
-                                           df_between = v_b,
-                                           df_within = v_w,
-                                           alpha = alpha,
-                                           critical_constant = critical_constant)
+  btwn_msg = FALSE
+  wthn_msg = FALSE
+  # set full family names for messages
+  if (family == "b"){
+    family_full = "between subject contrasts"
+    btwn_msg = TRUE
+  } else if (family == "w"){
+    family_full = "within subject contrasts"
+    wthn_msg = TRUE
+  } else if (family == "bw"){
+    family_full = "between x within subject contrasts"
+    btwn_msg = TRUE
+    wthn_msg = TRUE
+  } else {
+    family_full = "unknown family" #prob not necessary as earlier messages should catch this
+  }
 
+  # set full names for method for messages
+  if (method == "ind"){
+    method = "independent"
+  } else if (method == "bf"){
+    method = "Bonferroni"
+  } else if (method == "ph"){
+    if (family == "b"){
+      method = "Scheffe"
+    } else if (family == "w"){
+      method = "post-hoc within"
+    } else if (family == "bw"){
+      method = "post-hoc between x within (Roy's GCR)"
+    } else
+    method = "post-hoc"
+  } else {
+    method = "unknown method" #prob not necessary as earlier messages should catch this
+  }
+
+  # apply message update that will be applied to all contrast tables
+  attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                    paste("PsyR CI method:", method, "has been applied"),
+                                    paste("Family-wise correction assumes current contrasts are:", family_full),
+                                    paste("PsyR used an alpha rate of:", alpha)
+                                    )
+  # now apply specific attributes depending on currently used family
+  if (btwn_msg){
+    attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                      paste("PsyR assumed between subject factor(s) are:",
+                                            paste(between_factors, collapse=", ")),
+                                      paste("PsyR used df between of:", v_b)
+    )
+  }
+
+  if (wthn_msg){
+    attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                      paste("PsyR assumed within subject factor(s) are:",
+                                            paste(within_factors, collapse=", ")),
+                                      paste("PsyR used df within of:", v_w)
+    )
+  }
+
+  attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                    paste("PsyR used df error of:", v_e)
+  )
   contrast_table
 }

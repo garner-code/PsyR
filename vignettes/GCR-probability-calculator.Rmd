@@ -1,0 +1,74 @@
+---
+title: "GCR-probability-calculator"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GCR-probability-calculator}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PsyR)
+```
+
+## Roy's Largest Root
+
+The first step is to get Roy's Largest Root. To do this we need to fit our model as a MANOVA
+
+Let's use the built in `social_anxiety` dataset to run our analysis
+
+
+```{r load}
+
+data(social_anxiety)
+head(social_anxiety, 5)
+```
+
+Pivot the data to wideform
+
+```{r, wideform}
+
+social_anxiety  <- social_anxiety %>% 
+  pivot_wider(names_from = Session, values_from = Score)
+
+```
+
+Now we run a MANOVA analysis to get Roy's GCR of the co-variance matrix
+
+```{r, multimod}
+
+fit <- manova(cbind(Pre, Post, FU1, FU2) ~ Group, data = social_anxiety)
+summary(fit, test = "Roy")
+
+```
+
+So we are working with a value of 0.3903
+
+## compute probability
+
+Now we compute the probability of observing a GCR of 0.39 of our analysis. 
+
+```{r, set params}
+
+theta = 0.3903
+v_w = 3 # df within = number of levels of the within subject factor - 1
+v_b = 2 # df between = number of levels of the between subject factor - 1
+v_e = 87 # df error = total number of subjects - number of groups
+
+
+```
+
+Now the parameters are set, we can observe the probability of theta given v_w, v_b, and v_e
+
+```{r, compute prob}
+
+p = pgcr(theta, v_w, v_b, v_e)
+p
+```

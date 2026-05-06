@@ -1,0 +1,95 @@
+---
+title: "planned-contrasts_within-subjects"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{planned-contrasts_within-subjects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(ggplot2)
+library(PsyR)
+```
+
+## Load the data
+
+```{r data}
+
+data(priming)
+head(priming, 5)
+
+```
+
+and sort and plot
+
+
+```{r sortexp}
+
+priming <- priming %>%
+                mutate(Prime = factor(Prime),
+                       Subject = factor(Subject))
+```
+
+
+```{r plotdata}
+
+priming %>% ggplot(aes(x=Prime, y=ReactionTime, fill=Prime)) +
+  geom_boxplot() + theme_minimal()
+
+```
+
+```{r, aov}
+
+# perform the statistical model
+mod <- aov_ez(id="Subject", 
+              dv="ReactionTime", 
+              data=priming, 
+              within = "Prime")
+
+emms <- emmeans(mod, "Prime")
+emms
+
+```
+
+Now define contrasts
+
+```{r wthn_contrasts}
+
+experience_contrasts = list(
+  "stereo_vs_others" = c(0.5, 0.5, -1),
+  "atyp_vs_neural" = c(1, -1, 0)
+)
+
+```
+
+Calculate contrasts
+
+```{r, compute_contrasts}
+
+wthn_fx = contrast(emms, experience_contrasts)
+wthn_fx
+```
+
+## Use PsyR to get a prior CIs on effects
+
+```{r, get_cis}
+
+wthn_fx
+family_list = list("w") # to be documented
+
+
+psyci(model=mod, contrast_tables = wthn_fx, method = "bf", family_list = family_list, 
+      within_factors = list("Prime"))
+
+```

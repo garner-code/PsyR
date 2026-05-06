@@ -16,13 +16,6 @@ knitr::opts_chunk$set(
 
 This vignette demonstrates how to use the `psyci()` function from the `PsyR` package to compute simultaneous confidence intervals (SCIs) for planned contrasts in a **within-subjects lexical decision priming experiment**.
 
-```{r include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
 ## Loading Packages
 
 To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
@@ -115,8 +108,9 @@ contrast_table <- contrast(emm, planned_contrasts)
 ```{r}
 scis <- psyci(
   model = mod,
-  contrast_table = contrast_table,
+  contrast_table = list(contrast_table),
   method = "bf",         # Bonferroni correction
+  family_list=list("w"),
   within_factors = list("Prime")
 )
 scis
@@ -125,7 +119,7 @@ scis
 ## Visualize Confidence Intervals
 
 ```{r, fig.width = 7, fig.height = 4}
-scis_df <- as.data.frame(scis)
+scis_df <- as.data.frame(scis$w)
 
 scis_df$contrast <- c(
   "Stereotypical vs (Atypical + Neutral)", 

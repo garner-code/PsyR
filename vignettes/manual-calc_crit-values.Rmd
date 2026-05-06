@@ -1,0 +1,90 @@
+---
+title: "manual-calc_crit-values"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{manual-calc_crit-values}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PsyR)
+```
+
+Sometimes you just want to manually calculate a critical value yourself, and the 
+consequent confidence intervals. Here is how you do that:
+
+We are going to assume a contrast SE of 2.5, and an alpha rate of 0.05.
+Let's also assume a 2 (within) x 2 (between) design, with 25 participants in each group.
+Let's also just assume:
+df within of 1,
+a df between of 2, 
+and a df error of 98.
+
+```{r, setup vars}
+
+v_w <- 1
+v_b <- 2
+v_e <- 98
+SE = 2.5
+```
+
+First lets calculate the critical constant for each method:
+
+Individual t:
+
+```{r ind t}
+
+cc_ind_t(v_e)
+
+```
+
+Bonferroni corrected t, assuming 2 contrasts in the family of whichever contrasts...
+
+```{r bonf t}
+
+k = 2
+cc_bonf_t(v_e=v_e, n_k = 2)
+
+```
+
+Post-hoc Scheffe adjustment for the between family
+
+```{r, ph_b}
+
+cc_ph_b(v_b=v_b, v_e=v_e)
+
+```
+
+
+Or post-hoc Scheffe adjustment for the within family
+
+```{r, ph_w}
+
+cc_ph_w(v_w=v_w, v_e=v_e)
+```
+
+or Between x within post-hoc using Roy's GCR
+
+```{r, ph_bw}
+
+cc_ph_bw(v_w, v_b, v_e)
+```
+
+Let's assume we'll use this last CC to construct our confidence intervals. We can do that as follows:
+
+```{r, cis}
+
+cc <- cc_ph_bw(v_w, v_b, v_e)
+compute_contrast_ci(cc, SE)
+```
+
+
+Thus the CIs would be the mean, plus and minus the above number.
