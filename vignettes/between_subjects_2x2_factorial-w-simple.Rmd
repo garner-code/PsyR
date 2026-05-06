@@ -37,3 +37,86 @@ drive_sleepy <- drive_sleepy %>%
          nvh = fct_relevel(nvh, "high", "low"))
 
 ```
+
+## Model 
+
+Now run the anova
+
+```{r model}
+
+# perform the statistical model
+mod <- aov_ez("subID", 
+              "performance", 
+              drive_sleepy, 
+              between = c("sleep_deprivation", "nvh"))
+
+```
+
+## Contrasts
+
+Lets define and obtain our contrast tables
+
+```{r, between_subjects_contrasts}
+
+btwn_cont <- list(
+  "Sleep_Dep" = c(0.5, -0.5, 0.5, -0.5),
+  "NVH" = c(0.5, 0.5, -0.5, -0.5)
+)
+
+```
+
+Now get an emmens object and apply the contrasts
+
+```{r contrasts}
+
+emms <- emmeans(mod, c("sleep_deprivation", "nvh"))
+mfx <- contrast(emms, btwn_cont)
+```
+We also want the interaction contrast:
+
+```{r interaction_contrast}
+
+int <- contrast(emms, list("int"=c(0.5, -0.5, -0.5, 0.5)))
+
+```
+
+We also want the simple effects of NVH at each level of sleep deprivation, and vice versa:
+
+```{r nvh_at_sleep_dep}
+
+
+nvh_by_sleep_dep <- emmeans(mod, ~ nvh|sleep_deprivation)
+simp_fx_contrast  <- list(
+  "NVH" = c(1, -1)
+)
+nvh_simp_fx <- contrast(nvh_by_sleep_dep, method=simp_fx_contrast)
+nvh_simp_fx
+```
+
+
+```{r nvh_at_sleep_dep}
+
+
+sleep_dep_by_nvh <- emmeans(mod, ~ sleep_deprivation|nvh)
+
+sdep_simp_fx <- contrast(sleep_dep_by_nvh, method=simp_fx_contrast)
+sdep_simp_fx
+
+```
+
+## Simultaneous confidence intervals
+
+Now we apply the SMR correction to all our contrasts, and get the confidence intervals for all of them together.
+
+```{r}
+
+
+all_fx <- c(mfx, int, nvh_simp_fx, sdep_simp_fx)
+family_list = list(rep("b", times=length(all_fx))) 
+alphas = 3*.05 # 3 * alpha / nk
+
+psyci(model=mod, contrast_tables = all_fx, method = "smr", family_list = family_list, 
+      between_factors = list("sleep_deprivation", "nvh"),       alpha = alphas,
+      independent = FALSE)
+
+```
