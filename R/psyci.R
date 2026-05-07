@@ -66,7 +66,8 @@ psyci <- function(model, contrast_tables, method,
                   alpha = 0.05,
                   independent = TRUE,
                   nu1 = NA,
-                  smr_params = NA){
+                  smr_params = NA,
+                  seed = NULL){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
@@ -240,6 +241,13 @@ psyci <- function(model, contrast_tables, method,
 
     # here we make a list of critical constants, to be applied to construct confidence
     # intervals for each family of interest
+    ccs = rep(NA, length(contrast_tables))
+    # U2H: HAVE STARTED A FUNCTION CALLED cc-smr. NEED TO MAPPLY THE INFO TO THAT.
+
+
+
+    # now get the critical constants for the non-product contrasts, which will
+    # be a Scheffe procedure with the relevant alpha.
 
 
   }

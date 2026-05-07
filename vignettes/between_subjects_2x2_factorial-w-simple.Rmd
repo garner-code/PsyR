@@ -111,7 +111,7 @@ Now we apply the SMR correction to all our contrasts, and get the confidence int
 ```{r}
 
 
-all_fx <- c(mfx, int, nvh_simp_fx, sdep_simp_fx)
+all_fx <- c(mfx, int, nvh_simp_fx, sdep_simp_fx) 
 family_list = list(rep("b", times=length(all_fx))) 
 alphas = 3*.05 # 3 * alpha / nk
 
