@@ -120,3 +120,12 @@ psyci(model=mod, contrast_tables = all_fx, method = "smr", family_list = family_
       independent = FALSE)
 
 ```
+
+
+Info from Bird & Hadzi-Pavlovic (2005). 
+See page 359 for SMR parameters.
+See p 360 for the conversion of SMR into a critical constrant.
+
+
+
+
