@@ -59,9 +59,14 @@
 #' # now add CI's using post-hoc method
 #' psyci(model = mod, contrast_tables = list(btwn_con), method = "ph",
 #'         family_list = list("b"), between_factors = list("group"))
-psyci <- function(model, contrast_tables, method, family_list,
-                  between_factors = NA, within_factors = NA, alpha = 0.05,
-                  independent = TRUE, nu1 = NA){
+psyci <- function(model, contrast_tables, method,
+                  family_list,
+                  between_factors = NA,
+                  within_factors = NA,
+                  alpha = 0.05,
+                  independent = TRUE,
+                  nu1 = NA,
+                  smr_params = NA){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
@@ -98,6 +103,38 @@ psyci <- function(model, contrast_tables, method, family_list,
     }
   }
 
+  if (method %in% "smr"){
+
+    # double check families to make sure no within sub factors
+    fam_check <- unlist(
+      lapply(family_list, function(x) x %in% c("w", "bw")))
+
+    if (any(fam_check)){
+      stop("Error: You have requested the SMR procedure, but the family_list contains within subject related families.
+           Please check your family_list and method arguments.")
+    }
+
+    # now check that smr_params has been entered correctly
+    # first pass
+    if (any(is.na(smr_params))){
+      stop("Error: You have requested the SMR procedure,
+           but have not supplied the required smr_params argument.
+           Please check your method and smr_params arguments.")
+    }
+    # checking for fields, and the length of those fields
+    required_fields = c("p", "q", "nu1")
+    required_length = length(contrast_tables)
+     if (!all(required_fields %in% names(smr_params))){
+       stop("Error: You have requested the SMR procedure, but your smr_params argument is missing one or more required fields.
+            Please check your method and smr_params arguments.")
+     }
+     if (!all(sapply(smr_params[required_fields], length) == required_length)){
+       stop("Error: You have requested the SMR procedure, but the fields of your smr_params argument
+            are not the same length as contrast_tables. Please check your method and smr_params arguments.")
+     }
+  }
+
+  # now put the contrast table info together
   contrast_info <- do.call(rbind, contrast_tables)
   all_contrast_tables <- summary(contrast_info) # create one big contrast table that one can index easily
   contrast_tables <- contrast_tables # keeping list
@@ -199,6 +236,12 @@ psyci <- function(model, contrast_tables, method, family_list,
       cc_bw = lapply(alphas[names(alphas) %in% "bw"], cc_ph_bw, v_w=v_w, v_b=v_b, v_e=v_e)
       critical_constant[names(critical_constant) %in% "bw"] = cc_bw
     }
+  } else if (method %in% "smr"){
+
+    # here we make a list of critical constants, to be applied to construct confidence
+    # intervals for each family of interest
+
+
   }
 
   # now get SE from each contrast table in contrast_tables, compute CIs using appropriate

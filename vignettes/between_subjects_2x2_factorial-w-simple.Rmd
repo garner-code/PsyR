@@ -115,8 +115,25 @@ all_fx <- c(mfx, int, nvh_simp_fx, sdep_simp_fx)
 family_list = list(rep("b", times=length(all_fx))) 
 alphas = 3*.05 # 3 * alpha / nk
 
-psyci(model=mod, contrast_tables = all_fx, method = "smr", family_list = family_list, 
-      between_factors = list("sleep_deprivation", "nvh"),       alpha = alphas,
+# because we are using the SMR distribution for product
+# contrasts, we have to specify come extra parameters 
+# on page 359 in Table 2
+ps <- c(NA, 1, 1, 1) # the latter 2 are potentially 2
+qs <- c(NA, 1, 2, 2)
+nu1 <-c(NA, 1, 2, 2) # the latter 2 are potentially 3
+smr_params <- list(
+  p = ps,
+  q = qs,
+  nu1 = nu1
+)
+
+psyci(model=mod, 
+      contrast_tables = all_fx, 
+      method = "smr", 
+      smr_params = smr_params,
+      family_list = family_list, 
+      between_factors = list("sleep_deprivation", "nvh"),       
+      alpha = alphas,
       independent = FALSE)
 
 ```
