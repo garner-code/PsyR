@@ -13,7 +13,9 @@ psyci(
   within_factors = NA,
   alpha = 0.05,
   independent = TRUE,
-  nu1 = NA
+  nu1 = NA,
+  smr_params = NULL,
+  seed = NULL
 )
 }
 \arguments{
@@ -25,7 +27,7 @@ Do not mix or match orthogonal or non-orthogonal. If there is only one table of 
 it is not necesssary to enter it as a list.}
 
 \item{method}{a single string - method for confidence interval computation -
-"ind", "bf", or "ph" - see further details below}
+"ind", "bf", "ph", or "smr" - see further details below}
 
 \item{family_list}{\itemize{
 \item a LIST the same length of contrast tables that specifies
@@ -58,6 +60,15 @@ This is only relevant if method = "bf" or method = "ph", and will be ignored if 
 \item if independent is set to FALSE, and method = "ph", then supply nu1 (df1) that
 is used to adjust the critical constant to control for type 1 error (see eqs 7, 8, 9 of
 Bird (2002) https://doi.org/10.1177/0013164402062002001). default = NA
+}}
+
+\item{smr_params}{\itemize{
+\item a list of parameters required for the smr method.
+This should contain the following fields: p, q, n_sim (optional, default = 100000),
+and seed (optional, default = NULL). See Bird & Hazli-Pavlovic (2005)
+https://doi.org/10.1111/j.1467-9280.2005.01587.x Table 2, for the definition of p and q,
+and the documentation for the smr method (?smr_crit) for further details on n_sim and seed.
+default = NULL
 }}
 }
 \value{

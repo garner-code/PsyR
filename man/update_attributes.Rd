@@ -13,7 +13,8 @@ update_attributes(
   v_e,
   v_w = NA,
   v_b = NA,
-  alpha = 0.05
+  alpha = 0.05,
+  smr_params = NULL
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ see "?psyci" for further details}
 \item{v_b}{single value. df between. default = NA}
 
 \item{alpha}{single value. applied alpha rate. default = .05}
+
+\item{smr_params}{a list of parameters used for the Studentized Maximum Root method,
+if this methods was used. Must have named elements p and q. default = NULL}
 }
 \value{
 an emmeans contrast table with attributes updated

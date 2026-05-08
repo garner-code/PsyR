@@ -19,6 +19,8 @@
 #' @param v_w single value. df within. default = NA
 #' @param v_b single value. df between. default = NA
 #' @param alpha single value. applied alpha rate. default = .05
+#' @param smr_params  a list of parameters used for the Studentized Maximum Root method,
+#' if this methods was used. Must have named elements p and q. default = NULL
 #'
 #' @returns an emmeans contrast table with attributes updated
 #' @export
@@ -44,7 +46,8 @@
 update_attributes <- function(contrast_table, method, family = NA,
                               between_factors = NA, within_factors = NA,
                               v_e, v_w = NA, v_b = NA,
-                              alpha = 0.05){
+                              alpha = 0.05,
+                              smr_params = NULL){
 
   btwn_msg = FALSE
   wthn_msg = FALSE
@@ -76,7 +79,9 @@ update_attributes <- function(contrast_table, method, family = NA,
     } else if (family == "bw"){
       method = "post-hoc between x within (Roy's GCR)"
     } else
-    method = "post-hoc"
+      method = "post-hoc"
+  } else if (method == "smr"){
+    method = "Studentized Maximum Root (SMR)"
   } else {
     method = "unknown method" #prob not necessary as earlier messages should catch this
   }
@@ -89,11 +94,21 @@ update_attributes <- function(contrast_table, method, family = NA,
                                     )
   # now apply specific attributes depending on currently used family
   if (btwn_msg){
-    attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
-                                      paste("PsyR assumed between subject factor(s) are:",
-                                            paste(between_factors, collapse=", ")),
-                                      paste("PsyR used df between of:", v_b)
-    )
+    if (method == "Studentized Maximum Root (SMR)"){
+
+      attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                        paste("PsyR assumed between subject factor(s) are:",
+                                              paste(between_factors, collapse=", ")),
+                                        paste("PsyR used SMR parameter p of:", smr_params$p ),
+                                        paste("PsyR used SMR parameter q of:", smr_params$q )
+      )
+    } else {
+      attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
+                                        paste("PsyR assumed between subject factor(s) are:",
+                                              paste(between_factors, collapse=", ")),
+                                        paste("PsyR used df between of:", v_b)
+      )
+    }
   }
 
   if (wthn_msg){

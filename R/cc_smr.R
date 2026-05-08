@@ -1,18 +1,27 @@
-cc_smr <- function(smr_params, v_e, alpha, seed=NULL){
+#' Convert the critical constant for the SMR test into a critical constant for the
+#' computation of confidence intervals. This takes the square root of the SMR parameter
+#' output by smr_crit, as per Bird & Hadzi-Pavlovic (2005), page 360.
+#'
+#' @param alpha Numeric. The significance level (e.g., 0.05 for a 95%
+#' confidence level).
+#' @param p Integer. The matrix dimension (number of variables).
+#' @param q Integer. The degrees of freedom for the Wishart distribution.
+#' @param n Integer. The degrees of freedom for the test statistic.
+#' @param n_sim Integer. The number of simulations to run for estimating
+#' the moments. Default is 100000.
+#' @param seed Integer or NULL. The random seed for reproducibility.
+#' Default is NULL.
+#'
+#' @return Numeric. The critical value for the confidence interval computation.
+#' @export
+#'
+#' @examples
+#' critical_constant <- cc_smr(2, 2, 96, .05)
+#' print(critical_constant)
+cc_smr <- function(p, q, v_e, alpha, n_sim = 100000, seed = NULL){
 
-  # CHANGE THIS SO IT RETURNS ONE CC.
-
-  # first get the critical constants for the smr procedure
-  idx = which(!is.na(smr_params$p)) # which of the contrasts are product contrasts,
-  # inferred from the smr_params list.
-  ccs[idx] <- mapply(smr_crit, alpha=alpha[idx],
-                     p=smr_params$p[idx],
-                     q=smr_params$q[idx],
-                     n=rep(v_e, times=length(idx)),#smr_params$nu1[idx],
-                     MoreArgs=list(n_sim=100000, seed=seed))
-  # now take the square root of the critical constants, multiplied by nu1
-  # see Bird & Hadzi-Pavlovic (2005), page 360,
-  # for the conversion of SMR into a critical constant
-  ccs[idx] <- sqrt(ccs[idx] * smr_params$nu1[idx])
-  ccs
+  cc <- smr_crit(p=p, q=q, n=v_e, alpha=alpha,
+                 n_sim = n_sim, seed = seed)
+  cc <- sqrt(cc)
+  cc
 }

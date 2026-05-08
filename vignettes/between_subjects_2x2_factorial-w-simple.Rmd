@@ -54,7 +54,14 @@ mod <- aov_ez("subID",
 
 ## Contrasts
 
-Lets define and obtain our contrast tables
+We assemble our contrasts a little bit differently for the SMR procedure,
+as we only need to use it when using simple effects, and our construction of the 
+null hypothesis will be common for our main and simple effects and interactions (Bird &
+Hadzi-Pavlovic (2005), p. 353-354). 
+
+So for the SMR procedure we put all our contrasts of interest into a set of lists,
+and then we define our SMR parameters based on our family of models (A(b), B(a), or 
+A(b) $\cap$ B(a) - see Bird & Hadzi-Pavlovic (2005). Table 2).
 
 ```{r, between_subjects_contrasts}
 
@@ -62,7 +69,6 @@ btwn_cont <- list(
   "Sleep_Dep" = c(0.5, -0.5, 0.5, -0.5),
   "NVH" = c(0.5, 0.5, -0.5, -0.5)
 )
-
 ```
 
 Now get an emmens object and apply the contrasts
@@ -72,7 +78,8 @@ Now get an emmens object and apply the contrasts
 emms <- emmeans(mod, c("sleep_deprivation", "nvh"))
 mfx <- contrast(emms, btwn_cont)
 ```
-We also want the interaction contrast:
+We also want the interaction contrast. Note there was nothing stopping us
+adding it to the list of contrasts above.
 
 ```{r interaction_contrast}
 
@@ -112,19 +119,19 @@ Now we apply the SMR correction to all our contrasts, and get the confidence int
 
 
 all_fx <- c(mfx, int, nvh_simp_fx, sdep_simp_fx) 
-family_list = list(rep("b", times=length(all_fx))) 
-alphas = 3*.05 # 3 * alpha / nk
+family_list = as.list(rep("b", length(all_fx)))
+alphas = 0.05 # because we adjust by contrast
 
-# because we are using the SMR distribution for product
-# contrasts, we have to specify come extra parameters 
-# on page 359 in Table 2
-ps <- c(NA, 1, 1, 1) # the latter 2 are potentially 2
-qs <- c(NA, 1, 2, 2)
-nu1 <-c(NA, 1, 2, 2) # the latter 2 are potentially 3
+# because we are testing for A(b) and B(a) (and implicitly for A, B, and AB)
+# we define our smr parameters using row 4 of Table 2 of Bird & Hadzi-Pavlovic (2005)
+
+p <- 2 
+q <- 2
 smr_params <- list(
-  p = ps,
-  q = qs,
-  nu1 = nu1
+  p = p,
+  q = q,
+  n_sim = 100000, # this is also the default
+  seed = 42 # set seed if you want to replicate simulation of smr distribution
 )
 
 psyci(model=mod, 
@@ -133,8 +140,7 @@ psyci(model=mod,
       smr_params = smr_params,
       family_list = family_list, 
       between_factors = list("sleep_deprivation", "nvh"),       
-      alpha = alphas,
-      independent = FALSE)
+      alpha = alphas)
 
 ```
 

@@ -25,7 +25,7 @@
 #' Do not mix or match orthogonal or non-orthogonal. If there is only one table of contrasts,
 #' it is not necesssary to enter it as a list.
 #' @param method a single string - method for confidence interval computation -
-#' "ind", "bf", or "ph" - see further details below
+#' "ind", "bf", "ph", or "smr" - see further details below
 #' @param family_list - a LIST the same length of contrast tables that specifies
 #' if the associated contrast table is of the family "b", "w", or "bw"
 #' @param between_factors - a list of between subject factor names, default = NA
@@ -41,7 +41,12 @@
 #' @param nu1 - if independent is set to FALSE, and method = "ph", then supply nu1 (df1) that
 #' is used to adjust the critical constant to control for type 1 error (see eqs 7, 8, 9 of
 #' Bird (2002) https://doi.org/10.1177/0013164402062002001). default = NA
-#'
+#' @param smr_params - a list of parameters required for the smr method.
+#' This should contain the following fields: p, q, n_sim (optional, default = 100000),
+#' and seed (optional, default = NULL). See Bird & Hazli-Pavlovic (2005)
+#' https://doi.org/10.1111/j.1467-9280.2005.01587.x Table 2, for the definition of p and q,
+#' and the documentation for the smr method (?smr_crit) for further details on n_sim and seed.
+#' default = NULL
 #' @return an emmeans contrast table with confidence intervals added
 #' @export
 #'
@@ -66,14 +71,14 @@ psyci <- function(model, contrast_tables, method,
                   alpha = 0.05,
                   independent = TRUE,
                   nu1 = NA,
-                  smr_params = NA,
+                  smr_params = NULL,
                   seed = NULL){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
   }
-  if (!method %in% c("ind", "bf", "ph")){
-    stop("Error: method should be ind, bf, or ph")
+  if (!method %in% c("ind", "bf", "ph", "smr")){
+    stop("Error: method should be ind, bf, ph, or smr")
   }
 
   if (!is.list(family_list)){
@@ -110,7 +115,7 @@ psyci <- function(model, contrast_tables, method,
     fam_check <- unlist(
       lapply(family_list, function(x) x %in% c("w", "bw")))
 
-    if (any(fam_check)){
+    if (any(unlist(fam_check))){
       stop("Error: You have requested the SMR procedure, but the family_list contains within subject related families.
            Please check your family_list and method arguments.")
     }
@@ -123,16 +128,23 @@ psyci <- function(model, contrast_tables, method,
            Please check your method and smr_params arguments.")
     }
     # checking for fields, and the length of those fields
-    required_fields = c("p", "q", "nu1")
-    required_length = length(contrast_tables)
+    required_fields = c("p", "q")
      if (!all(required_fields %in% names(smr_params))){
        stop("Error: You have requested the SMR procedure, but your smr_params argument is missing one or more required fields.
             Please check your method and smr_params arguments.")
      }
-     if (!all(sapply(smr_params[required_fields], length) == required_length)){
-       stop("Error: You have requested the SMR procedure, but the fields of your smr_params argument
-            are not the same length as contrast_tables. Please check your method and smr_params arguments.")
-     }
+  }
+  # if method is smr, check whether or not the n_sim or seed params
+  # have been passed in. If not, set to the defaults
+  if (method %in% "smr"){
+    if (!"n_sim" %in% names(smr_params)){
+      smr_params$n_sim = 100000
+    }
+  }
+  # if the method is not smr, then set an smr_params value to null,
+  # for later use in the update_attributes function
+  if (!method %in% "smr"){
+   smr_params = NULL
   }
 
   # now put the contrast table info together
@@ -239,17 +251,20 @@ psyci <- function(model, contrast_tables, method,
     }
   } else if (method %in% "smr"){
 
-    # here we make a list of critical constants, to be applied to construct confidence
-    # intervals for each family of interest
-    ccs = rep(NA, length(contrast_tables))
-    # U2H: HAVE STARTED A FUNCTION CALLED cc-smr. NEED TO MAPPLY THE INFO TO THAT.
-
-
-
-    # now get the critical constants for the non-product contrasts, which will
-    # be a Scheffe procedure with the relevant alpha.
-
-
+    # do we have a seed setting?
+    if ("seed" %in% names(smr_params)){
+      seed = smr_params$seed
+    } else {
+      seed = NULL
+    }
+    # get the critical constant
+    smr_alpha <- unlist(unique(alphas))
+    if (length(smr_alpha) > 1){
+      stop("Error: more than one alpha value provided for SMR method")
+    }
+    cc_smr = sqrt(smr_crit(alpha = smr_alpha, p = smr_params$p, q = smr_params$q,
+                            n = v_e, n_sim = smr_params$n_sim, seed = seed))
+    critical_constant = rep(cc_smr, length(contrast_tables))
   }
 
   # now get SE from each contrast table in contrast_tables, compute CIs using appropriate
@@ -280,7 +295,10 @@ psyci <- function(model, contrast_tables, method,
   contrasts_w_cis <- mapply(update_attributes, contrasts_w_cis, method = methods,
                             family=families, between_factors=btwn_fctrs,
                             within_factors=wthn_fctrs, v_b=v_bs, v_w=v_ws,
-                            v_e=v_es, alpha=alphas, SIMPLIFY = FALSE)
+                            v_e=v_es, alpha=alphas,
+                            MoreArgs=list(smr_params=smr_params),
+                            SIMPLIFY = FALSE)
+
   names(contrasts_w_cis) = families
 
   return(contrasts_w_cis)

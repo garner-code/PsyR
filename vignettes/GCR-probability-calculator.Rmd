@@ -72,3 +72,4 @@ Now the parameters are set, we can observe the probability of theta given v_w, v
 p = pgcr(theta, v_w, v_b, v_e)
 p
 ```
+

@@ -32,7 +32,7 @@
 #'
 #' @seealso wishartlr_sample
 #' @export
-smr_crit <- function(alpha, p, q, n, n_sim = 100000, seed = NULL) {
+smr_crit <- function(alpha, p, q, n, n_sim = 100000, seed = NULL ) {
 
   calc_f_params <- function(mu1, mu2, mu3, tau) {
 
