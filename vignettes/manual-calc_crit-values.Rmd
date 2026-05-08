@@ -78,7 +78,7 @@ or Between x within post-hoc using Roy's GCR
 cc_ph_bw(v_w, v_b, v_e)
 ```
 
-Let's assume we'll use this last CC to construct our confidence intervals. We can do that as follows:
+Let's assume we'll use this CC to construct our confidence intervals ourselves. We can do that as follows:
 
 ```{r, cis}
 
@@ -86,5 +86,29 @@ cc <- cc_ph_bw(v_w, v_b, v_e)
 compute_contrast_ci(cc, SE)
 ```
 
+If you have a theta value from a post-hoc between x within design, where theta is a component of your covariance matrix, you can use the following function to get the associated p-value.
+
+```{r, gcr_p}
+
+s = 2
+m = -0.5
+n = 50
+theta = 0.2
+
+1 - gcr_cdf(s, m, n, theta)
+
+```
 
 Thus the CIs would be the mean, plus and minus the above number.
+
+For the smr procedure, you would use:
+
+```{r, smr}
+
+p = 2
+q = 2
+v_e = 96
+cc <- cc_smr(p, q, v_e, .05)
+print(cc)
+```
+
