@@ -1,10 +1,12 @@
 Package: PsyR
-Title: What the Package Does (One Line, Title Case)
+Title: Confidence Intervals for ANOVA Contrasts
 Version: 0.0.0.9000
 Authors@R: 
     person("Kelly", "Garner", , "kelly.grace.garner@unsw.edu.au", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-0690-6941"))
-Description: What the package does (one paragraph).
+Description: Computes confidence intervals for planned and post-hoc contrasts
+    from ANOVA models, including Bonferroni, post-hoc, and
+    Studentized Maximum Root procedures.
 License: MIT + file LICENSE
 Depends: 
     R (>= 3.5)
