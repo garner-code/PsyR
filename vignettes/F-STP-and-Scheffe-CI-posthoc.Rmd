@@ -49,7 +49,7 @@ Have you forgotten the details of the fatigue dataset? Call the help function us
 ?fatigue
 ```
 
-Time for some tidying! `mutate()` creates a new column called "Group", then assigns the labels of "Alert", "Mild", "Moderate" and "Extreme" to the previously coded group levels "1", "2", "3", "4". We have also called the `factor()` function, assigning our new column as a factor rather than a double. This will be helpful later when we visualise our data, not to mention that it makes for some more human readable category names!
+Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the datatype from a double to a factor and  assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful  when we visualise our data, not to mention that it makes for some more human readable category names!
 ```{r sortfatigue}
 
 fatigue <- fatigue %>%
@@ -62,10 +62,9 @@ fatigue <- fatigue %>%
 ```
 
 Time to plot our data, with help from the ggplot2 package.  
-First, using a pipe, lets tell `ggplot()` to use the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also fill our boxplots based on the Group they represent. 
-
+Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also fill our boxplots based on the Group they represent. 
 Next, lets create a boxplot `geom_boxplot()` and make it look nice and clean using `theme_classic()`.
-#' plot not wide enough
+#> the plot is a bit squished rn
 ```{r boxplotit}
 
 fatigue %>% ggplot(aes(x = Group, y = Errors, fill = Group)) +
@@ -75,7 +74,11 @@ fatigue %>% ggplot(aes(x = Group, y = Errors, fill = Group)) +
 
 ## The Analysis
 
-Lets run some statistical tests! First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*, taking in the ID of our subject, their errors score and their fatigue level. Next, lets specify that our data is between-subjects, as identified by our "Group" column. Finally, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* and output based upon "Group".
+Lets prepare to run some statistical tests!
+
+Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.  
+
+Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are now split by factor ("Alert", "Mild", "Moderate", "Extreme").
 
 ```{r, aov}
 
@@ -92,11 +95,12 @@ emms
 
 ```
 
-Time to define our contrasts! Lets create an object called *between_contrasts*. Call the `list` function, then create four contrasts. The contrasts represent the following:  
-* "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition  
-* "Extreme-Mod,Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.  
-* "Low-Hi" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.  
-* "Alert-Mild" - The difference between the Alert and Mild fatigue condtions.
+Time to define our contrasts!  
+Lets create an object called *between_contrasts*. Call the `list()` function, then create four contrasts. The contrasts represent the following:  
++ "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition  
++ "Extreme-Mod,Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.  
++ "Low-Hi" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.  
++ "Alert-Mild" - The difference between the Alert and Mild fatigue condtions.
 
 ```{r definecontrasts}
 ### note to selves - is there a way to get emmeans to do the scaling here?
@@ -110,7 +114,7 @@ between_contrasts = list(
 between_contrasts
 ```
 
-Lets create an ANOVA table. Create the *btwn_fx* object, then call the `contrast` function, setting *emms* in the "object" arguement and *between_contrasts* in the "future_sadie" arguement.
+Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" arguement and *between_contrasts* in the "method" arguement (ensuring the FWER is controlled according to a between contrasts protocol).
 
 ```{r, between_fx}
 
@@ -118,11 +122,15 @@ btwn_fx <- contrast(emms, between_contrasts)
 btwn_fx
 ```
 
-Finally, lets (future_sadie_here)
+Finally, lets calculate some confidence intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function. `psyci` takes in the *mod* object as its model (where the model must be made using the afex package - afex_aov), our previously made list of contrasts *btwn_fx*, specifying that the contrast table is between-subjects only ("b"), creates confidence intervals using a post-hoc method ("ph", estimate +- SE x cc), sets alpha at 0.05, 
+
+then labels each between subject factor name according to the "Group" column.
 
 ```{r, psyci}
 
 
-contrasts_w_cis = psyci(mod, contrast_tables=list(btwn_fx),  family_list=list("b"), method="ph", alpha=.05, between_factors = list("Group"))
+contrasts_w_cis = psyci(mod, contrast_tables = list(btwn_fx),  family_list = list("b"), method = "ph", alpha = .05, between_factors = list("Group"))
+#contrasts_w_cis
+#sadie: do you want to print contrasts_w_cis after? Delete if not.
 
 ```
