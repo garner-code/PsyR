@@ -47,13 +47,13 @@ Time for some tidying! `mutate()` creates a new column called "Group". Then, usi
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
-             mutate(
-               Group = factor(
-                 Group, 
-                 levels = c(1,2,3,4),
-                 labels = c('Alert', 'Mild', 'Moderate', 'Extreme')
-               )
-             )
+  mutate(
+    Group = factor(
+      Group,
+      levels = c(1, 2, 3, 4),
+      labels = c("Alert", "Mild", "Moderate", "Extreme")
+    )
+  )
 ```
   
 Time to plot our data, with help from the ggplot2 package.  
@@ -61,10 +61,10 @@ Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we ju
 Next, lets create a boxplot `geom_boxplot()` and make it look nice and clean using `theme_classic()`.  
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
-fatigue %>% 
+fatigue %>%
   ggplot(aes(x = Group, y = Errors, fill = Group)) +
-  geom_boxplot() + theme_classic()
-
+  geom_boxplot() +
+  theme_classic()
 ```
 
 ## The Analysis
@@ -80,11 +80,11 @@ Next, lets create a new object *emms* (short for estimated marginal means) calli
 afex_options(emmeans_model = "multivariate")
 # perform the statistical model
 mod <- aov_ez(
-        "id", 
-        "Errors", 
-        fatigue, 
-        between = "Group"
-        )
+  "id",
+  "Errors",
+  fatigue,
+  between = "Group"
+)
 
 emms <- emmeans(mod, "Group")
 emms
@@ -134,13 +134,13 @@ Finally, lets calculate some confidence intervals to estimate effect sizes. Lets
 * The between_factors argument is set according to our desired group names, as in the "Group" column
   
 ```{r, psyci}
-contrasts_w_cis = psyci(
-                    mod, 
-                    contrast_tables = list(btwn_fx), 
-                    family_list = list("b"), 
-                    method = "ph", 
-                    alpha = .05, 
-                    between_factors = list("Group")
-                  )
+contrasts_w_cis <- psyci(
+  mod,
+  contrast_tables = list(btwn_fx),
+  family_list = list("b"),
+  method = "ph",
+  alpha = .05,
+  between_factors = list("Group")
+)
 contrasts_w_cis
 ```
