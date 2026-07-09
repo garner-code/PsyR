@@ -7,9 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-# Title
-
-Info
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé simultaneous confidence interval (SCI) method for making inferences for multiple contrasts.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -20,68 +18,91 @@ knitr::opts_chunk$set(
 
 ## Loading packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.  
 
 ```{r, loadpackages}
-
 library(afex)
 library(emmeans)
 library(tidyverse)
 library(ggplot2)
 library(PsyR)
-
 ```
 
 ## The data
 
-```{r loaddata}
+Lets load the data, then call the `head()` function to print the first 5 rows.  
 
+```{r loaddata}
 data(fatigue)
 head(fatigue, 5)
 ```
 
-```{r, whatfatigue}
+Have you forgotten the details of the fatigue dataframe? Call the help function using `?data` to open its documentation.  
 
+```{r, whatfatigue}
 ?fatigue
 ```
-
+  
+Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the datatype from a double to a factor and assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful when we visualise our data, not to mention that it makes for some more human readable category names!  
 
 ```{r sortfatigue}
-
 fatigue <- fatigue %>%
-             mutate(Group = factor(Group, 
-                                  levels=c(1,2,3,4),
-                                  labels=c('Alert', 
-                                           'Mild', 
-                                          'Moderate',
-                                          'Extreme')))
+  mutate(
+    Group = factor(
+      Group,
+      levels = c(1, 2, 3, 4),
+      labels = c("Alert", "Mild", "Moderate", "Extreme")
+    )
+  )
+```
+  
+Time to plot our data, with help from the ggplot2 package.  
+Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also fill our boxplots based on the Group they represent. 
+Next, lets create a boxplot `geom_boxplot()` and make it look nice and clean using `theme_classic()`.  
+
+```{r boxplotit, fig.width = 7.1, fig.height = 4}
+fatigue %>%
+  ggplot(aes(x = Group, y = Errors, fill = Group)) +
+  geom_boxplot() +
+  theme_classic()
 ```
 
-```{r boxplotit}
+## The Analysis
 
-fatigue %>% ggplot(aes(x=Group, y=Errors, fill=Group)) +
-  geom_boxplot() + theme_classic()
+Lets prepare to run some statistical tests!
 
-```
+Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.  
 
-
+Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are now split by factor ("Alert", "Mild", "Moderate", "Extreme").
+  
 ```{r, aov}
-
 # set emmeans option to multivariate
 afex_options(emmeans_model = "multivariate")
 # perform the statistical model
-mod <- aov_ez("id", 
-              "Errors", 
-              fatigue, 
-              between = "Group")
+mod <- aov_ez(
+  "id",
+  "Errors",
+  fatigue,
+  between = "Group"
+)
 
 emms <- emmeans(mod, "Group")
 emms
-
 ```
+  
+Time to define our contrasts!  
+Lets create an object called *between_contrasts*. Call the `list()` function, then create four contrasts. The contrasts represent the following:  
+
+  * "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition  
+  
+  *   "Extreme-Mod,Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.  
+  
+  * "Low-Hi" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.  
+  
+  * "Alert-Mild" - The difference between the Alert and Mild fatigue conditions.
+  
 ```{r definecontrasts}
 ### note to selves - is there a way to get emmeans to do the scaling here?
-
 between_contrasts = list(
   "Fatigue-Alert" = c(-1, 1/3, 1/3, 1/3),
   "Extreme-Mod,Mild" = c(0, -1/2, -1/2, 1),
@@ -90,16 +111,36 @@ between_contrasts = list(
 )
 between_contrasts
 ```
-
+  
+Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" arguement and *between_contrasts* in the "method" arguement (ensuring the FWER is controlled according to a between contrasts protocol).
+  
 ```{r, between_fx}
-
 btwn_fx <- contrast(emms, between_contrasts)
 btwn_fx
 ```
+  
+Finally, lets calculate some confidence intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:  
 
+* The model is specified as the previously made *mod* object, where the model must be made using the afex package - afex_aov  
+
+* The contrast_tables argument is set as the previously made *btwn_fx*  
+
+* The family list is set as "b", specifying that the contrast table is between-subjects only  
+
+* The method is set as "ph", creating confidence intervals using a post-hoc method (estimate +- SE x cc)  
+
+* Alpha is set at 0.05, indicating desired type I error rate
+
+* The between_factors argument is set according to our desired group names, as in the "Group" column
+  
 ```{r, psyci}
-
-
-contrasts_w_cis = psyci(mod, contrast_tables=list(btwn_fx),  family_list=list("b"), method="ph", alpha=.05, between_factors = list("Group"))
-
+contrasts_w_cis <- psyci(
+  mod,
+  contrast_tables = list(btwn_fx),
+  family_list = list("b"),
+  method = "ph",
+  alpha = .05,
+  between_factors = list("Group")
+)
+contrasts_w_cis
 ```
