@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé simultaneous confidence interval (SCI) method for making inferences for multiple contrasts.
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -16,11 +16,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Loading packages
+## The Packages
 
 To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.  
 
-```{r, loadpackages}
+```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
 library(emmeans)
 library(tidyverse)
@@ -28,22 +28,23 @@ library(ggplot2)
 library(PsyR)
 ```
 
-## The data
+## The Data
 
 Lets load the data, then call the `head()` function to print the first 5 rows.  
 
 ```{r loaddata}
 data(fatigue)
-head(fatigue, 5)
+head(fatigue, 5) %>%
+  knitr::kable()
 ```
 
 Have you forgotten the details of the fatigue dataframe? Call the help function using `?data` to open its documentation.  
 
-```{r, whatfatigue}
+```{r, whatfatigue, message = FALSE, warning = FALSE}
 ?fatigue
 ```
   
-Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the datatype from a double to a factor and assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful when we visualise our data, not to mention that it makes for some more human readable category names!  
+Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the data type from a double to a factor and assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful when we visualise our data, not to mention that it makes for some more human readable category names!  
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -76,8 +77,6 @@ Here we will create the building blocks of our eventual ANOVA output. First, let
 Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are now split by factor ("Alert", "Mild", "Moderate", "Extreme").
   
 ```{r, aov}
-# set emmeans option to multivariate
-afex_options(emmeans_model = "multivariate")
 # perform the statistical model
 mod <- aov_ez(
   "id",
@@ -85,9 +84,8 @@ mod <- aov_ez(
   fatigue,
   between = "Group"
 )
-
 emms <- emmeans(mod, "Group")
-emms
+knitr::kable(emms, digits = 3)
 ```
   
 Time to define our contrasts!  
@@ -109,14 +107,14 @@ between_contrasts = list(
   "Low-Hi" = c(1/2, 1/2, -1/2, -1/2),
   "Alert-Mild" = c(1, -1, 0, 0)
 )
-between_contrasts
+knitr::kable(between_contrasts, digits = 2)
 ```
   
 Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (ensuring the FWER is controlled according to a between contrasts protocol).
   
 ```{r, between_fx}
 btwn_fx <- contrast(emms, between_contrasts)
-btwn_fx
+knitr::kable(btwn_fx, digits = 3)
 ```
   
 Finally, lets calculate some confidence intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:  
@@ -142,9 +140,12 @@ contrasts_w_cis <- psyci(
   alpha = .05,
   between_factors = list("Group")
 )
-contrasts_w_cis
+knitr::kable(contrasts_w_cis, digits = 3)
 ```
 
 ## The Interpretation
 
 Interpretation to be included here.
+
+I will put this in later. [Caption](.png) 
+
