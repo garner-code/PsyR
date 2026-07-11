@@ -147,5 +147,7 @@ knitr::kable(contrasts_w_cis, digits = 3)
 
 Interpretation to be included here.
 
-I will put this in later. [Caption](.png) 
+I will put this in later.  
+
+![Caption](PsyR.png)
 
