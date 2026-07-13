@@ -34,11 +34,11 @@ Lets load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(fatigue)
-head(fatigue, 5) |>
-  knitr::kable()
+head(fatigue, 5) %>%
+  knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
 
-Have you forgotten the details of the fatigue dataframe? Call the help function using `?data` to open its documentation.  
+Have you forgotten the details of the fatigue dataframe? Call the help function using `?df` to open its documentation.  
 
 ```{r, whatfatigue, message = FALSE, warning = FALSE}
 ?fatigue
@@ -58,7 +58,8 @@ fatigue <- fatigue %>%
 ```
   
 Time to plot our data, with help from the ggplot2 package.  
-Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also colour-code our four groups using by calling fill: <span style="color: OrangeRed;">Alert</span>, <span style="color: OliveDrab;">Mild</span>, <span style="color: DarkTurquoise;">Moderate</span> and <span style="color: DarkOrchid;">Extreme</span>.
+
+Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also colour-code our four groups by calling fill: <span style="color: OrangeRed;">Alert</span>, <span style="color: OliveDrab;">Mild</span>, <span style="color: CadetBlue;">Moderate</span> and <span style="color: DarkOrchid;">Extreme</span>.
 
 Next, lets create a boxplot `geom_boxplot()` and make it look nice and clean using `theme_classic()`.  
 
@@ -75,7 +76,7 @@ Lets prepare to run some statistical tests!
 
 Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.  
 
-Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are now split by factor ("Alert", "Mild", "Moderate", "Extreme").
+Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are split by factor ("Alert", "Mild", "Moderate", "Extreme").
   
 ```{r, aov}
 # perform the statistical model
@@ -90,13 +91,14 @@ knitr::kable(emms, digits = 3)
 ```
   
 Time to define our contrasts!  
+
 Lets create an object called *between_contrasts*. Call the `list()` function, then create four contrasts. The contrasts represent the following:  
 
   * "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition  
   
   *   "Extreme-Mod, Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.  
   
-  * "Low-Hi" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.  
+  * "Low-High" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.  
   
   * "Alert-Mild" - The difference between the Alert and Mild fatigue conditions.
   
@@ -105,10 +107,9 @@ Lets create an object called *between_contrasts*. Call the `list()` function, th
 between_contrasts = list(
   "Fatigue-Alert" = c(-1, 1/3, 1/3, 1/3),
   "Extreme-Mod, Mild" = c(0, -1/2, -1/2, 1),
-  "Low-Hi" = c(1/2, 1/2, -1/2, -1/2),
+  "Low-High" = c(1/2, 1/2, -1/2, -1/2),
   "Alert-Mild" = c(1, -1, 0, 0)
 )
-knitr::kable(between_contrasts, digits = 2)
 ```
   
 Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (ensuring the FWER is controlled according to a between contrasts protocol).
@@ -128,7 +129,7 @@ Finally, lets calculate some confidence intervals to estimate effect sizes. Lets
 
 * The method is set as "ph", creating confidence intervals using a post-hoc method (estimate +- SE x cc)  
 
-* Alpha is set at 0.05, indicating desired type I error rate
+* Alpha is set at 0.05, indicating the desired type I error rate
 
 * The between_factors argument is set according to our desired group names, as in the "Group" column
   
@@ -146,12 +147,21 @@ knitr::kable(contrasts_w_cis, digits = 3)
 
 ## The Interpretation
 
-Interpretation to be included here.
+There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-Hi" contrasts (p < 0.05).
 
-I will put this in later.  
+* Compared to alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors. 
 
-------------------------------------
+* Drivers with extreme fatigue make between 4.187 and 10.813 more errors than the average of Moderate and Mild fatigue conditions.
 
-![PsYR](../man/figures/PsyR.png)
+* Drivers with low fatigue (the average of alert and mild conditions) make between 4.295 and 9.705 less errors than those with high fatigue (the average of moderate and extreme conditions) 
+
+There is insufficient evidence to suggest a significant difference exists in the "Alert-Mild" contrast (p > 0.05). 
+
+* Alert drivers may make 5.825 fewer or 1.825 more mistakes than their mildly fatigued counterparts.
+
+---------------------------------
 
 
+```{r, echo=FALSE, fig.align='center', out.width='50%'}
+knitr::include_graphics("../man/figures/PsyR.png")
+```
