@@ -26,13 +26,23 @@ Following the example in chapter 6 of [@bird2004] Analysis of Variance via Confi
 
 ## Load the data
 
-Lets load the data, make it longform, and define the factors
+Lets load the data, then call the `head()` function to print the first 5 rows. 
 
 ```{r loaddata}
 data(kevin_within)
 head(kevin_within, 5) %>%
   knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
+
+Have you forgotten the details of the dataframe? Call the help function using `?df` to open its documentation.  
+
+```{r, whatfatigue, message = FALSE, warning = FALSE}
+?kevin_within
+```
+
+Lets tidy our data! First, call `pivot_longer()`, using `values_to` to move the scores from the "Pre", "Post" and "FU" conditions into a single column labelled "Score". Lets also create a column to identify what session the scores come from, using `names_to` to populate the column with our predefined session names.
+
+Next, lets re-organise our new "Session" column. We can order the scores according to the chronological order of our data, such that all "Pre" scores are displayed at the top of the dataframe, followed by "Post" and then "FU".
 
 ```{r longform}
 kevin_within <- kevin_within %>%
@@ -50,6 +60,17 @@ kevin_within <- kevin_within %>%
       "FU"
     )
   )
+```
+
+Time to plot our data, with help from the ggplot2 package.  
+
+Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our four groups by calling fill: <span style="color: OrangeRed;">Pre</span>, <span style="color: OliveDrab;">Post</span>, <span style="color: CadetBlue;">FU</span>.
+
+```{r boxplotit, fig.width = 7.1, fig.height = 4}
+kevin_within %>%
+  ggplot(aes(x = Session, y = Score, fill = Session)) +
+  geom_boxplot() +
+  theme_classic()
 ```
 
 ## Model
