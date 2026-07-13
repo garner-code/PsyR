@@ -15,18 +15,24 @@ knitr::opts_chunk$set(
 )
 ```
 
+##The Packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
 ```{r setup, message = FALSE, warning = FALSE}
 library(PsyR)
-library(tidyverse)
 library(emmeans)
 library(afex)
+library(tidyverse)
 ```
+
+Insert new vignette description here.
 
 Following the example in chapter 6 of [@bird2004] Analysis of Variance via Confidence Intervals
 
-## Load the data
+## The Data
 
-Lets load the data, then call the `head()` function to print the first 5 rows. 
+Lets load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(kevin_within)
@@ -34,7 +40,7 @@ head(kevin_within, 5) %>%
   knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
 
-Have you forgotten the details of the dataframe? Call the help function using `?df` to open its documentation.  
+Have you forgotten the details of the dataframe? Call the help function using `?df` to open its documentation.
 
 ```{r, whatfatigue, message = FALSE, warning = FALSE}
 ?kevin_within
@@ -62,9 +68,9 @@ kevin_within <- kevin_within %>%
   )
 ```
 
-Time to plot our data, with help from the ggplot2 package.  
+Time to plot our data, with help from the ggplot2 package.
 
-Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our four groups by calling fill: <span style="color: OrangeRed;">Pre</span>, <span style="color: OliveDrab;">Post</span>, <span style="color: CadetBlue;">FU</span>.
+Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our four groups by calling fill: [Pre]{style="color: OrangeRed;"}, [Post]{style="color: OliveDrab;"}, [FU]{style="color: CadetBlue;"}.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 kevin_within %>%
@@ -73,7 +79,7 @@ kevin_within %>%
   theme_classic()
 ```
 
-## Model
+## The Analysis
 
 Now run the anova
 
@@ -93,9 +99,15 @@ emms <- emmeans(mod, "Session")
 knitr::kable(emms, digits = 3)
 ```
 
-## Contrasts
+Now lets define and compute our contrasts of interest. Specifically, the contrasts compare the following:
 
-Now lets define and compute contrasts of interest
+* "Post-Pre" - The difference between scores taken prior to intervention and after the intervention.
+
+* "FU-Post" - The difference between scores taken post intervention and at follow up.
+
+* "FU-Pre" - The difference between scores taken prior to intervention and at follow up.
+
+Finally, we will create our ANOVA table. Lets make the *cnt_res* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and our newly defined *contrasts* in the "method" argument.
 
 ```{r phoc}
 contrasts <- list(
@@ -107,8 +119,6 @@ contrasts <- list(
 cnt_res <- contrast(emms, contrasts)
 knitr::kable(cnt_res, digits = 3)
 ```
-
-## Simultaneous Confidence Intervals
 
 Now lets compute post-hoc 95% CIs for a within subjects design
 
