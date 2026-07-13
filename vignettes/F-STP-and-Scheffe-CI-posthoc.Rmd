@@ -112,7 +112,7 @@ between_contrasts = list(
 )
 ```
   
-Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (ensuring the FWER is controlled according to a between contrasts protocol).
+Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (which will take in our newly defined contrasts).
   
 ```{r, between_fx}
 btwn_fx <- contrast(emms, between_contrasts)
