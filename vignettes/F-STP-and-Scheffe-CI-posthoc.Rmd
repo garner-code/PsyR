@@ -74,7 +74,7 @@ fatigue %>%
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.  
+Here we will create the building blocks of our eventual ANOVA output. First, lets create a new object *mod*. Call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.  
 
 Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are split by factor ("Alert", "Mild", "Moderate", "Extreme").
   
