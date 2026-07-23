@@ -21,35 +21,55 @@ library(emmeans)
 library(afex)
 ```
 
-Following the example in chapter 7 of Bird (2004) Analysis of Variance via Confidence Intervals
+Following the example in chapter 7 of @bird2004 - Analysis of Variance via Confidence Intervals
 
-## Load the data
+## The Data
 
-Lets load the data, make it longform, and define the factors 
+Lets load the data, then call the `head()` function to print the first 5 rows.
 
-```{r loaddata}
+```{r loaddata, message = false, warning = false}
 
 data(social_anxiety)
-head(social_anxiety, 5)
+head(social_anxiety, 5) %>%
+  knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
+
+Have you forgotten the details of the social anxiety dataframe? Call the help function using `?df` to open its documentation.
+
+```{r, what_socialanx,  message = false, warning = false}
+?social_anxiety
+```
+
+Time for some tidying! Within the `mutate()` function, lets transform our existing columns. First, using `fct_relevel()` the "Session" column is changed to the Factor datatype, and then organised according to chronological order. Next, the Group column is assigned as a factor, and then recoded such that treatment type is labelled with some more human readable names.
 
 ```{r longform}
 
-social_anxiety <- social_anxiety %>% 
-  mutate(Session = fct_relevel(Session, 'Pre','Post','FU1','FU2'),
-         Group = factor(Group),
-         Group = fct_recode(
-           Group,
-           "New" = "1",
-           "Standard" = "2",
-           "MinContact" = "3"
-         ))
+social_anxiety <- social_anxiety %>%
+  mutate(
+    Session = fct_relevel(Session, "Pre", "Post", "FU1", "FU2"),
+    Group = factor(Group),
+    Group = fct_recode(
+      Group,
+      "New" = "1",
+      "Standard" = "2",
+      "MinContact" = "3"
+    )
+  )
 
 ```
 
-## Model 
+Time to visualise our data. Using `ggplot()`, lets take in our social anxiety dataframe. Next, lets call `aes()` and create a canvas with "Session" on the X axis, "Score" on the Y axis. Lets also colour-code our groups by calling fill: [New]{style="color: OrangeRed;"}, [Standard]{style="color: OliveDrab;"}, [MinContact]{style="color: Blue;"}.
 
-Now run the anova
+```{r boxplotit, fig.width = 7.1, fig.height = 4}
+social_anxiety %>%
+  ggplot(aes(x = Session, y = Score, fill = Group)) +
+    geom_boxplot() +
+    theme_classic(base_size = 14)
+```
+
+## The Analysis 
+
+Now run the anova.
 
 ```{r model}
 
@@ -132,3 +152,5 @@ Next, we run the exact same but using the post-hoc method
 psyci(model=mod, contrast_tables = all_fx, method = "ph", family_list = family_list, between_factors = list("Group"), within_factors=list("Session"), alpha = alphas)
 
 ```
+
+##The Interpretation
