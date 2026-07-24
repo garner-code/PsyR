@@ -15,9 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-A vignette to help understand how to use PsyR to enact
-
-Following the example in chapter 6 of @bird2004 - Analysis of Variance via Confidence Intervals
+A vignette to help understand how to use PsyR to enact Post-Hoc Analysis of Variance via Confidence Intervals in a within-subjects design [@bird2004].
 
 ## The Packages
 
@@ -50,7 +48,7 @@ Lets tidy our data!
 
 First, call `pivot_longer()`, using the `values_to` argument to move the scores from the "Pre", "Post" and "FU" (Follow Up) conditions into a single column labelled "Score". Lets also create a column to identify what session the scores come from, using the `names_to` argument to populate the column with our predefined session names.
 
-Next, lets use the `fct_relevel()` function to set our "Session" column to the "Factor" datatype. This will be important later for visualisation and analysis purposes.
+Next, lets use the `fct_relevel()` function to set our "Session" column to the factor datatype. This will be important later for visualisation and analysis purposes.
 
 ```{r longform}
 kevin_within <- kevin_within %>%
@@ -74,7 +72,7 @@ head(kevin_within, 5) %>%
 
 Time to plot our data, with help from the ggplot2 package.
 
-Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our groups by calling fill: [Pre]{style="color: OrangeRed;"}, [Post]{style="color: OliveDrab;"}, [FU]{style="color: Blue;"}.
+Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our groups by calling fill: [Pre]{style="color: OrangeRed;"}, [Post]{style="color: Green;"}, [FU]{style="color: Blue;"}.
 
 Finally, lets create some boxplots using `geom_boxplot()` and make it look nice and clean using `theme_classic()`.
 
@@ -109,7 +107,7 @@ emms <- emmeans(mod, "Session")
 knitr::kable(emms, digits = 3)
 ```
 
-Now lets define and compute our contrasts of interest. Specifically, the contrasts compare the following:
+Now lets define and compute our contrasts of interest. To do so, create the *contrasts* object, calling `list()` to define our contrasts, which compare the following:
 
 - "Post-Pre" - The difference between scores taken prior to intervention and after the intervention.
 
@@ -117,7 +115,7 @@ Now lets define and compute our contrasts of interest. Specifically, the contras
 
 - "FU-Pre" - The difference between scores taken prior to intervention and at a 6 month follow up.
 
-Next, lets create our ANOVA table. Lets make our *contrasts* list. Next create the *cnt_res* object. Then, call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and our newly defined *contrasts* in the "method" argument.
+We can now generate our ANOVA table. To do so, create the *cnt_res* object. Then, call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and our newly defined *contrasts* in the "method" argument.
 
 ```{r phoc}
 contrasts <- list(
@@ -132,15 +130,15 @@ knitr::kable(cnt_res, digits = 3)
 
 Finally, lets compute our post-hoc 95% CIs for our within-subjects design. To do so, lets call `psyci()` from the PsyR package, specifying the following:
 
-- The model is specified as the previously made *mod* object, where the model must be made using the afex package - afex_aov
+- The model is specified as the previously made *mod* object, where the model must be made using the afex package - afex_aov.
 
-- The contrast_tables argument is set as the previously made *cnt_res*
+- The contrast_tables argument is set as the previously made *cnt_res*.
 
-- The method is set as "ph", creating confidence intervals (estimate +- SE x cc) using a post-hoc method [@bird2004a]
+- The method is set as "ph", creating confidence intervals (estimate +- SE x cc) using a post-hoc method [@bird2004a].
 
-- The family list is set as "w", specifying that the contrast table is within-subjects
+- The family list is set as "w", specifying that the contrast table is within-subjects.
 
-- The within_factors argument is set according to our desired group names, as in the "Session" column
+- The within_factors argument is set according to our desired group names, as in the "Session" column.
 
 ```{r, scis}
 psyci(
@@ -157,11 +155,13 @@ knitr::kable(digits = 3)
 
 There is insufficient evidence to suggests a significant difference exists in any of our contrasts of interest (p \> 0.05). However, our SCIs can give us some insight into the directionality of our data.
 
-- Compared to pre-intervention, scores at post-intervention may have improved by up to 6.192 units, or may have regressed by -0.192 units.
+- Compared to pre-intervention, scores at post-intervention may have improved by up to 6.192 units, or may have regressed by 0.192 units.
 
 - Compared to post-intervention, participants at follow up may have improved by up to 16.636 units, or may have regressed by 10.636 units.
 
 - Compared to pre-intervention, participants at follow up may have improved by up to 17.836 units, or may have regressed by 5.836 units.
+
+-----------------------------------------------------------------------
 
 ```{r, echo=FALSE, fig.align='center', out.width='50%'}
 knitr::include_graphics("../man/figures/PsyR.png")
