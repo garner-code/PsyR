@@ -5,9 +5,10 @@ vignette: >
   %\VignetteIndexEntry{F-STP-and-Scheffe-CI-posthoc}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé simultaneous confidence interval (SCI) method for making inferences for multiple contrasts.
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -16,34 +17,35 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Loading packages
+## The Packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.  
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
-```{r, loadpackages}
+```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
 library(emmeans)
-library(tidyverse)
 library(ggplot2)
 library(PsyR)
+library(tidyverse)
 ```
 
-## The data
+## The Data
 
-Lets load the data, then call the `head()` function to print the first 5 rows.  
+Lets load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(fatigue)
-head(fatigue, 5)
+head(fatigue, 5) %>%
+  knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
 
-Have you forgotten the details of the fatigue dataframe? Call the help function using `?data` to open its documentation.  
+Have you forgotten the details of the fatigue dataframe? Call the help function using `?df` to open its documentation.
 
-```{r, whatfatigue}
+```{r, whatfatigue, message = FALSE, warning = FALSE}
 ?fatigue
 ```
-  
-Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the datatype from a double to a factor and assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful when we visualise our data, not to mention that it makes for some more human readable category names!  
+
+Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the data type from a double to a factor and assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful when we visualise our data, not to mention that it makes for some more human readable category names!
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -55,29 +57,29 @@ fatigue <- fatigue %>%
     )
   )
 ```
-  
-Time to plot our data, with help from the ggplot2 package.  
-Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also fill our boxplots based on the Group they represent. 
-Next, lets create a boxplot `geom_boxplot()` and make it look nice and clean using `theme_classic()`.  
+
+Time to plot our data, with help from the ggplot2 package.
+
+Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also colour-code our four groups by calling fill: [Alert]{style="color: OrangeRed;"}, [Mild]{style="color: OliveDrab;"}, [Moderate]{style="color: CadetBlue;"} and [Extreme]{style="color: DarkOrchid;"}.
+
+Next, lets create a boxplot using `geom_boxplot()` and make it look nice and clean using `theme_classic()`.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 fatigue %>%
   ggplot(aes(x = Group, y = Errors, fill = Group)) +
   geom_boxplot() +
-  theme_classic()
+  theme_classic(base_size = 14)
 ```
 
 ## The Analysis
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.  
+Here we will create the building blocks of our eventual ANOVA output. First, lets create a new object labelled *mod* (short for model). Call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.
 
-Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are now split by factor ("Alert", "Mild", "Moderate", "Extreme").
-  
+Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are split by factor ("Alert", "Mild", "Moderate", "Extreme").
+
 ```{r, aov}
-# set emmeans option to multivariate
-afex_options(emmeans_model = "multivariate")
 # perform the statistical model
 mod <- aov_ez(
   "id",
@@ -85,54 +87,53 @@ mod <- aov_ez(
   fatigue,
   between = "Group"
 )
-
 emms <- emmeans(mod, "Group")
-emms
+knitr::kable(emms, digits = 3)
 ```
-  
-Time to define our contrasts!  
-Lets create an object called *between_contrasts*. Call the `list()` function, then create four contrasts. The contrasts represent the following:  
 
-  * "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition  
-  
-  *   "Extreme-Mod,Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.  
-  
-  * "Low-Hi" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.  
-  
-  * "Alert-Mild" - The difference between the Alert and Mild fatigue conditions.
-  
+Time to define our contrasts!
+
+Lets create an object called *between_contrasts*. Next, call the `list()` function and define our four contrasts of interest. The contrasts represent the following:
+
+- "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition
+
+- "Extreme-Mod, Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.
+
+- "Low-High" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.
+
+- "Alert-Mild" - The difference between the Alert and Mild fatigue conditions.
+
 ```{r definecontrasts}
 ### note to selves - is there a way to get emmeans to do the scaling here?
 between_contrasts = list(
   "Fatigue-Alert" = c(-1, 1/3, 1/3, 1/3),
-  "Extreme-Mod,Mild" = c(0, -1/2, -1/2, 1),
-  "Low-Hi" = c(1/2, 1/2, -1/2, -1/2),
+  "Extreme-Mod, Mild" = c(0, -1/2, -1/2, 1),
+  "Low-High" = c(1/2, 1/2, -1/2, -1/2),
   "Alert-Mild" = c(1, -1, 0, 0)
 )
-between_contrasts
 ```
-  
-Lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" arguement and *between_contrasts* in the "method" arguement (ensuring the FWER is controlled according to a between contrasts protocol).
-  
+
+Now that we have defined our contrasts, lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (which will take in our newly defined contrasts).
+
 ```{r, between_fx}
 btwn_fx <- contrast(emms, between_contrasts)
-btwn_fx
+knitr::kable(btwn_fx, digits = 3)
 ```
-  
-Finally, lets calculate some confidence intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:  
 
-* The model is specified as the previously made *mod* object, where the model must be made using the afex package - afex_aov  
+Finally, lets calculate some confidence intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:
 
-* The contrast_tables argument is set as the previously made *btwn_fx*  
+- The model is the previously made *mod* object, where the model must be made using the afex package - afex_aov
 
-* The family list is set as "b", specifying that the contrast table is between-subjects only  
+- The contrast_tables argument is set as the previously made *btwn_fx*
 
-* The method is set as "ph", creating confidence intervals using a post-hoc method (estimate +- SE x cc)  
+- The family list is set as "b", specifying that the contrast table is between-subjects only
 
-* Alpha is set at 0.05, indicating desired type I error rate
+- The method is set as "ph", creating confidence intervals (estimate +- SE x cc) using a post-hoc method [@bird2002a]
 
-* The between_factors argument is set according to our desired group names, as in the "Group" column
-  
+- Alpha is set at 0.05, indicating the desired type I error rate
+
+- The between_factors argument is set according to our desired group names, as in the "Group" column
+
 ```{r, psyci}
 contrasts_w_cis <- psyci(
   mod,
@@ -142,5 +143,27 @@ contrasts_w_cis <- psyci(
   alpha = .05,
   between_factors = list("Group")
 )
-contrasts_w_cis
+knitr::kable(contrasts_w_cis, digits = 3)
 ```
+
+## The Interpretation
+
+There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-Hi" contrasts (p \< 0.05).
+
+- Compared to alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors.
+
+- Drivers with extreme fatigue make between 4.187 and 10.813 more errors than the average of Moderate and Mild fatigue conditions.
+
+- Drivers with low fatigue (the average of alert and mild conditions) make between 4.295 and 9.705 fewer errors than those with high fatigue (the average of moderate and extreme conditions)
+
+There is insufficient evidence to suggest a significant difference exists in the "Alert-Mild" contrast (p \> 0.05).
+
+- Alert drivers may make 5.825 fewer or 1.825 more mistakes than their mildly fatigued counterparts.
+
+------------------------------------------------------------------------
+
+```{r, echo=FALSE, fig.align='center', out.width='50%'}
+knitr::include_graphics("../man/figures/PsyR.png")
+```
+
+------------------------------------------------------------------------
