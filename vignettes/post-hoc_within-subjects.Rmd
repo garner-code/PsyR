@@ -157,13 +157,15 @@ knitr::kable(digits = 3)
 
 There is insufficient evidence to suggests a significant difference exists in any of our contrasts of interest (p \> 0.05). However, our SCIs can give us some insight into the directionality of our data.
 
-- CHECK p-val being less than 0.05 but still lower and upper inconsistent (i.e. not both pos or both neg)? Might have to cast mind back to this in 3001 this may be an ignore p vals moment. Is this because the CIs in a post-hoc within subs design, as in original psy, are not properly scaled?
+- Compared to pre-intervention, scores at post-intervention may have improved by up to 6.192 units, or may have regressed by -0.192 units.
 
 - Compared to post-intervention, scores at 6 month follow up show large variance. Participants at follow up compared to post may have improved by up to 16.636 units, or may have regressed by 10.636 units.
 
 - Compared to pre-intervention, scores at 6 month follow up show large variance. Participants at follow up compared to pre may have improved by up to 17.836 units, or may have regressed by 5.836 units.
 ------------------------------------------------------------------------
 
-logo here (if accepted into upstream main)
+```{r, echo=FALSE, fig.align='center', out.width='50%'}
+knitr::include_graphics("../man/figures/PsyR.png")
+```
 
 ------------------------------------------------------------------------
