@@ -21,7 +21,8 @@ library(emmeans)
 library(afex)
 ```
 
-Following the example in chapter 6 of Bird (2004) Analysis of Variance via Confidence Intervals
+Following the example in chapter 6 of Bird (2004) Analysis of Variance via Confidence Intervals  
+sadie was here
 
 ## Load the data
 
