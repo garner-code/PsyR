@@ -31,7 +31,7 @@ library(afex)
 
 Lets load the data, then call the `head()` function to print the first 5 rows.
 
-```{r loaddata, message = false, warning = false}
+```{r loaddata, message = FALSE, warning = FALSE}
 data(social_anxiety)
 head(social_anxiety, 5) %>%
   knitr::kable(format = "html", table.attr = "style='width:50%;'")
@@ -39,7 +39,7 @@ head(social_anxiety, 5) %>%
 
 Have you forgotten the details of the social anxiety dataframe? Call the help function using `?df` to open its documentation.
 
-```{r, what_socialanx,  message = false, warning = false}
+```{r, what_socialanx, message = FALSE, warning = FALSE}
 ?social_anxiety
 ```
 
@@ -128,8 +128,7 @@ btwn_contrasts <- list(
 emms_btwn <- emmeans(mod, "Group")
 
 btwn_fx <- contrast(emms_btwn, btwn_contrasts)
-btwn_fx
-knitr::kable(between_fx, digits = 3)
+knitr::kable(btwn_fx, digits = 3)
 ```
 
 text
