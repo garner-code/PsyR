@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
-```{r setup}
+```{r setup, message = FALSE, warning = FALSE}
 library(PsyR)
 library(tidyverse)
 library(emmeans)
@@ -31,7 +31,7 @@ library(afex)
 
 Lets load the data, then call the `head()` function to print the first 5 rows.
 
-```{r loaddata, message = false, warning = false}
+```{r loaddata, message = FALSE, warning = FALSE}
 data(social_anxiety)
 head(social_anxiety, 5) %>%
   knitr::kable(format = "html", table.attr = "style='width:50%;'")
@@ -39,7 +39,7 @@ head(social_anxiety, 5) %>%
 
 Have you forgotten the details of the social anxiety dataframe? Call the help function using `?df` to open its documentation.
 
-```{r, what_socialanx,  message = false, warning = false}
+```{r, what_socialanx, message = FALSE, warning = FALSE}
 ?social_anxiety
 ```
 
@@ -61,7 +61,7 @@ social_anxiety <- social_anxiety %>%
   )
 ```
 
-Time to visualise our data. Using `ggplot()`, lets take in our social anxiety dataframe. Next, lets call `aes()` and create a canvas with "Session" on the X axis, "Score" on the Y axis. Lets also colour-code our groups by calling fill: [New]{style="color: OrangeRed;"}, [Standard]{style="color: OliveDrab;"}, [MinContact]{style="color: Blue;"}.
+Time to visualise our data. Using `ggplot()`, lets take in our social anxiety dataframe. Next, lets call `aes()` and create a canvas with "Session" on the X axis, "Score" on the Y axis. Lets also colour-code our groups by calling fill: [New]{style="color: OrangeRed;"}, [Standard]{style="color: Green;"}, [MinContact]{style="color: Blue;"}.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 social_anxiety %>%
@@ -70,11 +70,11 @@ social_anxiety %>%
     theme_classic(base_size = 14)
 ```
 
-## The Analysis 
+## The Analysis
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the social_anxiety dataframe, the "Session" column set as within-subjects, and the "Group" column set as between-subjects. 
+Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the social_anxiety dataframe, the "Session" column set as within-subjects, and the "Group" column set as between-subjects.
 
 ```{r model}
 # set emmeans option to multivariate
@@ -93,7 +93,7 @@ emms_win <- emmeans(mod, "Session")
 knitr::kable(emms_win, digits = 3)
 ```
 
-Lets define and obtain our contrast tables. To do so, create the *win_contrasts* object, calling `list()` to define our contrasts, which compare the following:
+Lets define and obtain our within-subjects contrast tables. To do so, create the *win_contrasts* object, calling `list()` to define our contrasts, which compare the following:
 
 - "Pre-Rest" - The difference between
 
@@ -101,9 +101,9 @@ Lets define and obtain our contrast tables. To do so, create the *win_contrasts*
 
 - "FU1-FU2" - The difference between
 
-We can now generate our ANOVA table. To do so, create the *win_fx* object. Then, call the `contrast()` function from the emmeans package, setting *emms_win* in the "object" argument and our newly defined *win_contrasts* in the "method" argument.
+We can now generate an ANOVA table. To do so, create the *win_fx* object. Then, call the `contrast()` function from the emmeans package, setting *emms_win* in the "object" argument and our newly defined *win_contrasts* in the "method" argument.
 
-
+Add in some disclaimer - this is only the within subs main effect
 
 ```{r, win}
 win_contrasts <- list(
@@ -116,7 +116,7 @@ win_fx <- contrast(emms_win, win_contrasts)
 knitr::kable(win_fx, digits = 3)
 ```
 
-text
+text - model after within
 
 ```{r, btwn}
 
@@ -128,14 +128,12 @@ btwn_contrasts <- list(
 emms_btwn <- emmeans(mod, "Group")
 
 btwn_fx <- contrast(emms_btwn, btwn_contrasts)
-btwn_fx
-knitr::kable(between_fx, digits = 3)
+knitr::kable(btwn_fx, digits = 3)
 ```
 
-text
+text - discuss interaction etc?
 
 ```{r, int}
-
 emms_int <- emmeans(
   mod, c("Group", "Session")
 )
@@ -144,15 +142,14 @@ int_fx <- contrast(
   emms_int,
   interaction = list(btwn_contrasts, win_contrasts)
 )
-int_fx
 knitr::kable(int_fx, digits = 3)
 ```
 
-A Priori Confidence
+#### A Priori Confidence
 
 Here we replicate the bonferroni correction first presented in chapter 7
 
-```{r, bon}
+```{r, bon, message = FALSE, warning = FALSE}
 
 all_fx <- c(win_fx, btwn_fx, int_fx)
 family_list = list("w", "b", "bw") 
@@ -166,9 +163,12 @@ psyci(
 
 ```
 
-Next, we run the exact same but using the post-hoc method
+#### Post-hoc method
 
-```{r, psyci}
+Next, we run the exact same but using the post-hoc method
+justify why this is the preferred way (FWER < 0.05)?
+
+```{r, psyci, message = FALSE, warning = FALSE}
 
 psyci(
   model = mod, contrast_tables = all_fx, method = "ph", 
