@@ -1,5 +1,5 @@
 ---
-title: "F-STP-and-Scheffe-CI-posthoc"
+title: "F STP and Scheffe SCIs posthoc"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{F-STP-and-Scheffe-CI-posthoc}
@@ -24,7 +24,6 @@ To use Psy to calculate confidence intervals over contrast effects, we will use 
 ```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
 library(emmeans)
-library(ggplot2)
 library(PsyR)
 library(tidyverse)
 ```
@@ -35,17 +34,10 @@ Lets load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(fatigue)
-head(fatigue, 5) %>%
-  knitr::kable(format = "html", table.attr = "style='width:50%;'")
+head(fatigue, 5)
 ```
 
-Have you forgotten the details of the fatigue dataframe? Call the help function using `?df` to open its documentation.
-
-```{r, whatfatigue, message = FALSE, warning = FALSE}
-?fatigue
-```
-
-Time for some tidying! `mutate()` creates a new column called "Group". Then, using the `factor()` function, lets change the data type from a double to a factor and assign the labels "Alert", "Mild", "Moderate" and "Extreme". This will be helpful when we visualise our data, not to mention that it makes for some more human readable category names!
+The "Fatigue" dataframe shows the results of a between-subjects experiment where the impact of driver fatigue on driving errors was assessed, where a higher score is indicative of poorer performance. Drivers were assigned into one of four conditions: Alert, Mild fatigue, Moderate fatigue, and Extreme Fatigue. Lets reflect this in the dataframe by using the `factor()` function to change the names of the conditions, as well as changing the datatype to a factor to ensure later compatability with data analysis.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -58,17 +50,25 @@ fatigue <- fatigue %>%
   )
 ```
 
-Time to plot our data, with help from the ggplot2 package.
+Visualising our data gives us some insight into some overall trends. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions.
 
-Using a pipe, lets tell `ggplot()` to take in the fatigue dataset (the one we just edited, with the better labels). Then, within `aes()` lets create a canvas with "Group" on the X axis and "Errors" on the Y axis. Lets also colour-code our four groups by calling fill: [Alert]{style="color: OrangeRed;"}, [Mild]{style="color: OliveDrab;"}, [Moderate]{style="color: CadetBlue;"} and [Extreme]{style="color: DarkOrchid;"}.
+SPEND SOME TIME HERE EXPLAINING OUR DATA
 
-Next, lets create a boxplot using `geom_boxplot()` and make it look nice and clean using `theme_classic()`.
+[Alert]{style="color: OrangeRed;"}, [Mild]{style="color: OliveDrab;"}, [Moderate]{style="color: CadetBlue;"} and [Extreme]{style="color: DarkOrchid;"}.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 fatigue %>%
   ggplot(aes(x = Group, y = Errors, fill = Group)) +
   geom_boxplot() +
   theme_classic(base_size = 14)
+```
+
+DISCUSS THE DATA, SOME HYPOTHESES
+
+To learn more about the fatigue dataframe, call the help function using `?df` to open its documentation.
+
+```{r, whatfatigue, message = FALSE, warning = FALSE, evaluate = FALSE}
+?fatigue
 ```
 
 ## The Analysis
