@@ -10,6 +10,13 @@ bibliography: references.bib
 
 A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts.
 
+Such a method is appropriate when:
+
+- Participants are randomly allocated
+
+- Only 1 Independent Variable is present, with J levels
+
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -50,11 +57,7 @@ fatigue <- fatigue %>%
   )
 ```
 
-Visualising our data gives us some insight into some overall trends. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions.
-
-SPEND SOME TIME HERE EXPLAINING OUR DATA
-
-[Alert]{style="color: OrangeRed;"}, [Mild]{style="color: OliveDrab;"}, [Moderate]{style="color: CadetBlue;"} and [Extreme]{style="color: DarkOrchid;"}.
+Visualising our data gives us some insight into some overall trends. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions. Visualising our data, among other things, can be useful for informing which contrasts should be analysed.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 fatigue %>%
@@ -63,9 +66,7 @@ fatigue %>%
   theme_classic(base_size = 14)
 ```
 
-DISCUSS THE DATA, SOME HYPOTHESES
-
-To learn more about the fatigue dataframe, call the help function using `?df` to open its documentation.
+Finally, to learn more about the fatigue dataframe call the help function using `?df` to open its documentation.
 
 ```{r, whatfatigue, message = FALSE, warning = FALSE, evaluate = FALSE}
 ?fatigue
@@ -75,9 +76,11 @@ To learn more about the fatigue dataframe, call the help function using `?df` to
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks of our eventual ANOVA output. First, lets create a new object labelled *mod* (short for model). Call the `aov_ez()` function which takes in the "id" column to identify subjects, the "Errors" column as the dependent variable, the fatigue dataframe, and the "Group" column set as between-subjects. This aggregates across our Group column, so it isn't useful on its own.
+Here we will create the building blocks for first an ANOVA output, and later our Simultaneous Confidence Intervals (SCIs). This workflow can be justified as follows. 
 
-Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Group". Now we are heading in the right direction, as our results are split by factor ("Alert", "Mild", "Moderate", "Extreme").
+- An Omnibus ANOVA F test allows an alpha-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F => Fc, a heterogeneity inference may be made and further analysis may be undertaken.
+
+- SCIs allow us to simultaneously test specific contrasts of interest for significance (while mainting a FWER < alpha). This is important in not only ascertaining differences between populations, but also in understanding their directionality and magnitude. 
 
 ```{r, aov}
 # perform the statistical model
@@ -91,9 +94,7 @@ emms <- emmeans(mod, "Group")
 knitr::kable(emms, digits = 3)
 ```
 
-Time to define our contrasts!
-
-Lets create an object called *between_contrasts*. Next, call the `list()` function and define our four contrasts of interest. The contrasts represent the following:
+Time to define our contrasts! To do so, it is important to look at the stated aims of the research as well as the pattern of sample means in our data. Looking back at our visualisation, the following four contrasts seem to be relevant for analysis. 
 
 - "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition
 
@@ -102,6 +103,12 @@ Lets create an object called *between_contrasts*. Next, call the `list()` functi
 - "Low-High" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.
 
 - "Alert-Mild" - The difference between the Alert and Mild fatigue conditions.
+
+Additionally, when deciding contrasts of interest one may turn to other factors, such as:
+
+- The Maximal Contrast (generally uninterpretable, but useful as the pattern of coefficients suggests where the greatest difference between conditions may be found)
+
+- Contrast Complexity, where in general a more complex contrast will afford greater precision in construction of SCIs. (To be sanity checked as to whether this applies to SCIs as well as CIs)
 
 ```{r definecontrasts}
 ### note to selves - is there a way to get emmeans to do the scaling here?
@@ -113,14 +120,14 @@ between_contrasts = list(
 )
 ```
 
-Now that we have defined our contrasts, lets create our ANOVA table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (which will take in our newly defined contrasts).
+Now that we have defined our contrasts, lets store them within a contrasts table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (which will take in our newly defined contrasts).
 
 ```{r, between_fx}
 btwn_fx <- contrast(emms, between_contrasts)
 knitr::kable(btwn_fx, digits = 3)
 ```
 
-Finally, lets calculate some confidence intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:
+Finally, lets calculate some Simultaneous Confidence Intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:
 
 - The model is the previously made *mod* object, where the model must be made using the afex package - afex_aov
 
@@ -159,6 +166,8 @@ There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mo
 There is insufficient evidence to suggest a significant difference exists in the "Alert-Mild" contrast (p \> 0.05).
 
 - Alert drivers may make 5.825 fewer or 1.825 more mistakes than their mildly fatigued counterparts.
+
+Discuss the need to define what is a difference of importance (and how this can be user defined or it may be gained through standardising and then going off cohen's d)
 
 ------------------------------------------------------------------------
 
