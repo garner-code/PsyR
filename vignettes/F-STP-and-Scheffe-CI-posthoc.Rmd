@@ -10,12 +10,7 @@ bibliography: references.bib
 
 A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts.
 
-Such a method is appropriate when:
-
-- Participants are randomly allocated
-
-- Only 1 Independent Variable is present, with J levels
-
+Such a method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -44,7 +39,9 @@ data(fatigue)
 head(fatigue, 5)
 ```
 
-The "Fatigue" dataframe shows the results of a between-subjects experiment where the impact of driver fatigue on driving errors was assessed, where a higher score is indicative of poorer performance. Drivers were assigned into one of four conditions: Alert, Mild fatigue, Moderate fatigue, and Extreme Fatigue. Lets reflect this in the dataframe by using the `factor()` function to change the names of the conditions, as well as changing the datatype to a factor to ensure later compatability with data analysis.
+The "Fatigue" dataframe shows the results of a between-subjects experiment where the impact of driver fatigue on driving errors was assessed, where a higher score is indicative of poorer performance. Participants were assigned to one of four conditions relating to the IV of driver fatigue: Alert, Mild, Moderate , and Extreme.
+
+Lets reflect this in the dataframe by using the `factor()` function to change the names of the conditions, as well as changing the datatype to a factor to ensure later compatability with data analysis.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -57,7 +54,7 @@ fatigue <- fatigue %>%
   )
 ```
 
-Visualising our data gives us some insight into some overall trends. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions. Visualising our data, among other things, can be useful for informing which contrasts should be analysed.
+Visualising gives us insight into some overall trends of the data. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions. Visualising our data, among other things, can be useful for informing which contrasts should be analysed.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 fatigue %>%
@@ -76,11 +73,13 @@ Finally, to learn more about the fatigue dataframe call the help function using 
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks for first an ANOVA output, and later our Simultaneous Confidence Intervals (SCIs). This workflow can be justified as follows. 
+Here we will create the building blocks for first an ANOVA output, and later our Simultaneous Confidence Intervals (SCIs). This workflow can be justified as follows.
 
-- An Omnibus ANOVA F test allows an alpha-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F => Fc, a heterogeneity inference may be made and further analysis may be undertaken.
+- An Omnibus ANOVA F test allows an ⍺-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F ≥ F~c~, a heterogeneity inference may be made and further analysis may be undertaken.
 
-- SCIs allow us to simultaneously test specific contrasts of interest for significance (while mainting a FWER < alpha). This is important in not only ascertaining differences between populations, but also in understanding their directionality and magnitude. 
+- SCIs allow us to simultaneously test specific contrasts of interest for significance (while maintaining a FWER \< ⍺). This is important not only for ascertaining differences between populations, but also in understanding the directionality and magnitude of said differences.
+
+Consider inputting something regarding what the code below is doing?
 
 ```{r, aov}
 # perform the statistical model
@@ -94,7 +93,7 @@ emms <- emmeans(mod, "Group")
 knitr::kable(emms, digits = 3)
 ```
 
-Time to define our contrasts! To do so, it is important to look at the stated aims of the research as well as the pattern of sample means in our data. Looking back at our visualisation, the following four contrasts seem to be relevant for analysis. 
+Time to define our contrasts! To do so, it is important to look at the stated aims of the research as well as the pattern of sample means in our data. Looking back at our visualisation, the following four contrasts seem to be relevant for analysis.
 
 - "Fatigue-Alert" - The difference between the average of fatigued conditions and the alert condition
 
@@ -106,7 +105,7 @@ Time to define our contrasts! To do so, it is important to look at the stated ai
 
 Additionally, when deciding contrasts of interest one may turn to other factors, such as:
 
-- The Maximal Contrast (generally uninterpretable, but useful as the pattern of coefficients suggests where the greatest difference between conditions may be found)
+- The Maximal Contrast (generally uninterpretable, but useful as the pattern of coefficients suggests where the greatest difference between conditions may be)
 
 - Contrast Complexity, where in general a more complex contrast will afford greater precision in construction of SCIs. (To be sanity checked as to whether this applies to SCIs as well as CIs)
 
@@ -127,6 +126,9 @@ btwn_fx <- contrast(emms, between_contrasts)
 knitr::kable(btwn_fx, digits = 3)
 ```
 
+
+HERE, highlight how most will end at this contrast table. Show what they would conclude and note that it is hamstrung/lacking specificity
+
 Finally, lets calculate some Simultaneous Confidence Intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:
 
 - The model is the previously made *mod* object, where the model must be made using the afex package - afex_aov
@@ -137,7 +139,7 @@ Finally, lets calculate some Simultaneous Confidence Intervals to estimate effec
 
 - The method is set as "ph", creating confidence intervals (estimate +- SE x cc) using a post-hoc method [@bird2002a]
 
-- Alpha is set at 0.05, indicating the desired type I error rate
+- ⍺ is set at 0.05, indicating the desired type I error rate
 
 - The between_factors argument is set according to our desired group names, as in the "Group" column
 
@@ -154,6 +156,8 @@ knitr::kable(contrasts_w_cis, digits = 3)
 ```
 
 ## The Interpretation
+
+stress the beauty of SCIs
 
 There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-Hi" contrasts (p \< 0.05).
 
