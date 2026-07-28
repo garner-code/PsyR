@@ -39,9 +39,7 @@ data(fatigue)
 head(fatigue, 5)
 ```
 
-The "Fatigue" dataframe shows the results of a between-subjects experiment where the impact of driver fatigue on driving errors was assessed, where a higher score is indicative of poorer performance. Participants were assigned to one of four conditions relating to the IV of driver fatigue: Alert, Mild, Moderate , and Extreme.
-
-Lets reflect this in the dataframe by using the `factor()` function to change the names of the conditions, as well as changing the datatype to a factor to ensure later compatability with data analysis.
+The "Fatigue" dataframe shows the results of a between-subjects experiment where the impact of driver fatigue on driving errors was assessed, where a higher score is indicative of poorer performance. Participants were assigned to one of four conditions relating to the IV of driver fatigue: Alert, Mild, Moderate, and Extreme. To reflect this in the dataframe, call `factor()` to relabel the levels of our group, and to reassign the column to the factor datatype.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -54,7 +52,7 @@ fatigue <- fatigue %>%
   )
 ```
 
-Visualising gives us insight into some overall trends of the data. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions. Visualising our data, among other things, can be useful for informing which contrasts should be analysed.
+Next, lets visualise our data. Doing so allows us to understand the overall layout of the data, which (among other methods) can be used to inform which contrasts should be analysed. For example, while the number of driving errors increases as level of fatigue increases, this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions. 
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 fatigue %>%
@@ -75,11 +73,11 @@ Lets prepare to run some statistical tests!
 
 Here we will create the building blocks for first an ANOVA output, and later our Simultaneous Confidence Intervals (SCIs). This workflow can be justified as follows.
 
-- An Omnibus ANOVA F test allows an ⍺-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F ≥ F~c~, a heterogeneity inference may be made and further analysis may be undertaken.
+- An Omnibus ANOVA F test allows an ⍺-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F ≥ F~c~, a heterogeneity inference may be made, indicative that further analysis is warranted.
 
-- SCIs allow us to simultaneously test specific contrasts of interest for significance (while maintaining a FWER \< ⍺). This is important not only for ascertaining differences between populations, but also in understanding the directionality and magnitude of said differences.
+- The creation of SCIs allow us to simultaneously test specific contrasts of interest for significance (while maintaining a FWER \< ⍺). This is important not only for ascertaining differences between populations, but also in understanding the directionality and magnitude of said differences. Such a method is compatible with an initial Omnibus ANOVA F test.
 
-Consider inputting something regarding what the code below is doing?
+The following code builds towards an eventual SCI approach, by first outputting the estimated marginal means for each level of the independent variable.
 
 ```{r, aov}
 # perform the statistical model
@@ -126,22 +124,15 @@ btwn_fx <- contrast(emms, between_contrasts)
 knitr::kable(btwn_fx, digits = 3)
 ```
 
+### The Interpretation
 
-HERE, highlight how most will end at this contrast table. Show what they would conclude and note that it is hamstrung/lacking specificity
+From the above output, the following conclusions may be drawn:
 
-Finally, lets calculate some Simultaneous Confidence Intervals to estimate effect sizes. Lets create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:
+- That significant differences exist in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-High" contrasts (p < 0.05). Fatigued participants make more driving erros than Alert participants, participants with extreme fatigue make more driving errors than the average of participants with mild and moderate fatigue, and participants with high fatigue (the average of extreme and moderate) make more driving errors than those with low fatigue (the average of mild and alert).
 
-- The model is the previously made *mod* object, where the model must be made using the afex package - afex_aov
+- There is insufficient evidence to suggest a significant difference exists between participants with mild fatigue and participants with no fatigue.
 
-- The contrast_tables argument is set as the previously made *btwn_fx*
-
-- The family list is set as "b", specifying that the contrast table is between-subjects only
-
-- The method is set as "ph", creating confidence intervals (estimate +- SE x cc) using a post-hoc method [@bird2002a]
-
-- ⍺ is set at 0.05, indicating the desired type I error rate
-
-- The between_factors argument is set according to our desired group names, as in the "Group" column
+Such analysis establishes that a significant effect is occurring, but does not allow for specific insight into the magnitude of said effect. A SCI approach can solve this.
 
 ```{r, psyci}
 contrasts_w_cis <- psyci(
@@ -155,11 +146,9 @@ contrasts_w_cis <- psyci(
 knitr::kable(contrasts_w_cis, digits = 3)
 ```
 
-## The Interpretation
+## The Contribution of the Scheffé SCI Method
 
-stress the beauty of SCIs
-
-There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-Hi" contrasts (p \< 0.05).
+In creating SCIs, we gain insight into the results which exceeds that of a traditional ANOVA Contrast approach. There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-Hi" contrasts (p \< 0.05). Specifically:
 
 - Compared to alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors.
 
@@ -171,7 +160,11 @@ There is insufficient evidence to suggest a significant difference exists in the
 
 - Alert drivers may make 5.825 fewer or 1.825 more mistakes than their mildly fatigued counterparts.
 
-Discuss the need to define what is a difference of importance (and how this can be user defined or it may be gained through standardising and then going off cohen's d)
+Such specificity is especially useful if thresholds of importance are introduced. For example, imagine the government was only interested in interventions addressing driving errors that led to **3 fewer driving errors**. With this new guideline, even non-significant results become usfeul points of discussion. For example
+
+- Alert drivers may make 5.825 fewer or 1.825 more mistakes than their mildly fatigued counterparts. Thus, the impact of driver fatigue may result in positive clinically significant outcomes (> 3 driving errors), and will not result in negative performance (as 1.825 is not greater than 3.)
+
+Discuss the need to define what is a difference of importance (and how this can be user defined or it may be gained through standardising and then going off cohen's d)s
 
 ------------------------------------------------------------------------
 
