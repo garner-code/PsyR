@@ -5,6 +5,7 @@ vignette: >
   %\VignetteIndexEntry{post-hoc_within-subjects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: references.bib
 ---
 
 ```{r, include = FALSE}
@@ -14,77 +15,156 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+A vignette to help understand how to use PsyR to enact Post-Hoc Analysis of Variance via Confidence Intervals in a within-subjects design [@bird2004].
+
+## The Packages
+
+To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r setup, message = FALSE, warning = FALSE}
 library(PsyR)
-library(tidyverse)
 library(emmeans)
 library(afex)
+library(tidyverse)
 ```
 
-Following the example in chapter 6 of Bird (2004) Analysis of Variance via Confidence Intervals
+## The Data
 
-## Load the data
-
-Lets load the data, make it longform, and define the factors 
+Lets load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
-
 data(kevin_within)
-head(kevin_within, 5)
+head(kevin_within, 5) %>%
+  knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
+
+Have you forgotten the details of the dataframe? Call the help function using `?df` to open its documentation.
+
+```{r, whatfatigue, message = FALSE, warning = FALSE}
+?kevin_within
+```
+
+Lets tidy our data!
+
+First, call `pivot_longer()`, using the `values_to` argument to move the scores from the "Pre", "Post" and "FU" (Follow Up) conditions into a single column labelled "Score". Lets also create a column to identify what session the scores come from, using the `names_to` argument to populate the column with our predefined session names.
+
+Next, lets use the `fct_relevel()` function to set our "Session" column to the factor datatype. This will be important later for visualisation and analysis purposes.
 
 ```{r longform}
+kevin_within <- kevin_within %>%
+  pivot_longer(c("Pre", "Post", "FU"),
+    values_to = "Score",
+    names_to = "Session"
+  )
 
-kevin_within <- kevin_within %>% pivot_longer(c("Pre", "Post", "FU"),
-                                              values_to = "Score",
-                                              names_to = "Session")
-
-kevin_within <- kevin_within %>% mutate(Session = fct_relevel(Session, 'Pre','Post','FU'))
-
+kevin_within <- kevin_within %>%
+  mutate(
+    Session = fct_relevel(
+      Session, 
+      "Pre", 
+      "Post", 
+      "FU"
+    )
+  )
+head(kevin_within, 5) %>%
+  knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
 
-## Model 
+Time to plot our data, with help from the ggplot2 package.
 
-Now run the anova
+Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our groups by calling fill: [Pre]{style="color: OrangeRed;"}, [Post]{style="color: Green;"}, [FU]{style="color: Blue;"}.
+
+Finally, lets create some boxplots using `geom_boxplot()` and make it look nice and clean using `theme_classic()`.
+
+```{r boxplotit, fig.width = 7.1, fig.height = 4}
+kevin_within %>%
+  ggplot(aes(x = Session, y = Score, fill = Session)) +
+  geom_boxplot() +
+  theme_classic(base_size = 14)
+```
+
+## The Analysis
+
+Lets prepare to run some statistical tests!
+
+Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the kevin_within dataframe, and the "Group" column set as between-subjects. This aggregates across our Session column, so it isn't useful on its own.
+
+Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Session". Now we are heading in the right direction, as our results are split by factor ("Pre", "Post", "FU").
 
 ```{r model}
-
 # set emmeans option to multivariate
 afex_options(emmeans_model = "multivariate")
+
 # perform the statistical model
-mod <- aov_ez("Subject", 
-              "Score", 
-              kevin_within, 
-              within = "Session")
+mod <- aov_ez(
+  "Subject",
+  "Score",
+  kevin_within,
+  within = "Session"
+)
 
 emms <- emmeans(mod, "Session")
-emms
-
+knitr::kable(emms, digits = 3)
 ```
 
-## Contrasts
+Now lets define and compute our contrasts of interest. To do so, create the *contrasts* object, calling `list()` to define our contrasts, which compare the following:
 
-Now lets define and compute contrasts of interest
+- "Post-Pre" - The difference between scores taken prior to intervention and after the intervention.
+
+- "FU-Post" - The difference between scores taken post intervention and at a 6 month follow up.
+
+- "FU-Pre" - The difference between scores taken prior to intervention and at a 6 month follow up.
+
+We can now generate our ANOVA table. To do so, create the *cnt_res* object. Then, call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and our newly defined *contrasts* in the "method" argument.
 
 ```{r phoc}
-
 contrasts <- list(
   "Post-Pre" = c(-1, 1, 0),
-  "FU-Post" = c(0, -1, 1),
-  "FU-Pre" = c(-1, 0, 1)
+  "FU-Post"  = c(0, -1, 1),
+  "FU-Pre"   = c(-1, 0, 1)
 )
 
 cnt_res <- contrast(emms, contrasts)
-cnt_res
+knitr::kable(cnt_res, digits = 3)
 ```
-## Simultaneous Confidence Intervals
 
-Now lets compute post-hoc 95% CIs for a within subjects design
+Finally, lets compute our post-hoc 95% CIs for our within-subjects design. To do so, lets call `psyci()` from the PsyR package, specifying the following:
+
+- The model is specified as the previously made *mod* object, where the model must be made using the afex package - afex_aov.
+
+- The contrast_tables argument is set as the previously made *cnt_res*.
+
+- The method is set as "ph", creating confidence intervals (estimate +- SE x cc) using a post-hoc method [@bird2004a].
+
+- The family list is set as "w", specifying that the contrast table is within-subjects.
+
+- The within_factors argument is set according to our desired group names, as in the "Session" column.
 
 ```{r, scis}
-
-psyci(model=mod, contrast_tables = cnt_res, 
-      method = "ph", family_list = list("w"), 
-      within_factors = list("Session"))
-
+psyci(
+  model = mod, 
+  contrast_tables = cnt_res, 
+  method = "ph", 
+  family_list = list("w"),
+  within_factors = list("Session")
+) %>%
+knitr::kable(digits = 3)
 ```
+
+## The Interpretation
+
+There is insufficient evidence to suggests a significant difference exists in any of our contrasts of interest (p \> 0.05). However, our SCIs can give us some insight into the directionality of our data.
+
+- Compared to pre-intervention, scores at post-intervention may have improved by up to 6.192 units, or may have regressed by 0.192 units.
+
+- Compared to post-intervention, participants at follow up may have improved by up to 16.636 units, or may have regressed by 10.636 units.
+
+- Compared to pre-intervention, participants at follow up may have improved by up to 17.836 units, or may have regressed by 5.836 units.
+
+-----------------------------------------------------------------------
+
+```{r, echo=FALSE, fig.align='center', out.width='50%'}
+knitr::include_graphics("../man/figures/PsyR.png")
+```
+
+------------------------------------------------------------------------
