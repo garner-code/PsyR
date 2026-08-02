@@ -8,7 +8,7 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004].
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004].  
 
 This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
 
