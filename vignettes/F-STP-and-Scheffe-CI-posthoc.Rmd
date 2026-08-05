@@ -47,7 +47,7 @@ To learn more about the fatigue dataframe call the help function using `?df` to 
 ?fatigue
 ```
 
-When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` to relabel the levels of our group, and to reassign the "Group "column to the factor datatype.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` to relabel the levels of our group, and to reassign the "Group" column to the factor datatype.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -132,9 +132,9 @@ From the above output, the following conclusions may be drawn:
 
 - There is insufficient evidence to suggest a significant difference exists between participants with Mild fatigue and participants with no fatigue.
 
-Such analysis establishes that significant effects exist in our chosen contrasts, but does not allow for specific insight into the magnitude of said effects. An approach utilising SCIs can remedy this. To achieve this with PsyR, let's create the list *contrasts_w_cis* using the `psyci()` function, specifying the following:
+Such analysis establishes that significant effects exist in our chosen contrasts, but does not allow for specific insight into the magnitude of said effects. An approach utilising SCIs can remedy this. To achieve this with PsyR, let's create an object *contrasts_w_cis* using the `psyci()` function, specifying the following:
 
-- The model is the previously made *mod* object, where the model must be made using the afex package (and specifically of class afex_aov).
+- The model is the previously made *mod* object, where the model must be made using the afex package (and of class afex_aov).
 
 - The contrast_tables argument is set as the previously made *btwn_fx* object. Of note, if one has multiple contrast tables this argument can also take in a list.
 
@@ -174,7 +174,7 @@ There is insufficient evidence to suggest a significant difference exists in the
 
 - Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts.
 
-Such specificity is especially useful if thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that led to **3 fewer driving errors**. The addition of this stipulation once again alters our analysis. For example:
+Such specificity is especially useful if thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **3 driving errors**. The addition of this stipulation once again alters our analysis. For example:
 
 - Compared to Alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors. While a significant effect has been detected, we cannot determine whether this effect meets the importance criterion set out by the government (as the lower bound 2.877 \< 3).
 
@@ -184,7 +184,7 @@ Finally, in lieu of specific values, a threshold of importance may be defined ac
 
 ## Conclusion
 
-Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially as compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection.
+Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially when compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection.
 
 ------------------------------------------------------------------------
 
