@@ -1,5 +1,5 @@
 ---
-title: "F STP and Scheffe SCIs posthoc"
+title: "F STP and Scheffé SCIs Posthoc"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{F-STP-and-Scheffe-CI-posthoc}
@@ -8,7 +8,7 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004].  
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004].
 
 This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
 
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 ## The Packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use Psy to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
@@ -32,7 +32,9 @@ library(tidyverse)
 
 ## The Data
 
-Lets load the data, then call the `head()` function to print the first 5 rows.
+The "Fatigue" dataframe contains the results of a between-subjects experiment examining the impact of driver fatigue on driving errors, where a higher score is indicative of poorer performance. Participants were assigned to one of four conditions relating to the IV of driver fatigue: Alert, Mild, Moderate, and Extreme.
+
+Let's load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(fatigue)
@@ -45,7 +47,7 @@ To learn more about the fatigue dataframe call the help function using `?df` to 
 ?fatigue
 ```
 
-The "Fatigue" dataframe contains the results of a between-subjects experiment examining the impact of driver fatigue on driving errors, where a higher score is indicative of poorer performance. Participants were assigned to one of four conditions relating to the IV of driver fatigue: Alert, Mild, Moderate, and Extreme. To reflect this in the dataframe, call `factor()` to relabel the levels of our group, and to reassign the column to the factor datatype.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` to relabel the levels of our group, and to reassign the "Group" column to the factor datatype.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -58,9 +60,9 @@ fatigue <- fatigue %>%
   )
 ```
 
-Next, lets visualise our data. Doing so allows us to understand the overall layout of the data, which (alongside other methods) can be used to inform which contrasts should be analysed.
+Next, let's visualise our data. Doing so allows us to understand the overall layout of the data, which (alongside other methods) can be used to inform which contrasts should be analysed.
 
-```{r boxplotit, fig.width = 7.1, fig.height = 4}
+```{r boxplotit, fig.width = 7, fig.height = 4}
 fatigue %>%
   ggplot(aes(x = Group, y = Errors, fill = Group)) +
   geom_boxplot() +
@@ -71,15 +73,15 @@ As an example, one observation that may inform a contrast could be the following
 
 ## The Analysis
 
-Lets prepare to run some statistical tests!
+Let's prepare to run some statistical tests!
 
-Here we will create the building blocks for first an ANOVA output, and later our Simultaneous Confidence Intervals (SCIs). This workflow can be justified as follows.
+Here we will create the building blocks for first an ANOVA output, and later our SCIs. This workflow can be justified as follows.
 
-- An ANOVA F test allows an ⍺-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F ≥ F~c~, a heterogeneity inference may be made. Thus, the ANOVA F essentially pre-screens the data, assessing whether any contrasts with significant effects exist (albeit it should be noted that a significant ANOVA F result does not guarantee said contrasts will be interpretable).
+- An ANOVA F test allows an ⍺-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F ≥ F~c~, a heterogeneity inference may be made. Thus, the ANOVA F test essentially pre-screens the data, assessing whether any contrasts with significant effects exist (albeit it should be noted that a significant ANOVA F test result does not guarantee said contrasts will be interpretable).
 
-- The creation of SCIs allows us to simultaneously test specific contrasts of interest for significance (while maintaining a FWER \< ⍺). This is important not only for ascertaining differences between populations, but also in understanding the directionality and magnitude of said differences. Such a method is compatible with an initial ANOVA F test.
+- The creation of SCIs goes beyond a traditional hypothesis testing approach of determining the significance of a set of contrasts. Where hypothesis testing allows one to determine whether to reject the null hypothesis, SCIs provide additional information regarding the directionality and magnitude of the effects at test (while maintaining a FWER \< ⍺). Such a method is compatible with an initial ANOVA F test.
 
-The following code builds towards an eventual SCI approach, by first outputting the estimated marginal means for each level of the independent variable.
+The following code builds towards an eventual SCI approach. Let's create a new object *emms*, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output according to "Group" (which, as a reminder, is a column of the factor datatype which indicates what level of the IV each score belongs to). Running this code will give us the estimated marginal means for each level of the independent variable.
 
 ```{r, aov}
 # perform the statistical model
@@ -93,29 +95,29 @@ emms <- emmeans(mod, "Group")
 knitr::kable(emms, digits = 3)
 ```
 
-Time to define our contrasts! To do so, it is important to look at the stated aims of the research as well as the pattern of sample means in our data. Looking back at our visualisation, the following four contrasts seem to be relevant for analysis.
+Time to define our contrasts!
 
-- "Fatigue-Alert" - The difference between the average of fatigued conditions and the Alert condition.
+To do so, it is important to look at the stated aims of the research, the maximal contrast, and the pattern of sample means in our data. Thus, the following four contrasts are chosen for analysis.
 
-- "Extreme-Mod, Mild" - The difference between Extreme fatigue and the average of Moderate and Mild fatigue.
+- "Fatigue - Alert" ➞ The difference between the average of fatigued conditions and the Alert condition.
 
-- "Low-High" - The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.
+- "Extreme - Mod, Mild" ➞ The difference between Extreme fatigue and the average of Moderate and Mild fatigue.
 
-- "Alert-Mild" - The difference between the Alert and Mild fatigue conditions.
+- "Low - High" ➞ The difference between the average of Alert and Mild fatigue versus the average of Moderate and Extreme fatigue.
 
-Additionally, when deciding contrasts of interest one may turn to the maximal contrast. While this contrast is almost always uninterpretable, examining its pattern of coefficients provides a useful guide as to how to construct a contrast which will detect a significant effect. To find the maximal contrast, establish its coefficients by taking the difference between the mean of each group (4, 6, 9, 15) and the grand mean (8.5). This yields the contrast [-4.5, -2.5, 0.5 and 6.5], which can loosely be mapped onto the "Low-High" contrast.
+- "Alert - Mild" ➞ The difference between the Alert and Mild fatigue conditions.
 
 ```{r definecontrasts}
 ### note to selves - is there a way to get emmeans to do the scaling here?
 between_contrasts = list(
-  "Fatigue-Alert" = c(-1, 1/3, 1/3, 1/3),
-  "Extreme-Mod, Mild" = c(0, -1/2, -1/2, 1),
-  "Low-High" = c(1/2, 1/2, -1/2, -1/2),
-  "Alert-Mild" = c(1, -1, 0, 0)
+  "Fatigue - Alert" = c(-1, 1/3, 1/3, 1/3),
+  "Extreme - Mod, Mild" = c(0, -1/2, -1/2, 1),
+  "Low - High" = c(1/2, 1/2, -1/2, -1/2),
+  "Alert - Mild" = c(1, -1, 0, 0)
 )
 ```
 
-Now that we have defined our contrasts, lets store them within a contrasts table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (which will take in our newly defined contrasts).
+Now that we have defined our contrasts, let's store them within a contrasts table. Create the *btwn_fx* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *between_contrasts* in the "method" argument (which will take in our newly defined contrasts). The output of this code, as shown below, contains the results of hypothesis tests of each contrast.
 
 ```{r, between_fx}
 btwn_fx <- contrast(emms, between_contrasts)
@@ -126,11 +128,23 @@ knitr::kable(btwn_fx, digits = 3)
 
 From the above output, the following conclusions may be drawn:
 
-- That significant differences exist in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-High" contrasts (p \< 0.05). Fatigued participants make more driving errors than Alert participants, participants with Extreme fatigue make more driving errors than the average of participants with Mild and Moderate fatigue, and participants with High fatigue (the average of Extreme and Moderate) make more driving errors than those with Low fatigue (the average of Mild and Alert).
+- That significant differences exist in the "Fatigue - Alert", "Extreme - Mod, Mild", and "Low - High" contrasts (p \< 0.05). Fatigued participants make more driving errors than Alert participants, participants with Extreme fatigue make more driving errors than the average of participants with Mild and Moderate fatigue, and participants with High fatigue (the average of Extreme and Moderate) make more driving errors than those with Low fatigue (the average of Mild and Alert).
 
 - There is insufficient evidence to suggest a significant difference exists between participants with Mild fatigue and participants with no fatigue.
 
-Such analysis establishes that significant effects exist in our chosen contrasts, but does not allow for specific insight into the magnitude of said effects. An approach utilising SCIs can remedy this.
+Such analysis establishes that significant effects exist in our chosen contrasts, but does not allow for specific insight into the magnitude of said effects. An approach utilising SCIs can remedy this. To achieve this with PsyR, let's create an object *contrasts_w_cis* using the `psyci()` function, specifying the following:
+
+- The model is the previously made *mod* object, where the model must be made using the afex package (and of class afex_aov).
+
+- The contrast_tables argument is set as the previously made *btwn_fx* object. Of note, if one has multiple contrast tables this argument can also take in a list.
+
+- The family_list argument takes in a list of the same length as contrast_tables. Here we set it as "b", specifying that the contrast table is between-subjects only.
+
+- The method is set as "ph", creating confidence intervals (estimate ± SE ⨉ cc) using a post-hoc method [@bird2002a].
+
+- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate. 
+
+- The between_factors argument takes in a list of between subjects factor names, as previously defined in the "Group" object.
 
 ```{r, psyci}
 contrasts_w_cis <- psyci(
@@ -148,29 +162,29 @@ knitr::kable(contrasts_w_cis, digits = 3)
 
 In creating SCIs, we gain insight into the results which exceeds that of a traditional ANOVA contrast approach. An updated interpretation may look as follows.
 
-There is evidence of significant differences in the "Fatigue-Alert", "Extreme-Mod, Mild", and "Low-High" contrasts (p \< 0.05). Specifically:
+There is evidence of significant differences in the "Fatigue - Alert", "Extreme - Mod, Mild", and "Low - High" contrasts (p \< 0.05). Specifically:
 
 - Compared to Alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors.
 
 - Drivers with Extreme fatigue make between 4.187 and 10.813 more errors than the average of Moderate and Mild fatigue conditions.
 
-- Drivers with Low fatigue (the average of Alert and Mild conditions) make between 4.295 and 9.705 fewer errors than those with High fatigue (the average of Moderate and Extreme conditions)
+- Drivers with Low fatigue (the average of Alert and Mild conditions) make between 4.295 and 9.705 fewer errors than those with High fatigue (the average of Moderate and Extreme conditions).
 
-There is insufficient evidence to suggest a significant difference exists in the "Alert-Mild" contrast (p \> 0.05).
+There is insufficient evidence to suggest a significant difference exists in the "Alert - Mild" contrast (p \> 0.05).
 
 - Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts.
 
-Such specificity is especially useful if thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions addressing driving errors that led to **3 fewer driving errors**. The addition of this stipulation once again alters our analysis. For example:
+Such specificity is especially useful if thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **3 driving errors**. The addition of this stipulation once again alters our analysis. For example:
 
-- Compared to Alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors. However, while a significant effect has been detected, we cannot determine whether this effect meets the importance criterion set out by the government (as the lower bound 2.877 < 3).
+- Compared to Alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors. While a significant effect has been detected, we cannot determine whether this effect meets the importance criterion set out by the government (as the lower bound 2.877 \< 3).
 
-- Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts. Thus, while no significant effect has been detected, it can be said with 95% confidence that Alert drivers may make less mistakes than their Mildly fatigued counterparts, and this reduction may be important (as 5.825 > 3). Further, Alert drivers do not make an important amount more mistakes than Mildly fatigued drivers (1.825 < 3).
+- Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts. Thus, while no significant effect has been detected, it can be said with 95% confidence that Alert drivers may make an important amount fewer mistakes than Mildly fatigued drivers (5.825 \> 3), but do not make an important amount more mistakes than Mildly fatigued drivers (1.825 \< 3).
 
 Finally, in lieu of specific values, a threshold of importance may be defined according to standardised units using guidelines such as Cohen's *d* to determine importance [@cohen2013]. To do so, divide raw limits by the within-group standard deviation (the square root of the within-group mean square error).
 
 ## Conclusion
 
-Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allows for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially as compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection.
+Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially when compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection.
 
 ------------------------------------------------------------------------
 
