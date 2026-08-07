@@ -26,9 +26,7 @@ To use Psy to calculate confidence intervals over contrast effects, we will util
 ```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
 library(emmeans)
-library(devtools)
-load_all()
-#library(PsyR)
+library(PsyR)
 library(tidyverse)
 ```
 
