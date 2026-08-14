@@ -8,9 +8,9 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004].
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004]. This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
 
-This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
+Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially when compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection. 
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -43,11 +43,11 @@ head(fatigue, 5)
 
 To learn more about the fatigue dataframe call the help function using `?df` to open its documentation.
 
-```{r, whatfatigue, message = FALSE, warning = FALSE, evaluate = FALSE}
+```{r, whatfatigue, message = FALSE, warning = FALSE, eval = FALSE}
 ?fatigue
 ```
 
-When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` to relabel the levels of our group, and to reassign the "Group" column to the factor datatype.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` reassign the the "Group" column to the factor datatype, and to relabel the levels of the driver fatigue independent variable.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -108,7 +108,6 @@ To do so, it is important to look at the stated aims of the research, the maxima
 - "Alert - Mild" ➞ The difference between the Alert and Mild fatigue conditions.
 
 ```{r definecontrasts}
-### note to selves - is there a way to get emmeans to do the scaling here?
 between_contrasts = list(
   "Fatigue - Alert" = c(-1, 1/3, 1/3, 1/3),
   "Extreme - Mod, Mild" = c(0, -1/2, -1/2, 1),
@@ -181,10 +180,6 @@ Such specificity is especially useful if thresholds of importance are introduced
 - Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts. Thus, while no significant effect has been detected, it can be said with 95% confidence that Alert drivers may make an important amount fewer mistakes than Mildly fatigued drivers (5.825 \> 3), but do not make an important amount more mistakes than Mildly fatigued drivers (1.825 \< 3).
 
 Finally, in lieu of specific values, a threshold of importance may be defined according to standardised units using guidelines such as Cohen's *d* to determine importance [@cohen2013]. To do so, divide raw limits by the within-group standard deviation (the square root of the within-group mean square error).
-
-## Conclusion
-
-Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially when compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection.
 
 ------------------------------------------------------------------------
 
