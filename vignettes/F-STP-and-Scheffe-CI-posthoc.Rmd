@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 ## The Packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use PsyR to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
@@ -137,13 +137,13 @@ Such analysis establishes that significant effects exist in our chosen contrasts
 
 - The contrast_tables argument is set as the previously made *btwn_fx* object. Of note, if one has multiple contrast tables this argument can also take in a list.
 
-- The family_list argument takes in a list of the same length as contrast_tables. Here we set it as "b", specifying that the contrast table is between-subjects only.
-
 - The method is set as "ph", creating confidence intervals (estimate ± SE ⨉ cc) using a post-hoc method [@bird2002a].
 
-- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate. 
+- The family list is set as "b", specifying that the contrast table is between-subjects. The family_list must take in a list of the same length as contrast_tables.
 
 - The between_factors argument takes in a list of between subjects factor names, as previously defined in the "Group" object.
+
+- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate. 
 
 ```{r, psyci}
 contrasts_w_cis <- psyci(
