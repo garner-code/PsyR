@@ -15,11 +15,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-A vignette to help understand how to use PsyR to enact Post-Hoc Analysis of Variance via Confidence Intervals in a within-subjects design [@bird2004].
+A vignette to help understand how to use PsyR to enact Post-Hoc Analysis of Variance via Confidence Intervals in a within-subjects design [@bird2004]. This technique adopts a multivariate approach, assuming a lack of spherecity in the data (as is necessarily expected in within-subjects designs).
 
 ## The Packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use Psy to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(afex)
@@ -30,31 +31,29 @@ library(tidyverse)
 
 ## The Data
 
+The kevin_within dataframe contains data from a single-factor within-subjects experiment assessing the impact of a treatment on patient wellbeing. N = 5 participants were recruited. They were measured pre-treatment, post-treatment, and at a 6 month follow-up. Thus, the dependent variable (wellbeing) has p = 3 levels.
+
 Lets load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(kevin_within)
-head(kevin_within, 5) %>%
-  knitr::kable(format = "html", table.attr = "style='width:50%;'")
+head(kevin_within, 5)
 ```
 
-Have you forgotten the details of the dataframe? Call the help function using `?df` to open its documentation.
+To learn more about the kevin_within dataframe call the help function using `?df` to open its documentation.
 
-```{r, whatfatigue, message = FALSE, warning = FALSE}
+
+```{r, whatfatigue, message = FALSE, warning = FALSE, eval = FALSE}
 ?kevin_within
 ```
 
-Lets tidy our data!
-
-First, call `pivot_longer()`, using the `values_to` argument to move the scores from the "Pre", "Post" and "FU" (Follow Up) conditions into a single column labelled "Score". Lets also create a column to identify what session the scores come from, using the `names_to` argument to populate the column with our predefined session names.
-
-Next, lets use the `fct_relevel()` function to set our "Session" column to the factor datatype. This will be important later for visualisation and analysis purposes.
+When working with this dataframe, we need the data to be in long-form. So, call `pivot_longer()`, assigning names to a new "Session" column and values to a new "Score" column. We also will call `fct_relevel()`, assigning the "Session" column as a factor and reordering the levels of the independent variable according to chronological order.
 
 ```{r longform}
 kevin_within <- kevin_within %>%
   pivot_longer(c("Pre", "Post", "FU"),
-    values_to = "Score",
-    names_to = "Session"
+    names_to = "Session",
+    values_to = "Score"
   )
 
 kevin_within <- kevin_within %>%
@@ -70,11 +69,7 @@ head(kevin_within, 5) %>%
   knitr::kable(format = "html", table.attr = "style='width:50%;'")
 ```
 
-Time to plot our data, with help from the ggplot2 package.
-
-Using a pipe, lets tell `ggplot()` to take in the kevin_within dataset (the one we just tidied up into longform). Then, within `aes()` lets create a canvas with "Session" on the X axis and "Score" on the Y axis. Lets also colour-code our groups by calling fill: [Pre]{style="color: OrangeRed;"}, [Post]{style="color: Green;"}, [FU]{style="color: Blue;"}.
-
-Finally, lets create some boxplots using `geom_boxplot()` and make it look nice and clean using `theme_classic()`.
+Next, let's visualise our data. Doing so allows us to understand the overall layout of the data, which can be used to inform which contrasts should be analysed.
 
 ```{r boxplotit, fig.width = 7.1, fig.height = 4}
 kevin_within %>%
@@ -87,9 +82,13 @@ kevin_within %>%
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the kevin_within dataframe, and the "Group" column set as between-subjects. This aggregates across our Session column, so it isn't useful on its own.
+Here we will create the building blocks for first an ANOVA output, and later our CIs. This workflow can be justified as follows.
 
-Next, lets create a new object *emms* (short for estimated marginal means) calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Session". Now we are heading in the right direction, as our results are split by factor ("Pre", "Post", "FU").
+The folloing code builds towards this approach.
+
+The following code builds towards an eventual SCI approach. Let's create a new object *emms*, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output according to "Group" (which, as a reminder, is a column of the factor datatype which indicates what level of the IV each score belongs to). Running this code will give us the estimated marginal means for each level of the independent variable.
+
+First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod* by calling the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the kevin_within dataframe, and the "Group" column set as between-subjects. Next, lets create a new object *emms*, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Session". Running this code will give us the estimated marginal means for the dependent variable (wellbeing) at each level of the independent variable (time of measurement).
 
 ```{r model}
 # set emmeans option to multivariate
@@ -107,15 +106,16 @@ emms <- emmeans(mod, "Session")
 knitr::kable(emms, digits = 3)
 ```
 
-Now lets define and compute our contrasts of interest. To do so, create the *contrasts* object, calling `list()` to define our contrasts, which compare the following:
+Time to define our contrasts!
 
-- "Post-Pre" - The difference between scores taken prior to intervention and after the intervention.
+With only p = 3 levels of the independent variable, it makes sense to define simple contrasts examining the difference between each level. Of note, the post-hoc nature of our analysis prevents inflation of the Type I error rate, meaning that in designs with more levels of the IV it is valid to define as many contrasts as are deemed of interest. With all that being said, the following three contrasts are chosen for analysis
 
-- "FU-Post" - The difference between scores taken post intervention and at a 6 month follow up.
+- "Post - Pre" ➞ The difference between scores taken pre- and post-intervention.
+- "FU - Post" ➞ The difference between scores taken post-intervention and at a 6 month follow-up.
 
-- "FU-Pre" - The difference between scores taken prior to intervention and at a 6 month follow up.
+- "FU - Pre" ➞ The difference between scores taken prior to intervention and at a 6 month follow-up.
 
-We can now generate our ANOVA table. To do so, create the *cnt_res* object. Then, call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and our newly defined *contrasts* in the "method" argument.
+Having defined our contrasts, let's store them within a contrasts table. Create the *cnt_res* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *contrasts* in the "method" argument (which will take in our newly defined contrasts). The output of this code, as shown below, contains the results of hypothesis tests of each contrast.
 
 ```{r phoc}
 contrasts <- list(
@@ -127,6 +127,13 @@ contrasts <- list(
 cnt_res <- contrast(emms, contrasts)
 knitr::kable(cnt_res, digits = 3)
 ```
+
+### The (Initial) Interpretation
+
+Fill in
+
+Such analysis establishes that significant effects exist in our chosen contrasts, but does not allow for specific insight into the magnitude of said effects. An approach utilising CIs can remedy this. To achieve this with PsyR, let's create an object *contrasts_w_cis* using the `psyci()` function, specifying the following:
+
 
 Finally, lets compute our post-hoc 95% CIs for our within-subjects design. To do so, lets call `psyci()` from the PsyR package, specifying the following:
 
