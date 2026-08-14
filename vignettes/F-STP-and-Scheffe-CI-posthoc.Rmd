@@ -147,7 +147,7 @@ Such analysis establishes that significant effects exist in our chosen contrasts
 
 ```{r, psyci}
 contrasts_w_cis <- psyci(
-  mod,
+  model = mod,
   contrast_tables = list(btwn_fx),
   family_list = list("b"),
   method = "ph",
