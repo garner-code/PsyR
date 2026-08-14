@@ -1,5 +1,5 @@
 ---
-title: "post-hoc_within-subjects"
+title: "Post-Hoc Within-Subjects ANOVA via CIs"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{post-hoc_within-subjects}
@@ -22,9 +22,9 @@ A vignette to help understand how to use PsyR to enact Post-Hoc Analysis of Vari
 To use Psy to calculate confidence intervals over contrast effects, we will use a workflow that uses functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r setup, message = FALSE, warning = FALSE}
-library(PsyR)
-library(emmeans)
 library(afex)
+library(emmeans)
+library(PsyR)
 library(tidyverse)
 ```
 
