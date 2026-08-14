@@ -15,12 +15,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-A vignette to help understand how to use PsyR to enact a Post-Hoc Analysis of Variance via Confidence Intervals in a within-subjects design [@bird2004]. This technique adopts a multivariate approach, assuming a lack of spherecity in the data (as is necessarily expected in within-subjects designs).
+A vignette to help understand how to use PsyR to enact a Post-Hoc Analysis of Variance via Confidence Intervals (CIs) in a single factor within-subjects design [@bird2004]. By using CIs, a researcher can gain greater insight into the magnitude of an effect, lending greater nuance and specificity to analysis. This technique adopts a multivariate approach, recognising that each subject produces multiple scores which may be correlated, and assuming a lack of spherecity in the data (as is necessarily expected in within-subjects designs).
 
 ## The Packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
-
+To use PsyR to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(afex)
@@ -33,7 +32,7 @@ library(tidyverse)
 
 The kevin_within dataframe contains data from a single-factor within-subjects experiment assessing the impact of a new treatment on patient wellbeing. N = 5 participants were recruited, and their wellbeing was measured pre-treatment, post-treatment, and at a 6 month follow-up. Thus, the dependent variable (wellbeing) has p = 3 levels.
 
-Lets load the data, then call the `head()` function to print the first 5 rows.
+Let's load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
 data(kevin_within)
@@ -41,7 +40,6 @@ head(kevin_within, 5)
 ```
 
 To learn more about the kevin_within dataframe call the help function using `?df` to open its documentation.
-
 
 ```{r, whatfatigue, message = FALSE, warning = FALSE, eval = FALSE}
 ?kevin_within
@@ -67,7 +65,7 @@ kevin_within <- kevin_within %>%
   )
 ```
 
-Next, let's visualise our data. Doing so allows us to understand the overall layout of the data, which can be used to inform which contrasts should be analysed.
+Next, let's visualise our data. Doing so allows us to understand the overall layout of the data, which (in addition to other methods) can be used to inform which contrasts should be analysed.
 
 ```{r boxplotit, fig.width = 7, fig.height = 4}
 kevin_within %>%
@@ -78,11 +76,15 @@ kevin_within %>%
 
 ## The Analysis
 
-Lets prepare to run some statistical tests!
+Let's prepare to run some statistical tests!
 
 Here we will create the building blocks for first an ANOVA output, and later our CIs. This workflow can be justified as follows.
 
-The following code builds towards this approach. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod* by calling the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the kevin_within dataframe, and the "Group" column set as between-subjects. Next, lets create a new object *emms*, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Session". Running this code will give us the estimated marginal means for the dependent variable (wellbeing) at each level of the independent variable (time of measurement).
+- An overall multivariate-model homogeneity test allows an ⍺-level test of the null (homogeneity) hypothesis: that, at the population level, no difference exists between conditions. For the maximal contrast, a Hotelling's T^2^ statistic [@hotelling1931] is generated and compared to an F~c~, where if T^2^ ≥ F~c~ a heterogeneity inference may be made.
+
+- The creation of CIs goes beyond a traditional hypothesis testing approach of determining the significance of a set of contrasts. Where hypothesis testing allows one to determine whether to reject the null hypothesis, CIs provide additional information regarding the directionality and magnitude of the effects at test (while maintaining a FWER \< ⍺).
+
+The following code builds towards this approach. First, let's specify that we want a multivariate analysis, using the `afex_options()` function. Next, create a new object *mod* by calling the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the kevin_within dataframe, and the "Group" column set as between-subjects. Finally, create a new object *emms*, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output based upon "Session". Running this code will give us the estimated marginal means for the dependent variable (wellbeing) at each level of the independent variable (time of measurement).
 
 ```{r model}
 # set emmeans option to multivariate
@@ -102,12 +104,15 @@ knitr::kable(emms, digits = 3)
 
 Time to define our contrasts!
 
-With only p = 3 levels of the independent variable, it makes sense to define simple contrasts examining the difference between each level. Of note, the methodology of this particular analysis prevents inflation of the Type I error rate, meaning that in designs with more levels of the IV it is valid to define as many contrasts as are deemed of interest. With all that being said, the following three contrasts are chosen for analysis
+To do so, it is important to look at the stated aims of the research, the maximal contrast, and the pattern of sample means in our data.
 
-- "Post - Pre" ➞ The difference between scores taken pre- and post-intervention.
-- "FU - Post" ➞ The difference between scores taken post-intervention and at a 6 month follow-up.
+In this case, simple contrasts examining the difference in wellbeing at each measurement point seem like appropriate questions to ask of the data. However, it should be noted that if a researcher wanted to define more contrasts, our methodology prevents prevents inflation of the Type I error rate, meaning that it is valid to define as many contrasts as are deemed of interest. With that being said, the following three contrasts are chosen for analysis
 
-- "FU - Pre" ➞ The difference between scores taken prior to intervention and at a 6 month follow-up.
+- "Post - Pre" ➞ The difference between post and pre-intervention scores.
+
+- "FU - Post" ➞ The difference between 6 month follow-up and post-intervention scores.
+
+- "FU - Pre" ➞ The difference between 6 month follow-up and pre-intervention scores.
 
 Having defined our contrasts, let's store them within a contrasts table. Create the *cnt_res* object, then call the `contrast()` function from the emmeans package, setting *emms* in the "object" argument and *contrasts* in the "method" argument (which will take in our newly defined contrasts). The output of this code, as shown below, contains the results of hypothesis tests of each contrast.
 
@@ -117,26 +122,26 @@ contrasts <- list(
   "FU - Post"  = c(0, -1, 1),
   "FU - Pre"   = c(-1, 0, 1)
 )
-### note to selves: p vals outputted are from emmeans and are not commensurate with current approach.
+### note to selves: p vals outputted are from emmeans and are not commensurate with CI output/Hotelling's T^2^
 cnt_res <- contrast(emms, contrasts)
 knitr::kable(cnt_res, digits = 3)
 ```
 
 ### The (Initial) Interpretation
 
-The above analysis outputs two p-values, where the "Post - Pre" contrast seems significant according to the p-value from emmeans but does not meet the criteria for significance according to the p-value from PsyR. Here, clarity may be achieved by examining our CIs, where lower and upper bounds which are either both positive or both negative are indicative of a significant result. Further, CIs let us understand the the magnitude of the effects represented by our contrasts. To achieve this with PsyR, let's create an object *contrasts_w_cis* using the `psyci()` function, specifying the following:
+The above analysis outputs two p-values, with most of them indicating a failure to reject the null hypothesis. Of note, the "Post - Pre" contrast seems significant according to the p-value from emmeans but does not meet the criteria for significance according to the p-value from PsyR. Here, clarity may be achieved by examining our CIs, where lower and upper bounds which are either both positive or both negative are indicative of a significant result. Further, CIs let us understand the magnitude of the effects represented by our contrasts. To generate our CIs with PsyR, let's create an object *contrasts_w_cis* using the `psyci()` function, specifying the following:
 
 - The model is the previously made *mod* object, where the model must be made using the afex package (and of class afex_aov).
 
 - The contrast_tables argument is set as the previously made *btwn_fx* object. Of note, if one has multiple contrast tables this argument can also take in a list.
 
-- The method is set as "ph", creating confidence intervals (estimate ± SE ⨉ cc) using a post-hoc method [@bird2004a].
+- The method is set as "ph", creating confidence intervals (estimate ± SE ⨉ cc) using a post-hoc method [@bird2004].
 
-- The family list is set as "w", specifying that the contrast table is within-subjects. family_list must take in a list of the same length as contrast_tables.
+- The family list is set as "w", specifying that the contrast table is within-subjects. The family_list must take in a list of the same length as contrast_tables.
 
 - The within_factors argument takes in a list of between subjects factor names, as previously defined in the "Session" column.
 
-- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate. 
+- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate.
 
 ```{r, scis}
 psyci(
@@ -152,9 +157,7 @@ knitr::kable(digits = 3)
 
 ## PsyR's Contribution
 
-Explain why PsyR has added to our analysis. 
-
-There is insufficient evidence to suggests a significant difference exists in any of our contrasts of interest (p \> 0.05). However, our CIs can give us some insight into the directionality of our data.
+By examining our CIs, we can confirm that there is insufficient evidence to suggest a significant effect in any of our contrasts.
 
 - Compared to pre-intervention, scores at post-intervention may have improved by up to 6.192 units, or may have regressed by 0.192 units.
 
@@ -162,11 +165,11 @@ There is insufficient evidence to suggests a significant difference exists in an
 
 - Compared to pre-intervention, participants at follow up may have improved by up to 17.836 units, or may have regressed by 5.836 units.
 
-Such specificity is especially useful if thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **x wellbeing score**. The addition of this stipulation once again alters our analysis. For example:
+Despite not seeing any significant results, the extra information obtained through a CI approach can still be useful, such as in a scenario where thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **2 on the wellbeing score**. The addition of this stipulation alters our analysis. For example:
 
-add interpretation here.
+- Compared to pre-intervention, scores at post-intervention may have improved by up to 6.192 units, or may have regressed by 0.192 units. While there is insufficient evidence to make a conclusion regarding significance, examination of CIs allows for a conclusion regarding clinical relevance. Specifically, the treatment may result in a clinically relevant increase in wellbeing (6.192 \> 3), but will never result in a clinically relevant decrease in wellbeing (-0.192 \< 3).
 
------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 ```{r, echo=FALSE, fig.align='center', out.width='50%'}
 knitr::include_graphics("../man/figures/PsyR.png")
