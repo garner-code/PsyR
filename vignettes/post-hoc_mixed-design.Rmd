@@ -8,9 +8,9 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to demonstrate how to use PsyR to enact Post-Hoc Analysis of Variance via Confidence Intervals in a mixed (between x within) design, as in chapter 7 of @bird2004. The method defines and analyses 3 families - Between, Within, and Between x Within. In doing so, each critical values and critical constants are defined according to their family's critical value, ensuring the FWER is controlled at ⍺. Specifically:
+A vignette to demonstrate how to use PsyR to enact Post-Hoc Analysis of Variance via Confidence Intervals in a mixed between x (within) design, as in chapter 7 of @bird2004. The method defines and analyses 3 families - Between, (within), and between x (within). In doing so, contrast F~c~s and critical constants are defined according to their family's critical value, ensuring the FWER is controlled at ⍺. Specifically:
 
-- **Between**: The overall between main effect using a Scheffé ANOVA F Simultaneous Test Procedure (STP). This is a univariate approach
+- **Between**: The overall between main effect using a Scheffé ANOVA F Simultaneous Test Procedure (STP). This is a univariate approach.
 
 - **Within**: The overall within main effect using a Hotelling's T^2^ test [@hotelling1931]. This is a multivariate approach.
 
@@ -49,11 +49,11 @@ head(social_anxiety, 5)
 
 To learn more about the social_anxiety dataframe call the help function using `?df` to open its documentation.
 
-```{r, what_socialanx, message = FALSE, warning = FALSE, eval = false}
+```{r, what_socialanx, message = FALSE, warning = FALSE, eval = FALSE}
 ?social_anxiety
 ```
 
-When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles) and ordered according to their chronological order. So, call `fct_relevel()` to reassign the "Session" column to the factor datatype and order the levels of the within subjects independent variable.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles) and ordered according to their chronological order. So, call `fct_relevel()` to reassign the "Session" column to the factor datatype and order the levels of the within-subjects independent variable.
 
 ```{r longform}
 social_anxiety <- social_anxiety %>%
@@ -73,10 +73,15 @@ social_anxiety <- social_anxiety %>%
 
 Next, let's visualise our data. Doing so allows us to understand the overall layout of the data, which (alongside other methods) can be used to inform which contrasts should be analysed.
 
-```{r boxplotit, fig.width = 7, fig.height = 4}
+```{r linegraphit, fig.width = 7, fig.height = 4, message = FALSE, warning = FALSE}
 social_anxiety %>%
-  ggplot(aes(x = Session, y = Score, fill = Group)) +
-    geom_boxplot() +
+  group_by(Group, Session) %>%
+  summarise(
+    Score = mean(Score) 
+  ) %>% 
+  ggplot(aes(x = Session, y = Score, colour = Group, shape = Group)) +
+    geom_point() +
+    geom_line(aes(group = Group)) +
     theme_classic(base_size = 14)
 ```
 
@@ -84,11 +89,9 @@ social_anxiety %>%
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks for first an ANOVA output, and later our CIs. This workflow can be justified as follows.
+Here we will create the building blocks for three distinct tests of the homogeneity hypothesis (one per family) and corresponding CIs per family. The following code builds towards this approach.
 
-The following code builds towards the creation of CIs.
-
-Here we will create the building blocks of our eventual ANOVA output. First, lets specify that we want a multivariate analysis, using the `afex_options()` function. Next, lets create a new object *mod*. To create *mod*, call the `aov_ez()` function which takes in the "Subject" column to identify subjects, the "Score" column as the dependent variable, the social_anxiety dataframe, the "Session" column set as within-subjects, and the "Group" column set as between-subjects.
+First, let's specify that we want a multivariate analysis, using the `afex_options()` function. Next, let's create the object *mod* by calling the `aov_ez()` function. Place the "Subject" column in the id argument, "Score" as our dv, social_anxiety as our dataframe, "Group" as the between-subjects factor, and "Session" as the within-subjects factor. Finally, create the *emms_win* object, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output according to "Session" (which, as a reminder, is a column of the factor datatype that identifies what level of the within-subjects independent variable the score belongs to). Running this code will give us the estimated marginal means for each level of within-subjects independent variable.
 
 ```{r model}
 # set emmeans option to multivariate
@@ -99,42 +102,23 @@ mod <- aov_ez(
   "Subject", 
   "Score", 
   social_anxiety, 
-  within = "Session",
-  between = "Group"
+  between = "Group",
+  within = "Session"
 )
 
 emms_win <- emmeans(mod, "Session")
 knitr::kable(emms_win, digits = 3)
+###future me - figure out how to get tables vertically spaced
 ```
 
-Lets define and obtain our within-subjects contrast tables. To do so, create the *win_contrasts* object, calling `list()` to define our contrasts, which compare the following:
 
-- "Pre - Rest" ➞ The difference between
+Now let's define and obtain our between-subjects contrast table. To do so, create the *btwn_contrasts* object, calling `list()` to define our contrasts, which compare the following:
 
-- "Post - FUs" ➞ The difference between
+- "Ts - C" ➞ The difference between the control condition and the average of the two treatment conditions.
 
-- "FU1 - FU2" ➞ The difference between
+- "NT - ST" ➞ The difference between the New and Standard treatment conditions.
 
-We can now generate an ANOVA table. To do so, create the *win_fx* object. Then, call the `contrast()` function from the emmeans package, setting *emms_win* in the "object" argument and our newly defined *win_contrasts* in the "method" argument.
-
-Add in some disclaimer - this is only the within subs main effect
-
-```{r, win}
-win_contrasts <- list(
-  "Pre - Rest" = c(1, -1/3, -1/3, -1/3),
-  "Post - FUs" = c(0, 1, -0.5, -0.5),
-  "FU1 - FU2" = c(0, 0, 1, -1)
-) 
-
-win_fx <- contrast(emms_win, win_contrasts)
-knitr::kable(win_fx, digits = 3)
-```
-
-text - model after within
-
-- "Ts - C" ➞
-
-- "NT - ST" ➞
+We can now generate an ANOVA table with tests of significance of each of these between-subjects main effects, using an ANOVA F STP test of significance. To do so, create the *btwn_fx* object. Then, call the `contrast()` function from the emmeans package, setting *emms_win* in the "object" argument and our newly defined *btwn_contrasts* in the "method" argument.
 
 ```{r, btwn}
 
@@ -147,7 +131,31 @@ emms_btwn <- emmeans(mod, "Group")
 
 btwn_fx <- contrast(emms_btwn, btwn_contrasts)
 knitr::kable(btwn_fx, digits = 3)
+###future me - figure out how to get tables vertically spaced
 ```
+
+Let's also define and obtain our within-subjects contrast table. To do so, create the *win_contrasts* object, calling `list()` to define our contrasts, which compare the following:
+
+- "Pre - Rest" ➞ The difference between the measure of social anxiety before treatment and the average of measures taken after treatment administration.
+
+- "Post - FUs" ➞ The difference between the measure of social anxiety immediately after treatment and the average of the two measures taken at follow-up.
+
+- "FU1 - FU2" ➞ The difference between the 3 and 6 month follow -p measures of social anxiety.
+
+Once again, we can now generate an ANOVA table with tests of significance of each of these within-subjects main effects, using an overall Hotelling's T^2^ test procedure. To do so, create the *win_fx* object. Then, call the `contrast()` function from the emmeans package, setting *emms_win* in the "object" argument and our newly defined *win_contrasts* in the "method" argument.
+
+```{r, win}
+win_contrasts <- list(
+  "Pre - Rest" = c(1, -1/3, -1/3, -1/3),
+  "Post - FUs" = c(0, 1, -0.5, -0.5),
+  "FU1 - FU2" = c(0, 0, 1, -1)
+) 
+
+win_fx <- contrast(emms_win, win_contrasts)
+knitr::kable(win_fx, digits = 3)
+```
+
+Finally, lets create an ANOVA table of interaction effects using an overall test of Roy's GCR. To do so, create the *emms_int* object by calling `emmeans()`, placing *mod* in the object argument and outputing according to both our between-subjects and within-subjects indepedent variables. Next, create the *int_fx* object, calling `contrast()` and setting our newly made *emms_int* in the "object" argument and setting both our contrasts tables in the "method" argument.
 
 text - discuss interaction etc?
 
@@ -163,7 +171,9 @@ int_fx <- contrast(
 knitr::kable(int_fx, digits = 3)
 ```
 
-#### A Priori Confidence
+### A Priori Confidence Intervals
+
+To demonstrate the benefits of a post-hoc method, we must first showcase a planned analysis (something along these lines).
 
 Here we replicate the bonferroni correction first presented in chapter 7
 
@@ -177,7 +187,8 @@ psyci(
   model = mod, contrast_tables = all_fx, method = "bf", 
   family_list = family_list, between_factors = list("Group"),
   within_factors = list("Session"), alpha = alphas
-)
+) %>% 
+  knitr::kable(digits = 3)
 
 ```
 
@@ -191,7 +202,8 @@ psyci(
   model = mod, contrast_tables = all_fx, method = "ph", 
   family_list = family_list, between_factors = list("Group"),
   within_factors = list("Session"), alpha = alphas
-)
+) %>% 
+  knitr::kable(digits = 3)
 
 ```
 
