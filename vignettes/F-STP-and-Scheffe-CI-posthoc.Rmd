@@ -47,7 +47,7 @@ To learn more about the fatigue dataframe call the help function using `?df` to 
 ?fatigue
 ```
 
-When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` reassign the the "Group" column to the factor datatype, and to relabel the levels of the driver fatigue independent variable.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` reassign the "Group" column to the factor datatype, and to relabel the levels of the driver fatigue independent variable.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
