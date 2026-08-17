@@ -8,9 +8,9 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004].
+A vignette to help understand how to use PsyR to enact the Scheffé technique, which uses an ANOVA F Simultaneous Test Procedure and a Scheffé Simultaneous Confidence Interval (SCI) method for making inferences for multiple contrasts [@bird2004]. This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
 
-This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
+Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially when compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection. 
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 ## The Packages
 
-To use Psy to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use PsyR to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r, loadpackages, message = FALSE, warning = FALSE}
 library(afex)
@@ -43,11 +43,11 @@ head(fatigue, 5)
 
 To learn more about the fatigue dataframe call the help function using `?df` to open its documentation.
 
-```{r, whatfatigue, message = FALSE, warning = FALSE, evaluate = FALSE}
+```{r, whatfatigue, message = FALSE, warning = FALSE, eval = FALSE}
 ?fatigue
 ```
 
-When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` to relabel the levels of our group, and to reassign the "Group" column to the factor datatype.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles). So, call `factor()` reassign the "Group" column to the factor datatype, and to relabel the levels of the driver fatigue independent variable.
 
 ```{r sortfatigue}
 fatigue <- fatigue %>%
@@ -108,7 +108,6 @@ To do so, it is important to look at the stated aims of the research, the maxima
 - "Alert - Mild" ➞ The difference between the Alert and Mild fatigue conditions.
 
 ```{r definecontrasts}
-### note to selves - is there a way to get emmeans to do the scaling here?
 between_contrasts = list(
   "Fatigue - Alert" = c(-1, 1/3, 1/3, 1/3),
   "Extreme - Mod, Mild" = c(0, -1/2, -1/2, 1),
@@ -138,17 +137,17 @@ Such analysis establishes that significant effects exist in our chosen contrasts
 
 - The contrast_tables argument is set as the previously made *btwn_fx* object. Of note, if one has multiple contrast tables this argument can also take in a list.
 
-- The family_list argument takes in a list of the same length as contrast_tables. Here we set it as "b", specifying that the contrast table is between-subjects only.
-
 - The method is set as "ph", creating confidence intervals (estimate ± SE ⨉ cc) using a post-hoc method [@bird2002a].
 
-- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate. 
+- The family list is set as "b", specifying that the contrast table is between-subjects. The family_list must take in a list of the same length as contrast_tables.
 
 - The between_factors argument takes in a list of between subjects factor names, as previously defined in the "Group" object.
 
+- Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate. 
+
 ```{r, psyci}
 contrasts_w_cis <- psyci(
-  mod,
+  model = mod,
   contrast_tables = list(btwn_fx),
   family_list = list("b"),
   method = "ph",
@@ -181,10 +180,6 @@ Such specificity is especially useful if thresholds of importance are introduced
 - Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts. Thus, while no significant effect has been detected, it can be said with 95% confidence that Alert drivers may make an important amount fewer mistakes than Mildly fatigued drivers (5.825 \> 3), but do not make an important amount more mistakes than Mildly fatigued drivers (1.825 \< 3).
 
 Finally, in lieu of specific values, a threshold of importance may be defined according to standardised units using guidelines such as Cohen's *d* to determine importance [@cohen2013]. To do so, divide raw limits by the within-group standard deviation (the square root of the within-group mean square error).
-
-## Conclusion
-
-Engaging in a Scheffé post-hoc contrasts analysis using SCIs enables a researcher to make inferences of greater specificity than other approaches. Specifically, SCIs allow for inferences regarding the magnitude of the effect captured by a contrast. This is achieved while holding the FWER below ⍺, as the Scheffé method controls the FWER for the set of all conceivable contrasts (when J \> 2). However, the flexibility this method affords comes at the cost of power, especially when compared to a planned contrasts analysis investigating only a few contrasts of interest chosen a priori to data collection.
 
 ------------------------------------------------------------------------
 
