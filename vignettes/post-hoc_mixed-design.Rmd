@@ -53,7 +53,7 @@ To learn more about the social_anxiety dataframe call the help function using `?
 ?social_anxiety
 ```
 
-When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles) and ordered according to their chronological order. So, call `fct_relevel()` to reassign the "Session" column to the factor datatype and order the levels of the within-subjects independent variable. Further, call `factor()` and `fct_recode()` to reassign the "Group" column as a factor and order the levels of the between-subjects independent variable.
+When working with this dataframe, we need the independent variables to be represented as factors (rather than doubles) and ordered according to their chronological order. So, call `fct_relevel()` to reassign the "Session" column to the factor datatype and order the levels of the within-subjects independent variable. Likewise, call `factor()` and `fct_recode()` to reassign the "Group" column as a factor and order the levels of the between-subjects independent variable.
 
 ```{r longform}
 social_anxiety <- social_anxiety %>%
@@ -73,7 +73,7 @@ social_anxiety <- social_anxiety %>%
 
 Next, let's visualise our data. Doing so allows us to understand the overall layout of the data, which (alongside other methods) can be used to inform which contrasts should be analysed.
 
-```{r linegraphit, fig.width = 7, fig.height = 4, message = FALSE, warning = FALSE}
+```{r linegraphit, fig.width = 7, fig.height = 4, message = FALSE, warning = FALSE, dev = 'svg'}
 social_anxiety %>%
   group_by(Group, Session) %>%
   summarise(
@@ -89,9 +89,9 @@ social_anxiety %>%
 
 Lets prepare to run some statistical tests!
 
-Here we will create the building blocks for three distinct tests of the homogeneity hypothesis (one per family) and corresponding CIs per family. The following code builds towards this approach.
+Here we will create the building blocks for three distinct tests of the homogeneity hypothesis (one per family) and corresponding SCIs per family. The following code builds towards this approach.
 
-First, let's specify that we want a multivariate analysis, using the `afex_options()` function. Next, let's create the object *mod* by calling the `aov_ez()` function. Place the "Subject" column in the id argument, "Score" as our dependent variable, social_anxiety as our dataframe, "Group" as the between-subjects factor, and "Session" as the within-subjects factor. Finally, create the *emms_win* object, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output according to "Session" (which, as a reminder, is a column of the factor datatype that identifies what level of the within-subjects independent variable the score belongs to). Running this code will give us the estimated marginal means for each level of the within-subjects independent variable.
+First, let's specify that we want a multivariate analysis, using the `afex_options()` function. Next, let's create the object *mod* by calling the `aov_ez()` function. Place the "Subject" column in the ID argument, "Score" as our dependent variable, social_anxiety as our dataframe, "Group" as the between-subjects factor, and "Session" as the within-subjects factor. Finally, create the *emms_win* object, calling the `emmeans()` function and specifying that we want to take in *mod* (the object we just made) and output according to "Session" (which, as a reminder, is a column of the factor datatype that identifies what level of the within-subjects independent variable the score belongs to). Running this code will give us the estimated marginal means for each level of the within-subjects independent variable.
 
 ```{r model}
 # set emmeans option to multivariate
@@ -112,7 +112,7 @@ knitr::kable(emms_win, digits = 3)
 
 Now let's define and obtain our between-subjects contrast table. To do so, create the *btwn_contrasts* object, calling `list()` to define our contrasts, which compare the following:
 
-- "Ts - C" ➞ The difference between the Minimum Contact Control condition and the average of the two treatment conditions.
+- "Ts - C" ➞ The difference between the minimum contact Control condition and the average of the two treatment conditions.
 
 - "NT - ST" ➞ The difference between the New and Standard treatment conditions.
 
@@ -152,9 +152,7 @@ win_fx <- contrast(emms_win, win_contrasts)
 knitr::kable(win_fx, digits = 3)
 ```
 
-Finally, lets create an ANOVA table of interaction effects using an overall test of Roy's GCR. To do so, create the *emms_int* object by calling `emmeans()`, placing *mod* in the object argument and outputing according to both our between-subjects and within-subjects independent variables. Next, create the *int_fx* object, calling `contrast()` and setting our newly made *emms_int* in the "object" argument and setting both our contrasts tables in the "method" argument.
-
-Given the goal of the current research is to quantify the impact of a simultaneous manipulation to both a between and within subjects IV, the contrasts of greatest interest tend to be interaction contrasts.
+Finally, lets create an ANOVA table of interaction effects using an overall test of Roy's GCR. To do so, create the *emms_int* object by calling `emmeans()`, placing *mod* in the object argument and outputting according to both our between-subjects and within-subjects independent variables. Next, create the *int_fx* object, calling `contrast()` and setting our newly made *emms_int* in the "object" argument and both our contrasts tables in the "method" argument.
 
 ```{r, int}
 emms_int <- emmeans(
@@ -179,7 +177,7 @@ To demonstrate the benefits of a post-hoc method, we must first showcase a plann
 
 - The method is set as "bf", creating SCIs (estimate ± SE ⨉ cc) using the Bonferroni-t procedure.
 
-- The family list is set as the previously made *family_list*, labelling the contrast tables as within, between and between x within respectively.
+- The family list is set as the previously made *family_list*, labeling the contrast tables as within, between and between x within respectively.
 
 - The between_factors argument takes in a list of between subjects factor names, as previously defined in the "Group" column of the dataframe.
 
@@ -214,11 +212,13 @@ Interpretation of the above table may look as follows:
 
 It should be noted that in a factorial design, main effects contrasts tend to be of little interest to a researcher. This is because they average across all points of one of the independent variables. Nonetheless, the following conclusions may be drawn.
 
-Within Subjects: Averaged across between-subjects treatment types, the following may be stated. The average of social anxiety scores at post-treatment and follow up measures are between 2.532 and 5.564 units less than scores at pre-treatment. However, participants seem to relapse. Specifically, when comparing scores immediately post-treatment to the average of follow-up scores, participants demonstrate an increase in social anxiety of between 3.621 and 5.668 units. Further, social anxiety is greater at the 6 month follow-up than at 3 month follow-up by between 1.108 and 2.848 units.
+Within-Subjects: Averaged across treatment conditions, the following may be stated. The average of social anxiety scores at post-treatment and follow up measures are between 2.532 and 5.564 units less than scores at pre-treatment. However, participants seem to relapse. Specifically, when comparing scores immediately post-treatment to the average of follow-up scores, participants demonstrate an increase in social anxiety of between 3.621 and 5.668 units. Further, social anxiety is greater at the 6 month follow-up than at 3 month follow-up by between 1.108 and 2.848 units.
 
-Between Subjects: Averaged across all time points, the following may be stated. While there is insufficient evidence to conclude that the average scores of treatments for social anxiety are significantly different to the minimal contact control condition (p \< 0.05), it seems this effect is being driven by the lack of effectiveness of the standard treatment. When directly comparing the new and standard treatments, the new treatment results in a significant reduction in social anxiety between 0.581 and 8.469 units. 
+Between-Subjects: Averaged across all time points, the following may be stated. While there is insufficient evidence to conclude that the average scores of treatments for social anxiety are significantly different to the minimal contact Control condition (p \< 0.05), it seems this effect is being driven by the lack of effectiveness of the standard treatment. When directly comparing the new and standard treatments, the new treatment results in a significant reduction in social anxiety between 0.581 and 8.469 units.
 
 **Interactions**
+
+Given the goal of the current research is to quantify the impact of a simultaneous manipulation to both a between and within subjects IV, the contrasts of greatest interest tend to be interaction contrasts. For our interaction contrasts, the following conclusions may be drawn.
 
 When comparing the average of the treatments to the minimal contact control, the following may be said. Averaged across post-treatment and follow-up measures, the treatments result in a decrease in social anxiety as compared to the pre-treatment baseline (0.148, 7.263). However, there is evidence of a relapse in social anxiety at the follow-up conditions compared to the post-treatment measure (3.541, 8.342), with social anxiety greater at 6 month than 3 month follow-up (2.275, 6.358).
 
@@ -249,11 +249,11 @@ By and large, a post-hoc analysis merits the same conclusions as the above a pri
 
 ### The Benefit of Simultaneous Confidence Intervals
 
-The addition of SCIs is especially useful if  thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **2 units** on social anxiety. The addition of this stipulation once again alters our analysis. For example, conclusions regarding our post-hoc interaction contrasts would now look as follows:
+The addition of SCIs is especially useful if thresholds of importance are introduced. Imagine that, following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **2 units** on social anxiety. The addition of this stipulation once again alters our analysis. For example, conclusions regarding our post-hoc interaction contrasts would now look as follows:
 
-When comparing the average of the treatments to the minimal contact control, the following may be said. In the average of post-treatment and follow-up measures as compared to pre-treatment measures, there is insufficient evidence to suggest a significant difference. However, the directionality and magnitude of the SCIs shows that participants do not experience a clinically important increase in social anxiety (|-0.777| < 2), but they may experience a clinically important decrease (8.188 > 2). However, there is evidence of a significant and clinically important relapse at the follow-up conditions as compared to the post-treatment measure (2.917, 8.967). Finally, a significant but not clinically important increase in social anxiety is detected when comparing social anxiety scores at 6 versus 3 month follow-up (1.744, 6.890)
+When comparing the average of the treatments to the minimal contact control, the following may be said. In the average of post-treatment and follow-up measures as compared to pre-treatment measures, there is insufficient evidence to suggest a significant difference. However, the directionality and magnitude of the SCIs shows that participants do not experience a clinically important increase in social anxiety (\|-0.777\| \< 2), but they may experience a clinically important decrease (8.188 \> 2). However, there is evidence of a significant and clinically important relapse at the follow-up conditions as compared to the post-treatment measure (2.917, 8.967). Finally, a significant but not clinically important increase in social anxiety is detected when comparing social anxiety scores at 6 versus 3 month follow-up (1.744, 6.890)
 
-When comparing the new treatment to the standard treatment, the following may be said. There is insufficient evidence to suggest a difference between social anxiety levels before treatment and at the average of post and follow-up treatment measures. However, the directionality and magnitude of the SCIs shows that participants do not experience a clinically important increase in social anxiety (|-1.542| < 2), whereas they may experience a clinically important reduction in social anxiety (8.809 > 2). The new treatment seems to lead to reduced relapse as compared to the standard treatment, although there is insufficient evidence to suggest clinical difference. Compared to social anxiety post-treatment, the average of social anxiety scores across 3 and 6 month follow-up measurements show that participants who underwent the new treatment score between 0.957 and 7.943 units lower on social anxiety. This reduced relapse is sustained when comparing the 6 month to 3 month follow-up scores, with new treatment participants experiencing between 0.929 and 6.871 fewer units of social anxiety than their standard treatment counterparts.
+When comparing the new treatment to the standard treatment, the following may be said. There is insufficient evidence to suggest a difference between social anxiety levels before treatment and at the average of post and follow-up treatment measures. However, the directionality and magnitude of the SCIs shows that participants do not experience a clinically important increase in social anxiety (\|-1.542\| \< 2), whereas they may experience a clinically important reduction in social anxiety (8.809 \> 2). The new treatment seems to lead to reduced relapse as compared to the standard treatment, although there is insufficient evidence to suggest clinical difference. Compared to social anxiety post-treatment, the average of social anxiety scores across 3 and 6 month follow-up measurements show that participants who underwent the new treatment score between 0.957 and 7.943 units lower on social anxiety. This reduced relapse is sustained when comparing the 6 month to 3 month follow-up scores, with new treatment participants experiencing between 0.929 and 6.871 fewer units of social anxiety than their standard treatment counterparts.
 
 ------------------------------------------------------------------------
 
