@@ -100,7 +100,7 @@ planned_contrasts <- list(
   "Atyp_vs_Neut" = c(0, 1, -1)        # Atypical vs. Neutral
 )
 
-contrast_table <- contrast(emm, planned_contrasts)
+contrast_table <- contrast(emm, planned_contrasts, adjust="bonferroni")
 ```
 
 ## Compute Simultaneous Confidence Intervals

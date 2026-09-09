@@ -17,6 +17,7 @@ library(forcats)
 
 Following the example in chapter 4 of Bird (2004) Analysis of Variance via Confidence Intervals, of a coherent analysis for a 2 x 2 between subjects design with simple effects.
 
+
 ## Load the data
 
 Lets load the data, make it longform, and define the factors 

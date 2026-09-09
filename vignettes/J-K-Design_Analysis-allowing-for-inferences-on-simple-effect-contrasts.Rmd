@@ -98,7 +98,7 @@ Calculate the main effects for factor A
 ```{r, factor_a_fx}
 
 emms_exp <- emmeans(mod, c("Experience"))
-exp_fx <- contrast(emms_exp, experience_contrasts)
+exp_fx <- contrast(emms_exp, experience_contrasts, adjust="bonferroni")
 exp_fx
 
 ```
@@ -108,7 +108,7 @@ Now let's get the A(b) effects
 ```{r, A_b}
 
 Exp_g_therapy <- emmeans(mod, ~ Experience|Therapy)
-Ab_fx <- contrast(Exp_g_therapy, method=experience_contrasts)
+Ab_fx <- contrast(Exp_g_therapy, method=experience_contrasts, adjust="bonferroni")
 
 ```
 
@@ -116,7 +116,8 @@ And last, the AB effects
 
 ```{r, AB}
 
-interaction_fx = contrast(emms, interaction=list(experience_contrasts, therapy_contrasts))
+interaction_fx = contrast(emms, interaction=list(experience_contrasts, therapy_contrasts),
+                          adjust="bonferroni")
 interaction_fx
 ```
 

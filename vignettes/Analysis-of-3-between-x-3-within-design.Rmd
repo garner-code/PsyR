@@ -134,7 +134,7 @@ First we create an `emmeans` table that considers the overall effect of being in
 ```{r, between_fx}
 
 emms_grp <- emmeans(mod, c("Group"))
-btwn_fx <- contrast(emms_grp, between_contrasts[1:2])
+btwn_fx <- contrast(emms_grp, between_contrasts[1:2], adjust = "bonferroni")
 btwn_fx
 ```
 
@@ -172,7 +172,7 @@ Defining these contrasts by hand is tricky. Luckily we can use the emmeans `cont
 ```{r int_contrasts}
 
 interaction_fx = contrast(emms, interaction=list(between_contrasts,
-                                                 within_contrasts))
+                                                 within_contrasts), adjust = "bonferroni")
 interaction_fx
 ```
 
@@ -181,9 +181,9 @@ We also want to estimate the main effects of each set of between and within cont
 ```{r}
 
 emm_btwn = emmeans(mod, c("Group"))
-between_fx = contrast(emm_btwn, between_contrasts[1:2])
+between_fx = contrast(emm_btwn, between_contrasts[1:2], adjust = "bonferroni")
 emm_win = emmeans(mod, c("Time"))
-within_fx = contrast(emm_win, within_contrasts[1:2])
+within_fx = contrast(emm_win, within_contrasts[1:2], adjust = "bonferroni")
 
 all_fx = list(interaction_fx, between_fx, within_fx)
 family_list = list("bw", "b", "w") # to be documented
