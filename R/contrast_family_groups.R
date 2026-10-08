@@ -287,7 +287,11 @@
     }
     if (!is.na(correction_group) && !is.na(family_size)) {
         messages <- c(messages, sprintf(
-            "PsyR Bonferroni family_group '%s' contains %d genuine contrast(s).",
+            paste0(
+                "PsyR Bonferroni confidence intervals and `psyr_p_value` use ",
+                "family_group '%s', containing %d genuine contrast(s); ",
+                "`p.value` retains the original emmeans result."
+            ),
             correction_group, family_size
         ))
     }

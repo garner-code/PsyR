@@ -69,6 +69,17 @@ test_that("family_group pools genuine contrasts after selector rows are dropped"
     expect_equal(unique(unlist(lapply(observed, `[[`, "cc"))), expected_cc)
     expect_equal(expected_cc, 3.15268131217, tolerance = 1e-10)
 
+    for (table in observed) {
+        expected_p <- compute_contrast_p_value(
+            estimate = table$estimate,
+            se_contrast = table$SE,
+            method = "bf",
+            v_e = unique(table$df),
+            n_k = 18
+        )
+        expect_equal(table$psyr_p_value, expected_p)
+    }
+
     dropped <- attr(observed[[1L]], "psyr_dropped_noncontrasts")
     expect_equal(nrow(dropped), 6L)
     expect_setequal(
@@ -85,7 +96,7 @@ test_that("family_group pools genuine contrasts after selector rows are dropped"
     expect_identical(attr(observed[[1L]], "psyr_family_size"), 18L)
     expect_true(any(grepl("dropped 6 non-contrast", attr(observed[[1L]], "mesg"))))
     expect_true(any(grepl(
-        "family_group 'all_factorial' contains 18",
+        "family_group 'all_factorial', containing 18",
         attr(observed[[1L]], "mesg"),
         fixed = TRUE
     )))

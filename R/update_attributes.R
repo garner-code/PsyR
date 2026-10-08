@@ -84,10 +84,11 @@ update_attributes <- function(contrast_table, method, family = NA,
   p_value_message = character()
   if (!is.null(p_value_method)) {
     attr(contrast_table, "psyr_p_value_method") <- p_value_method
-    p_value_message = paste(
+    p_value_message = paste0(
       "PsyR p-value method:",
-      p_value_method,
-      "has been applied"
+      " ", p_value_method,
+      " has been applied to `psyr_p_value`; `p.value` retains the original ",
+      "emmeans result and may use a table-specific adjustment."
     )
   }
 
