@@ -1,0 +1,396 @@
+PsyR scaled confidence-interval validation
+===========================================
+
+The first two vignette-derived analyses are compared with an independent translation of PSY-source_no-touchy. The 2 x 2 result is also compared with references/between_subjects_2x2_factorial-with-simple.out.
+
+SCALED COMPARISON SUMMARY
+-------------------------
+                   analysis       divisor legacy_divisor max_estimate_difference max_se_difference max_limit_difference
+       3-between x 3-within 2.66666666667  2.66666666667       1.33226762955e-15 4.44089209850e-16    3.10862446895e-15
+ between-subjects 2 x 2 SMR 4.80208288142  4.80208288142       3.55271367880e-15 2.22044604925e-16    3.12973667469e-04
+
+ORIGINAL PSY 2 X 2 FILE COMPARISON
+-----------------------------------
+ contrast psy_raw_estimate psyr_raw_estimate legacy_raw_estimate psy_scaled_estimate psyr_scaled_estimate legacy_scaled_estimate psy_scaled_SE psyr_scaled_SE legacy_scaled_SE psy_scaled_lower psyr_scaled_lower legacy_scaled_lower psy_scaled_upper
+    A(b1)             6.64              6.64                6.64            1.382733       1.382733318847         1.382733318847      0.282843 0.282842712475   0.282842712475         0.537472    0.537158916952     0.5374718906199         2.227995
+    A(b2)            17.32             17.32               17.32            3.606768       3.606768235306         3.606768235306      0.282843 0.282842712475   0.282842712475         2.761507    2.761193833411     2.7615068070785         4.452030
+    B(a1)            -2.04             -2.04               -2.04           -0.424816      -0.424815658200        -0.424815658200      0.282843 0.282842712475   0.282842712475        -1.270077   -1.270390060094    -1.2700770864269         0.420446
+    B(a2)             8.64              8.64                8.64            1.799219       1.799219258259         1.799219258259      0.282843 0.282842712475   0.282842712475         0.953958    0.953644856364     0.9539578300317         2.644481
+        A            11.98             11.98               11.98            2.494751       2.494750777076         2.494750777076      0.200000 0.200000000000   0.200000000000         1.897061    1.896839383499     1.8970606893015         3.092441
+        B             3.30              3.30                3.30            0.687202       0.687201800029         0.687201800029      0.200000 0.200000000000   0.200000000000         0.089512    0.089290406452     0.0895117122546         1.284892
+       AB            -5.34             -5.34               -5.34           -1.112017      -1.112017458229        -1.112017458229      0.200000 0.200000000000   0.200000000000        -1.709708   -1.709928851807    -1.7097075460040        -0.514327
+ psyr_scaled_upper legacy_scaled_upper
+    2.228307720741      2.227994747074
+    4.452342637200      4.452029663533
+    0.420758743694      0.420445770027
+    2.644793660153      2.644480686486
+    3.092662170654      3.092440864851
+    1.285113193607      1.284891887804
+   -0.514106064652     -0.514327370455
+
+3-BETWEEN X 3-WITHIN
+--------------------
+ row                contrast legacy_estimate      psyr_estimate estimate_difference      legacy_SE        psyr_SE      SE_difference    legacy_lower      psyr_lower   lower_difference    legacy_upper      psyr_upper   upper_difference
+   1 Ts_v_Ctrl x Post_vs_Pre           2.250  2.25000000000e+00   1.33226762955e-15 0.586967844094 0.586967844094 -3.33066907388e-16  0.399477447081  0.399477447081  2.99760216649e-15  4.100522552919  4.100522552919 -1.77635683940e-15
+   2   T1_v_T2 x Post_vs_Pre           1.500  1.50000000000e+00   4.44089209850e-16 0.677772085586 0.677772085586 -4.44089209850e-16 -0.636799388138 -0.636799388138  2.99760216649e-15  3.636799388138  3.636799388138 -1.77635683940e-15
+   3       T1* x Post_vs_Pre           3.750  3.75000000000e+00   0.00000000000e+00 0.479257237817 0.479257237817 -3.33066907388e-16  2.239054662612  2.239054662612  1.77635683940e-15  5.260945337388  5.260945337388 -1.77635683940e-15
+   4       T2* x Post_vs_Pre           2.250  2.25000000000e+00  -4.44089209850e-16 0.479257237817 0.479257237817 -2.77555756156e-16  0.739054662612  0.739054662612  9.99200722163e-16  3.760945337388  3.760945337388 -1.77635683940e-15
+   5     Ctrl* x Post_vs_Pre           0.750  7.50000000000e-01  -1.22124532709e-15 0.479257237817 0.479257237817 -2.77555756156e-16 -0.760945337388 -0.760945337388  3.33066907388e-16  2.260945337388  2.260945337388 -3.10862446895e-15
+   6  Ts_v_Ctrl x FU_vs_Post          -1.125 -1.12500000000e+00  -1.33226762955e-15 0.510055144078 0.510055144078  0.00000000000e+00 -2.733041320910 -2.733041320910 -8.88178419700e-16  0.483041320910  0.483041320910 -1.83186799063e-15
+   7    T1_v_T2 x FU_vs_Post          -3.000 -3.00000000000e+00   0.00000000000e+00 0.588960949469 0.588960949469 -1.11022302463e-16 -4.856806178990 -4.856806178990  1.77635683940e-15 -1.143193821010 -1.143193821010 -1.33226762955e-15
+   8        T1* x FU_vs_Post          -3.000 -3.00000000000e+00  -1.33226762955e-15 0.416458281224 0.416458281224 -5.55111512313e-17 -4.312960240513 -4.312960240513  0.00000000000e+00 -1.687039759487 -1.687039759487 -2.44249065418e-15
+   9        T2* x FU_vs_Post           0.000 -8.32667268469e-16  -8.32667268469e-16 0.416458281224 0.416458281224  0.00000000000e+00 -1.312960240513 -1.312960240513  0.00000000000e+00  1.312960240513  1.312960240513 -1.55431223448e-15
+  10      Ctrl* x FU_vs_Post          -0.375 -3.75000000000e-01   0.00000000000e+00 0.416458281224 0.416458281224  0.00000000000e+00 -1.687960240513 -1.687960240513  6.66133814775e-16  0.937960240513  0.937960240513 -7.77156117238e-16
+  11       Ts_v_Ctrl x Post*           2.250  2.25000000000e+00   8.88178419700e-16 0.419262745781 0.419262745781  0.00000000000e+00  0.928198176487  0.928198176487  1.55431223448e-15  3.571801823513  3.571801823513  0.00000000000e+00
+  12         T1_v_T2 x Post*           0.750  7.50000000000e-01   0.00000000000e+00 0.484122918276 0.484122918276 -2.22044604925e-16 -0.776285277242 -0.776285277242  1.66533453694e-15  2.276285277242  2.276285277242 -1.77635683940e-15
+  13         Ts_v_Ctrl x FU*           1.125  1.12500000000e+00  -4.44089209850e-16 0.660255632312 0.660255632312  2.22044604925e-16 -0.956575593246 -0.956575593246  1.11022302463e-16  3.206575593246  3.206575593246 -4.44089209850e-16
+  14           T1_v_T2 x FU*          -2.250 -2.25000000000e+00  -4.44089209850e-16 0.762397534099 0.762397534099  0.00000000000e+00 -4.653596458198 -4.653596458198  8.88178419700e-16  0.153596458198  0.153596458198 -1.66533453694e-15
+  15               Ts_v_Ctrl           1.125  1.12500000000e+00   0.00000000000e+00 0.411741727300 0.411741727300  0.00000000000e+00 -0.173090449099 -0.173090449099  4.99600361081e-16  2.423090449099  2.423090449099 -8.88178419700e-16
+  16                 T1_v_T2          -0.750 -7.50000000000e-01  -3.33066907388e-16 0.475438394187 0.475438394187 -1.66533453694e-16 -2.248905740440 -2.248905740440  1.33226762955e-15  0.748905740440  0.748905740440 -1.66533453694e-15
+  17             Post_vs_Pre           2.250  2.25000000000e+00  -4.44089209850e-16 0.276699295265 0.276699295265 -1.66533453694e-16  1.377655302728  1.377655302728  6.66133814775e-16  3.122344697272  3.122344697272 -2.22044604925e-15
+  18              FU_vs_Post          -1.125 -1.12500000000e+00  -6.66133814775e-16 0.240442300771 0.240442300771 -8.32667268469e-17 -1.883037948296 -1.883037948296  0.00000000000e+00 -0.366962051704 -0.366962051704 -1.33226762955e-15
+
+Printed PsyR raw and scaled tables
+Raw contrast effects and confidence intervals (dependent-variable units)
+
+$bw
+ Group_custom Time_custom estimate   SE df t.ratio p.value   cc  lower upper
+ Ts_v_Ctrl    Post_vs_Pre        6 1.57 12   3.833  0.0333 3.15   1.07 10.93
+ T1_v_T2      Post_vs_Pre        4 1.81 12   2.213  0.6582 3.15  -1.70  9.70
+ T1*          Post_vs_Pre       10 1.28 12   7.825 <0.0001 3.15   5.97 14.03
+ T2*          Post_vs_Pre        6 1.28 12   4.695  0.0073 3.15   1.97 10.03
+ Ctrl*        Post_vs_Pre        2 1.28 12   1.565  1.0000 3.15  -2.03  6.03
+ Ts_v_Ctrl    FU_vs_Post        -3 1.36 12  -2.206  0.6671 3.15  -7.29  1.29
+ T1_v_T2      FU_vs_Post        -8 1.57 12  -5.094  0.0037 3.15 -12.95 -3.05
+ T1*          FU_vs_Post        -8 1.11 12  -7.204  0.0002 3.15 -11.50 -4.50
+ T2*          FU_vs_Post         0 1.11 12   0.000  1.0000 3.15  -3.50  3.50
+ Ctrl*        FU_vs_Post        -1 1.11 12  -0.900  1.0000 3.15  -4.50  2.50
+ Ts_v_Ctrl    Post*              6 1.12 12   5.367  0.0024 3.15   2.48  9.52
+ T1_v_T2      Post*              2 1.29 12   1.549  1.0000 3.15  -2.07  6.07
+ Ts_v_Ctrl    FU*                3 1.76 12   1.704  1.0000 3.15  -2.55  8.55
+ T1_v_T2      FU*               -6 2.03 12  -2.951  0.1696 3.15 -12.41  0.41
+ psyr_p_value
+     4.29e-02
+     8.46e-01
+     8.49e-05
+     9.34e-03
+     1.00e+00
+     8.58e-01
+     4.76e-03
+     1.95e-04
+     1.00e+00
+     1.00e+00
+     3.04e-03
+     1.00e+00
+     1.00e+00
+     2.18e-01
+
+P value adjustment: bonferroni method for 14 tests 
+PsyR CI method: Bonferroni has been applied 
+PsyR p-value method: Bonferroni has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between x within subject contrasts 
+PsyR used an alpha rate of: 0.15 
+PsyR assumed between subject factor(s) are: Group 
+PsyR used df between of: NA 
+PsyR assumed within subject factor(s) are: Time 
+PsyR used df within of: NA 
+PsyR used df error of: 12 
+PsyR dropped 6 non-contrast row(s) before correction: T1* x Post*, T2* x Post*, Ctrl* x Post*, T1* x FU*, T2* x FU*, Ctrl* x FU*. 
+PsyR Bonferroni confidence intervals and `psyr_p_value` use family_group 'all_factorial', containing 18 genuine contrast(s); `p.value` retains the original emmeans result. 
+Orthogonality: this table is not orthogonal to contrast_tables[[2]], contrast_tables[[3]]. 
+
+$b
+ contrast  estimate   SE df t.ratio p.value   cc  lower upper psyr_p_value
+ Ts_v_Ctrl        3 1.10 12   2.732  0.0364 3.15 -0.462  6.46        0.327
+ T1_v_T2         -2 1.27 12  -1.577  0.2813 3.15 -5.997  2.00        1.000
+
+Results are averaged over the levels of: Time 
+P value adjustment: bonferroni method for 2 tests 
+PsyR CI method: Bonferroni has been applied 
+PsyR p-value method: Bonferroni has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.15 
+PsyR assumed between subject factor(s) are: Group 
+PsyR used df between of: NA 
+PsyR used df error of: 12 
+PsyR found no non-contrast rows to drop. 
+PsyR Bonferroni confidence intervals and `psyr_p_value` use family_group 'all_factorial', containing 18 genuine contrast(s); `p.value` retains the original emmeans result. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[3]]. 
+
+$w
+ contrast    estimate    SE df t.ratio p.value   cc lower  upper psyr_p_value
+ Post_vs_Pre        6 0.738 12   8.132 <0.0001 3.15  3.67  8.326     5.72e-05
+ FU_vs_Post        -3 0.641 12  -4.679  0.0011 3.15 -5.02 -0.979     9.60e-03
+
+Results are averaged over the levels of: Group 
+P value adjustment: bonferroni method for 2 tests 
+PsyR CI method: Bonferroni has been applied 
+PsyR p-value method: Bonferroni has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: within subject contrasts 
+PsyR used an alpha rate of: 0.15 
+PsyR assumed within subject factor(s) are: Time 
+PsyR used df within of: NA 
+PsyR used df error of: 12 
+PsyR found no non-contrast rows to drop. 
+PsyR Bonferroni confidence intervals and `psyr_p_value` use family_group 'all_factorial', containing 18 genuine contrast(s); `p.value` retains the original emmeans result. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[2]]. 
+
+Scaled contrast effects and confidence intervals (sample SD units)
+Scaling divisor (pooled sample SD): 2.666667
+
+$bw
+ Group_custom Time_custom estimate    SE df t.ratio p.value   cc  lower  upper
+ Ts_v_Ctrl    Post_vs_Pre    2.250 0.587 12   3.833  0.0333 3.15  0.399  4.101
+ T1_v_T2      Post_vs_Pre    1.500 0.678 12   2.213  0.6582 3.15 -0.637  3.637
+ T1*          Post_vs_Pre    3.750 0.479 12   7.825 <0.0001 3.15  2.239  5.261
+ T2*          Post_vs_Pre    2.250 0.479 12   4.695  0.0073 3.15  0.739  3.761
+ Ctrl*        Post_vs_Pre    0.750 0.479 12   1.565  1.0000 3.15 -0.761  2.261
+ Ts_v_Ctrl    FU_vs_Post    -1.125 0.510 12  -2.206  0.6671 3.15 -2.733  0.483
+ T1_v_T2      FU_vs_Post    -3.000 0.589 12  -5.094  0.0037 3.15 -4.857 -1.143
+ T1*          FU_vs_Post    -3.000 0.416 12  -7.204  0.0002 3.15 -4.313 -1.687
+ T2*          FU_vs_Post     0.000 0.416 12   0.000  1.0000 3.15 -1.313  1.313
+ Ctrl*        FU_vs_Post    -0.375 0.416 12  -0.900  1.0000 3.15 -1.688  0.938
+ Ts_v_Ctrl    Post*          2.250 0.419 12   5.367  0.0024 3.15  0.928  3.572
+ T1_v_T2      Post*          0.750 0.484 12   1.549  1.0000 3.15 -0.776  2.276
+ Ts_v_Ctrl    FU*            1.125 0.660 12   1.704  1.0000 3.15 -0.957  3.207
+ T1_v_T2      FU*           -2.250 0.762 12  -2.951  0.1696 3.15 -4.654  0.154
+ psyr_p_value
+     4.29e-02
+     8.46e-01
+     8.49e-05
+     9.34e-03
+     1.00e+00
+     8.58e-01
+     4.76e-03
+     1.95e-04
+     1.00e+00
+     1.00e+00
+     3.04e-03
+     1.00e+00
+     1.00e+00
+     2.18e-01
+
+P value adjustment: bonferroni method for 14 tests 
+PsyR CI method: Bonferroni has been applied 
+PsyR p-value method: Bonferroni has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between x within subject contrasts 
+PsyR used an alpha rate of: 0.15 
+PsyR assumed between subject factor(s) are: Group 
+PsyR used df between of: NA 
+PsyR assumed within subject factor(s) are: Time 
+PsyR used df within of: NA 
+PsyR used df error of: 12 
+PsyR dropped 6 non-contrast row(s) before correction: T1* x Post*, T2* x Post*, Ctrl* x Post*, T1* x FU*, T2* x FU*, Ctrl* x FU*. 
+PsyR Bonferroni confidence intervals and `psyr_p_value` use family_group 'all_factorial', containing 18 genuine contrast(s); `p.value` retains the original emmeans result. 
+Orthogonality: this table is not orthogonal to contrast_tables[[2]], contrast_tables[[3]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 2.666667 
+
+$b
+ contrast  estimate    SE df t.ratio p.value   cc  lower upper psyr_p_value
+ Ts_v_Ctrl     1.12 0.412 12   2.732  0.0364 3.15 -0.173 2.423        0.327
+ T1_v_T2      -0.75 0.475 12  -1.577  0.2813 3.15 -2.249 0.749        1.000
+
+Results are averaged over the levels of: Time 
+P value adjustment: bonferroni method for 2 tests 
+PsyR CI method: Bonferroni has been applied 
+PsyR p-value method: Bonferroni has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.15 
+PsyR assumed between subject factor(s) are: Group 
+PsyR used df between of: NA 
+PsyR used df error of: 12 
+PsyR found no non-contrast rows to drop. 
+PsyR Bonferroni confidence intervals and `psyr_p_value` use family_group 'all_factorial', containing 18 genuine contrast(s); `p.value` retains the original emmeans result. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[3]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 2.666667 
+
+$w
+ contrast    estimate    SE df t.ratio p.value   cc lower  upper psyr_p_value
+ Post_vs_Pre     2.25 0.277 12   8.132 <0.0001 3.15  1.38  3.122     5.72e-05
+ FU_vs_Post     -1.12 0.240 12  -4.679  0.0011 3.15 -1.88 -0.367     9.60e-03
+
+Results are averaged over the levels of: Group 
+P value adjustment: bonferroni method for 2 tests 
+PsyR CI method: Bonferroni has been applied 
+PsyR p-value method: Bonferroni has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: within subject contrasts 
+PsyR used an alpha rate of: 0.15 
+PsyR assumed within subject factor(s) are: Time 
+PsyR used df within of: NA 
+PsyR used df error of: 12 
+PsyR found no non-contrast rows to drop. 
+PsyR Bonferroni confidence intervals and `psyr_p_value` use family_group 'all_factorial', containing 18 genuine contrast(s); `p.value` retains the original emmeans result. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[2]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 2.666667 
+
+BETWEEN-SUBJECTS 2 X 2 SMR
+--------------------------
+ row     contrast legacy_estimate   psyr_estimate estimate_difference      legacy_SE        psyr_SE      SE_difference     legacy_lower      psyr_lower   lower_difference    legacy_upper      psyr_upper  upper_difference
+   1    Sleep_Dep  2.494750777076  2.494750777076  -2.66453525910e-15 0.200000000000 0.200000000000 -1.11022302463e-16  1.8970606893015  1.896839383499 -0.000221305802600  3.092440864851  3.092662170654 0.000221305802595
+   2          NVH  0.687201800029  0.687201800029   6.66133814775e-16 0.200000000000 0.200000000000  8.32667268469e-17  0.0895117122546  0.089290406452 -0.000221305802598  1.284891887804  1.285113193607 0.000221305802599
+   3          int -1.112017458229 -1.112017458229   4.44089209850e-16 0.200000000000 0.200000000000 -1.11022302463e-16 -1.7097075460040 -1.709928851807 -0.000221305802597 -0.514327370455 -0.514106064652 0.000221305802598
+   4   NVH | High -0.424815658200 -0.424815658200   1.22124532709e-15 0.282842712475 0.282842712475 -5.55111512313e-17 -1.2700770864269 -1.270390060094 -0.000312973667464  0.420445770027  0.420758743694 0.000312973667467
+   5   NVH | None  1.799219258259  1.799219258259   0.00000000000e+00 0.282842712475 0.282842712475  5.55111512313e-17  0.9539578300317  0.953644856364 -0.000312973667466  2.644480686486  2.644793660153 0.000312973667466
+   6 Sleep | high  1.382733318847  1.382733318847  -2.44249065418e-15 0.282842712475 0.282842712475 -1.11022302463e-16  0.5374718906199  0.537158916952 -0.000312973667468  2.227994747074  2.228307720741 0.000312973667463
+   7  Sleep | low  3.606768235306  3.606768235306  -3.55271367880e-15 0.282842712475 0.282842712475 -2.22044604925e-16  2.7615068070785  2.761193833411 -0.000312973667469  4.452029663533  4.452342637200 0.000312973667461
+
+Printed PsyR raw and scaled tables
+Raw contrast effects and confidence intervals (dependent-variable units)
+
+$b
+ contrast  estimate   SE df t.ratio p.value   cc lower upper psyr_p_value
+ Sleep_Dep     12.0 0.96 96  12.474 <0.0001 2.99 9.109 14.85       0.0000
+ NVH            3.3 0.96 96   3.436  0.0009 2.99 0.429  6.17       0.0154
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[3]], contrast_tables[[4]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[2]]. 
+
+$b
+ contrast estimate   SE df t.ratio p.value   cc lower upper psyr_p_value
+ int         -5.34 0.96 96  -5.560 <0.0001 2.99 -8.21 -2.47     9.47e-06
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[3]], contrast_tables[[4]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[1]]. 
+
+$b
+sleep_deprivation = High:
+ contrast estimate   SE df t.ratio p.value   cc lower upper psyr_p_value
+ NVH         -2.04 1.36 96  -1.502  0.1364 2.99 -6.10  2.02     6.36e-01
+
+sleep_deprivation = None:
+ contrast estimate   SE df t.ratio p.value   cc lower upper psyr_p_value
+ NVH          8.64 1.36 96   6.361 <0.0001 2.99  4.58 12.70     4.00e-07
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]], contrast_tables[[2]], contrast_tables[[4]]. 
+
+$b
+nvh = high:
+ contrast estimate   SE df t.ratio p.value   cc lower upper psyr_p_value
+ NVH          6.64 1.36 96   4.889 <0.0001 2.99  2.58  10.7     0.000127
+
+nvh = low:
+ contrast estimate   SE df t.ratio p.value   cc lower upper psyr_p_value
+ NVH         17.32 1.36 96  12.752 <0.0001 2.99 13.26  21.4     0.000000
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]], contrast_tables[[2]], contrast_tables[[3]]. 
+
+Scaled contrast effects and confidence intervals (sample SD units)
+Scaling divisor (pooled sample SD): 4.802083
+
+$b
+ contrast  estimate  SE df t.ratio p.value   cc  lower upper psyr_p_value
+ Sleep_Dep    2.495 0.2 96  12.474 <0.0001 2.99 1.8968  3.09       0.0000
+ NVH          0.687 0.2 96   3.436  0.0009 2.99 0.0893  1.29       0.0154
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[3]], contrast_tables[[4]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[2]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 4.802083 
+
+$b
+ contrast estimate  SE df t.ratio p.value   cc lower  upper psyr_p_value
+ int         -1.11 0.2 96  -5.560 <0.0001 2.99 -1.71 -0.514     9.47e-06
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[3]], contrast_tables[[4]]. 
+Orthogonality: this table is orthogonal to contrast_tables[[1]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 4.802083 
+
+$b
+sleep_deprivation = High:
+ contrast estimate    SE df t.ratio p.value   cc  lower upper psyr_p_value
+ NVH        -0.425 0.283 96  -1.502  0.1364 2.99 -1.270 0.421     6.36e-01
+
+sleep_deprivation = None:
+ contrast estimate    SE df t.ratio p.value   cc  lower upper psyr_p_value
+ NVH         1.799 0.283 96   6.361 <0.0001 2.99  0.954 2.645     4.00e-07
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]], contrast_tables[[2]], contrast_tables[[4]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 4.802083 
+
+$b
+nvh = high:
+ contrast estimate    SE df t.ratio p.value   cc lower upper psyr_p_value
+ NVH          1.38 0.283 96   4.889 <0.0001 2.99 0.537  2.23     0.000127
+
+nvh = low:
+ contrast estimate    SE df t.ratio p.value   cc lower upper psyr_p_value
+ NVH          3.61 0.283 96  12.752 <0.0001 2.99 2.761  4.45     0.000000
+
+PsyR CI method: Studentized Maximum Root (SMR) has been applied 
+PsyR p-value method: Studentized Maximum Root (SMR) has been applied to `psyr_p_value`; `p.value` retains the original emmeans result and may use a table-specific adjustment. 
+Family-wise correction assumes current contrasts are: between subject contrasts 
+PsyR used an alpha rate of: 0.05 
+PsyR assumed between subject factor(s) are: sleep_deprivation, nvh 
+PsyR used SMR parameter p of: 2 
+PsyR used SMR parameter q of: 2 
+PsyR used df error of: 96 
+PsyR found no non-contrast rows to drop. 
+Orthogonality: this table is not orthogonal to contrast_tables[[1]], contrast_tables[[2]], contrast_tables[[3]]. 
+PsyR scaled estimate, SE, and confidence limits by sample SD: 4.802083 
+

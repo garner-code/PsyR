@@ -76,6 +76,19 @@ psyci(model=mod, contrast_tables = list(btwn_con), method="ph")
 
 ```
 
+`psyci()` prints each result twice. The first table reports the contrast
+effects and confidence intervals in the dependent variable's original units.
+The second reports the same values in sample standard-deviation units, using
+the pooled within-cell scaling method from the original Psy program. The raw
+tables remain available through ordinary list indexing. For example:
+
+```{r scaled_example, eval = FALSE}
+result <- psyci(mod, list(btwn_con), method = "ph")
+raw_table <- result[[1]]
+scaled_table <- attr(result, "scaled_tables")[[1]]
+attr(result, "scale_info")$divisor
+```
+
 
 Here is an example, that carries on from the last, for obtaining within subject 
 confidence intervals:

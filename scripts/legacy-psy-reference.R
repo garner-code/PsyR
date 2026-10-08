@@ -58,6 +58,30 @@ legacy_psy_design <- function(data, id, dv, between = character(),
     )
 }
 
+# PsyFile.pas: CalculateSumSquaresWithinGroupsArray and meanSD. For each
+# repeated-measure cell, Psy pools deviations from the corresponding between-
+# group mean. The standardizing divisor is the root-mean-square of those SDs.
+legacy_psy_sample_sd <- function(design) {
+    cell_variances <- vapply(seq_len(ncol(design$data)), function(column) {
+        values <- design$data[, column]
+        group_means <- ave(values, design$group, FUN = mean)
+        sum((values - group_means)^2) / design$dfe
+    }, numeric(1))
+    sqrt(mean(cell_variances))
+}
+
+legacy_psy_standardize <- function(result, design) {
+    divisor <- legacy_psy_sample_sd(design)
+    standardized <- result
+    columns <- intersect(c("estimate", "SE", "lower", "upper"), names(result))
+    standardized[columns] <- lapply(
+        standardized[columns],
+        function(column) column / divisor
+    )
+    attr(standardized, "scale_divisor") <- divisor
+    standardized
+}
+
 # GCR.pas: Ksmn and RoyExact. BetaRoy is the unregularised incomplete beta.
 .legacy_beta_roy <- function(x, m, n) {
     stats::pbeta(x, m + 1, n + 1) * beta(m + 1, n + 1)

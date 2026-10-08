@@ -1,4 +1,6 @@
-library(PsyR)
+library(devtools)
+load_all()
+#library(PsyR)
 library(tidyverse)
 library(emmeans)
 library(afex)
@@ -40,11 +42,7 @@ mfx <- contrast(emms, btwn_cont)
 interaction_contrast <- list(
     "int" = c(0.5, -0.5, -0.5, 0.5)
 )
-interaction_contrast <- rescale_contrasts(
-    interaction_contrast,
-    mode = "interaction",
-    interaction_order = 1
-)
+
 int <- contrast(emms, interaction_contrast)
 
 simp_fx_contrast <- list("NVH" = c(1, -1))

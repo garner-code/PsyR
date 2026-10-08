@@ -86,7 +86,12 @@
 #'   `psyr_dropped_noncontrasts`, `psyr_orthogonality`, and
 #'   `psyr_family_group` and `psyr_family_size` record filtering and
 #'   grouping diagnostics, while
-#'   `mesg` contains corresponding human-readable messages.
+#'   `mesg` contains corresponding human-readable messages. Printing the result
+#'   shows the raw tables followed by tables in sample standard-deviation units,
+#'   following the original Psy program. The scaled tables are also available
+#'   from the result's `scaled_tables` attribute, and the divisor and component
+#'   SDs from its `scale_info` attribute. Existing list indexing continues to
+#'   return the raw tables.
 #' @export
 #'
 #' @examples
@@ -581,5 +586,5 @@ psyci <- function(model, contrast_tables, method,
 
   names(contrasts_w_cis) = unlist(families, use.names = FALSE)
 
-  return(contrasts_w_cis)
+  .new_psyci_result(contrasts_w_cis, model)
 }

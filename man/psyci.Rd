@@ -112,7 +112,12 @@ p-values. Non-contrast rows are removed before correction. The attributes
 \code{psyr_dropped_noncontrasts}, \code{psyr_orthogonality}, and
 \code{psyr_family_group} and \code{psyr_family_size} record filtering and
 grouping diagnostics, while
-\code{mesg} contains corresponding human-readable messages.
+\code{mesg} contains corresponding human-readable messages. Printing the result
+shows the raw tables followed by tables in sample standard-deviation units,
+following the original Psy program. The scaled tables are also available
+from the result's \code{scaled_tables} attribute, and the divisor and component
+SDs from its \code{scale_info} attribute. Existing list indexing continues to
+return the raw tables.
 }
 \description{
 This function computes confidence intervals for contrasts testing effects

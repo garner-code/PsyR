@@ -1,7 +1,9 @@
 library(afex)
 library(emmeans)
 library(tidyverse)
-library(PsyR)
+library(devtools)
+load_all()
+#library(PsyR)
 
 data(experience)
 experience <- experience %>%

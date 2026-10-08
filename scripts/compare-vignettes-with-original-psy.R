@@ -73,6 +73,77 @@ make_item <- function(label, family, a = NULL, w = NULL) {
 
 results <- list()
 comparison_details <- list()
+scaled_comparison_details <- list()
+printed_examples <- list()
+
+compare_scaled_result <- function(analysis, psyr, legacy, design) {
+    psyr_scaled <- flatten_psyr(attr(psyr, "scaled_tables"))
+    legacy_scaled <- legacy_psy_standardize(legacy, design)
+    columns <- c("estimate", "SE", "lower", "upper")
+    differences <- vapply(columns, function(column) {
+        max(abs(psyr_scaled[[column]] - legacy_scaled[[column]]), na.rm = TRUE)
+    }, numeric(1))
+    scaled_comparison_details[[analysis]] <<- data.frame(
+        row = seq_len(nrow(legacy_scaled)),
+        contrast = legacy_scaled$contrast,
+        legacy_estimate = legacy_scaled$estimate,
+        psyr_estimate = psyr_scaled$estimate,
+        estimate_difference = psyr_scaled$estimate - legacy_scaled$estimate,
+        legacy_SE = legacy_scaled$SE,
+        psyr_SE = psyr_scaled$SE,
+        SE_difference = psyr_scaled$SE - legacy_scaled$SE,
+        legacy_lower = legacy_scaled$lower,
+        psyr_lower = psyr_scaled$lower,
+        lower_difference = psyr_scaled$lower - legacy_scaled$lower,
+        legacy_upper = legacy_scaled$upper,
+        psyr_upper = psyr_scaled$upper,
+        upper_difference = psyr_scaled$upper - legacy_scaled$upper,
+        stringsAsFactors = FALSE
+    )
+    data.frame(
+        analysis = analysis,
+        divisor = attr(psyr, "scale_info")$divisor,
+        legacy_divisor = legacy_psy_sample_sd(design),
+        max_estimate_difference = differences[["estimate"]],
+        max_se_difference = differences[["SE"]],
+        max_limit_difference = max(differences[c("lower", "upper")]),
+        stringsAsFactors = FALSE
+    )
+}
+
+read_original_psy_ci_table <- function(file, heading, end_heading = NULL) {
+    lines <- readLines(file, warn = FALSE)
+    start <- grep(heading, lines, fixed = TRUE)
+    if (length(start) != 1L) {
+        stop("Could not find the requested CI section in ", file)
+    }
+    end <- length(lines)
+    if (!is.null(end_heading)) {
+        candidates <- grep(end_heading, lines, fixed = TRUE)
+        candidates <- candidates[candidates > start]
+        if (length(candidates) > 0L) end <- candidates[[1L]] - 1L
+    }
+    section <- lines[seq.int(start + 1L, end)]
+    rows <- section[grepl("\\sB[1-7]\\s", section)]
+    if (length(rows) != 7L) {
+        stop("Expected seven contrast rows in the requested CI section.")
+    }
+    values <- t(vapply(rows, function(row) {
+        matches <- regmatches(
+            row,
+            gregexpr("-?[0-9]+\\.[0-9]+", row, perl = TRUE)
+        )[[1L]]
+        tail(as.numeric(matches), 4L)
+    }, numeric(4)))
+    data.frame(
+        contrast = trimws(sub("\\s+B[1-7].*$", "", rows)),
+        estimate = values[, 1L],
+        SE = values[, 2L],
+        lower = values[, 3L],
+        upper = values[, 4L],
+        stringsAsFactors = FALSE
+    )
+}
 
 # Analysis of a 3-between x 3-within design -------------------------------
 analysis <- run_analysis_script("scripts/Analysis-of-3-between-x-3-within-design.R")
@@ -101,6 +172,13 @@ results[[length(results) + 1L]] <- compare_result(
     paste0("One 18-contrast all-factorial family; selector-by-selector cell ",
         "means are dropped before correction.")
 )
+scaled_results <- list(compare_scaled_result(
+    "3-between x 3-within",
+    analysis$contrasts_w_cis,
+    legacy,
+    design
+))
+printed_examples[["3-between x 3-within"]] <- analysis$contrasts_w_cis
 
 # Between-subjects 2 x 2 simple effects, SMR ------------------------------
 analysis <- run_analysis_script("scripts/between_subjects_2x2_factorial-w-simple.R")
@@ -111,7 +189,7 @@ design <- legacy_psy_design(
 items <- list(
     make_item("Sleep_Dep", "b", c(0.5, -0.5, 0.5, -0.5)),
     make_item("NVH", "b", c(0.5, 0.5, -0.5, -0.5)),
-    make_item("int", "b", c(1, -1, -1, 1)),
+    make_item("int", "b", c(0.5, -0.5, -0.5, 0.5)),
     make_item("NVH | High", "b", c(1, 0, -1, 0)),
     make_item("NVH | None", "b", c(0, 1, 0, -1)),
     make_item("Sleep | high", "b", c(1, -1, 0, 0)),
@@ -124,6 +202,76 @@ results[[length(results) + 1L]] <- compare_result(
     "between-subjects 2 x 2 SMR", analysis$contrasts_w_cis, legacy,
     paste0("Psy uses deterministic quadrature; PsyR uses the vignette's ",
         "seeded 100,000-draw simulation, so its critical constant is approximate.")
+)
+scaled_results[[length(scaled_results) + 1L]] <- compare_scaled_result(
+    "between-subjects 2 x 2 SMR",
+    analysis$contrasts_w_cis,
+    legacy,
+    design
+)
+printed_examples[["between-subjects 2 x 2 SMR"]] <- analysis$contrasts_w_cis
+
+psy_output_file <- "references/between_subjects_2x2_factorial-with-simple.out"
+psy_raw <- read_original_psy_ci_table(
+    psy_output_file,
+    "Raw CIs (scaled in Dependent Variable units)",
+    "Approximate Standardized CIs"
+)
+psy_scaled <- read_original_psy_ci_table(
+    psy_output_file,
+    "Approximate Standardized CIs (scaled in Sample SD units)"
+)
+psyr_2x2_raw <- flatten_psyr(analysis$contrasts_w_cis)
+psyr_2x2_scaled <- flatten_psyr(attr(
+    analysis$contrasts_w_cis,
+    "scaled_tables"
+))
+legacy_2x2_scaled <- legacy_psy_standardize(legacy, design)
+# Psy prints simple effects first, followed by main effects and the
+# interaction. Reorder the vignette-derived results to that display order.
+psy_display_order <- c(6L, 7L, 4L, 5L, 1L, 2L, 3L)
+psyr_2x2_raw <- psyr_2x2_raw[psy_display_order, , drop = FALSE]
+psyr_2x2_scaled <- psyr_2x2_scaled[psy_display_order, , drop = FALSE]
+legacy <- legacy[psy_display_order, , drop = FALSE]
+legacy_2x2_scaled <- legacy_2x2_scaled[psy_display_order, , drop = FALSE]
+reference_comparison <- data.frame(
+    contrast = psy_scaled$contrast,
+    psy_raw_estimate = psy_raw$estimate,
+    psyr_raw_estimate = psyr_2x2_raw$estimate,
+    legacy_raw_estimate = legacy$estimate,
+    psy_scaled_estimate = psy_scaled$estimate,
+    psyr_scaled_estimate = psyr_2x2_scaled$estimate,
+    legacy_scaled_estimate = legacy_2x2_scaled$estimate,
+    psy_scaled_SE = psy_scaled$SE,
+    psyr_scaled_SE = psyr_2x2_scaled$SE,
+    legacy_scaled_SE = legacy_2x2_scaled$SE,
+    psy_scaled_lower = psy_scaled$lower,
+    psyr_scaled_lower = psyr_2x2_scaled$lower,
+    legacy_scaled_lower = legacy_2x2_scaled$lower,
+    psy_scaled_upper = psy_scaled$upper,
+    psyr_scaled_upper = psyr_2x2_scaled$upper,
+    legacy_scaled_upper = legacy_2x2_scaled$upper,
+    stringsAsFactors = FALSE
+)
+reference_tolerances <- c(
+    displayed_value = 0.5e-6,
+    simulated_limit = 5e-4
+)
+stopifnot(
+    max(abs(psyr_2x2_raw$estimate - psy_raw$estimate)) <=
+        reference_tolerances[["displayed_value"]],
+    max(abs(psyr_2x2_scaled$estimate - psy_scaled$estimate)) <=
+        reference_tolerances[["displayed_value"]],
+    max(abs(psyr_2x2_scaled$SE - psy_scaled$SE)) <=
+        reference_tolerances[["displayed_value"]],
+    max(abs(legacy_2x2_scaled$lower - psy_scaled$lower)) <=
+        reference_tolerances[["displayed_value"]],
+    max(abs(legacy_2x2_scaled$upper - psy_scaled$upper)) <=
+        reference_tolerances[["displayed_value"]],
+    max(abs(psyr_2x2_scaled$lower - psy_scaled$lower)) <=
+        reference_tolerances[["simulated_limit"]],
+    max(abs(psyr_2x2_scaled$upper - psy_scaled$upper)) <=
+        reference_tolerances[["simulated_limit"]]
 )
 
 # J x K design -------------------------------------------------------------
@@ -261,7 +409,9 @@ results[[length(results) + 1L]] <- compare_result(
 )
 
 comparison_summary <- do.call(rbind, results)
+scaled_comparison_summary <- do.call(rbind, scaled_results)
 print(comparison_summary, row.names = FALSE, digits = 8)
+print(scaled_comparison_summary, row.names = FALSE, digits = 8)
 
 report_file <- "LEGACY_PSY_COMPARISON_RESULTS.txt"
 report <- c(
@@ -338,5 +488,55 @@ for (analysis_name in names(comparison_details)) {
 }
 writeLines(report, report_file, useBytes = TRUE)
 message("Detailed comparison written to ", normalizePath(report_file))
+
+scaled_report_file <- "SCALED_CI_COMPARISON_RESULTS.txt"
+scaled_report <- c(
+    "PsyR scaled confidence-interval validation",
+    "===========================================",
+    "",
+    paste0(
+        "The first two vignette-derived analyses are compared with an ",
+        "independent translation of PSY-source_no-touchy. The 2 x 2 result ",
+        "is also compared with ", psy_output_file, "."
+    ),
+    "",
+    "SCALED COMPARISON SUMMARY",
+    "-------------------------",
+    capture.output(print(
+        scaled_comparison_summary,
+        row.names = FALSE,
+        digits = 12,
+        width = 220
+    )),
+    "",
+    "ORIGINAL PSY 2 X 2 FILE COMPARISON",
+    "-----------------------------------",
+    capture.output(print(
+        reference_comparison,
+        row.names = FALSE,
+        digits = 12,
+        width = 260
+    )),
+    ""
+)
+for (analysis_name in names(scaled_comparison_details)) {
+    scaled_report <- c(
+        scaled_report,
+        toupper(analysis_name),
+        paste(rep("-", nchar(analysis_name)), collapse = ""),
+        capture.output(print(
+            scaled_comparison_details[[analysis_name]],
+            row.names = FALSE,
+            digits = 12,
+            width = 260
+        )),
+        "",
+        "Printed PsyR raw and scaled tables",
+        capture.output(print(printed_examples[[analysis_name]])),
+        ""
+    )
+}
+writeLines(scaled_report, scaled_report_file, useBytes = TRUE)
+message("Scaled table comparison written to ", normalizePath(scaled_report_file))
 
 invisible(comparison_summary)
