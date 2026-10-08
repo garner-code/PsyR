@@ -116,6 +116,24 @@ psyci(model=mod, contrast_tables = list(con_win), method="ph")
 #> PsyR used df within of: 2 
 #> PsyR used df error of: 12
 ```
+For pairwise correlated within-subject means, PsyR also provides the asymmetric
+noncentral-*t* standardized-effect interval proposed by Algina and Keselman
+(2003). It is opt-in, so existing calls retain the original Psy/Bird output.
+Use it with individual or Bonferroni intervals:
+
+``` r
+result_ak <- psyci(
+  mod,
+  list(con_win),
+  method = "bf",
+  standardized_ci = "algina_keselman"
+)
+ak_table <- attr(result_ak, "scaled_tables")[[1]]
+```
+
+The new `algina_keselman_ci()` function also exposes the calculation directly
+when an estimated contrast, its standard error, error degrees of freedom, and
+the appropriate sample-SD scaling divisor are already available.
 
 And finally, here is an example of how to generate CIs for between x
 within contrasts, using the same post-hoc method:

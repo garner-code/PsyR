@@ -18,7 +18,8 @@ psyci(
   smr_params = NULL,
   seed = NULL,
   family_check = c("error", "warn", "none"),
-  family_check_tol = sqrt(.Machine$double.eps)
+  family_check_tol = sqrt(.Machine$double.eps),
+  standardized_ci = c("bird", "algina_keselman")
 )
 }
 \arguments{
@@ -101,6 +102,14 @@ determines the post-hoc critical constant.}
 \item{family_check_tol}{Numeric relative tolerance used when detecting
 factor participation, deciding whether coefficient rows sum to zero, and
 assessing cross-table orthogonality.}
+
+\item{standardized_ci}{Method used for confidence limits in the
+sample-standard-deviation tables. \code{"bird"} preserves PsyR's existing
+symmetric intervals. \code{"algina_keselman"} uses the noncentral-t method of
+Algina and Keselman (2003), with a separate scaling divisor based on the
+repeated-measure cells involved in each contrast. The latter is available
+only for pairwise within-subject contrasts with \code{method = "ind"} or
+\code{method = "bf"}. The default is \code{"bird"}.}
 }
 \value{
 A list of \code{emmeans} contrast tables with confidence intervals added.
@@ -116,8 +125,10 @@ grouping diagnostics, while
 shows the raw tables followed by tables in sample standard-deviation units,
 following the original Psy program. The scaled tables are also available
 from the result's \code{scaled_tables} attribute, and the divisor and component
-SDs from its \code{scale_info} attribute. Existing list indexing continues to
-return the raw tables.
+SDs from its \code{scale_info} attribute. With
+\code{standardized_ci = "algina_keselman"}, each scaled table additionally
+reports its contrast-specific \code{scale}, \code{ncp}, \code{ncp_lower}, and \code{ncp_upper}
+values. Existing list indexing continues to return the raw tables.
 }
 \description{
 This function computes confidence intervals for contrasts testing effects

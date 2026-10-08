@@ -77,6 +77,13 @@
 #' @param family_check_tol Numeric relative tolerance used when detecting
 #' factor participation, deciding whether coefficient rows sum to zero, and
 #' assessing cross-table orthogonality.
+#' @param standardized_ci Method used for confidence limits in the
+#'   sample-standard-deviation tables. `"bird"` preserves PsyR's existing
+#'   symmetric intervals. `"algina_keselman"` uses the noncentral-t method of
+#'   Algina and Keselman (2003), with a separate scaling divisor based on the
+#'   repeated-measure cells involved in each contrast. The latter is available
+#'   only for pairwise within-subject contrasts with `method = "ind"` or
+#'   `method = "bf"`. The default is `"bird"`.
 #' @return A list of `emmeans` contrast tables with confidence intervals added.
 #'   Each table retains the original `emmeans` `p.value` column and adds
 #'   `psyr_p_value`, the contrast-specific p-value computed from the same PsyR
@@ -90,8 +97,10 @@
 #'   shows the raw tables followed by tables in sample standard-deviation units,
 #'   following the original Psy program. The scaled tables are also available
 #'   from the result's `scaled_tables` attribute, and the divisor and component
-#'   SDs from its `scale_info` attribute. Existing list indexing continues to
-#'   return the raw tables.
+#'   SDs from its `scale_info` attribute. With
+#'   `standardized_ci = "algina_keselman"`, each scaled table additionally
+#'   reports its contrast-specific `scale`, `ncp`, `ncp_lower`, and `ncp_upper`
+#'   values. Existing list indexing continues to return the raw tables.
 #' @export
 #'
 #' @examples
@@ -118,13 +127,25 @@ psyci <- function(model, contrast_tables, method,
                   smr_params = NULL,
                   seed = NULL,
                   family_check = c("error", "warn", "none"),
-                  family_check_tol = sqrt(.Machine$double.eps)){
+                  family_check_tol = sqrt(.Machine$double.eps),
+                  standardized_ci = c("bird", "algina_keselman")){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
   }
   if (!method %in% c("ind", "bf", "ph", "smr")){
     stop("Error: method should be ind, bf, ph, or smr")
+  }
+  standardized_ci <- match.arg(standardized_ci)
+  if (standardized_ci == "algina_keselman" &&
+      !method %in% c("ind", "bf")) {
+    stop(
+      paste0(
+        "Algina-Keselman standardized confidence intervals are available ",
+        "only with method = \"ind\" or method = \"bf\"."
+      ),
+      call. = FALSE
+    )
   }
 
   # first check if a single contrast table has been entered, and if so, convert
@@ -180,6 +201,16 @@ psyci <- function(model, contrast_tables, method,
     )
   }
   family_list <- as.list(family_report$families)
+  if (standardized_ci == "algina_keselman" &&
+      any(unlist(family_list, use.names = FALSE) != "w")) {
+    stop(
+      paste0(
+        "Algina-Keselman standardized confidence intervals require every ",
+        "contrast table to be a within-subject family."
+      ),
+      call. = FALSE
+    )
+  }
 
   fallback_between <- family_report$factor_arguments$between
   fallback_within <- family_report$factor_arguments$within
@@ -586,5 +617,17 @@ psyci <- function(model, contrast_tables, method,
 
   names(contrasts_w_cis) = unlist(families, use.names = FALSE)
 
-  .new_psyci_result(contrasts_w_cis, model)
+  standardized_adjustments <- if (method == "bf") {
+    as.list(nk)
+  } else {
+    rep(list(1L), length(contrasts_w_cis))
+  }
+  .new_psyci_result(
+    contrasts_w_cis,
+    model,
+    standardized_ci = standardized_ci,
+    extractions = contrast_preparation$extractions,
+    alphas = alphas,
+    adjustments = standardized_adjustments
+  )
 }
