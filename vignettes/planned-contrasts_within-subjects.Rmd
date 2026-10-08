@@ -86,10 +86,6 @@ wthn_fx
 ```{r, get_cis}
 
 wthn_fx
-family_list = list("w") # to be documented
-
-
-psyci(model=mod, contrast_tables = wthn_fx, method = "bf", family_list = family_list, 
-      within_factors = list("Prime"))
+psyci(model=mod, contrast_tables = wthn_fx, method = "bf")
 
 ```

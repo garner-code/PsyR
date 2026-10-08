@@ -170,7 +170,7 @@ knitr::kable(int_fx, digits = 3)
 
 ### A Priori Confidence Intervals
 
-To demonstrate the benefits of a post-hoc method, we must first showcase a planned analysis, with the purpose of highlighting that compared to a planned analysis, a post-hoc analysis accepts a loss statistical power in exchange for greater flexibility. Here we replicate the Bonferroni correction first presented in chapter 7 of @bird2004. To do so, let's first create the `all_fx` object which is a vector of the three contrast tables previously made. Let's also create the `family_list` object which is a list that labels our contrast tables as within, between and between x within respectively. Next, call `psyci()` with the following arguments.
+To demonstrate the benefits of a post-hoc method, we must first showcase a planned analysis, with the purpose of highlighting that compared to a planned analysis, a post-hoc analysis accepts a loss statistical power in exchange for greater flexibility. Here we replicate the Bonferroni correction first presented in chapter 7 of @bird2004. To do so, let's first create the `all_fx` object which is a vector of the three contrast tables previously made. PsyR infers the family and participating factors for every original `emmGrid`. Next, call `psyci()` with the following arguments.
 
 - The model is the previously made `mod` object, where the model must be made using the afex package (and of class afex_aov).
 
@@ -178,23 +178,17 @@ To demonstrate the benefits of a post-hoc method, we must first showcase a plann
 
 - The method is set as "bf", creating SCIs (estimate ± SE · cc) using the Bonferroni-t procedure.
 
-- The family list is set as the previously made `family_list`, labeling the contrast tables as within, between and between x within respectively. The order of the family list must match the order in which contrast tables are passed in.
-
-- The between_factors argument takes in a list of between subjects factor names, as previously defined in the "Group" column of the dataframe.
-
-- The within_factors argument takes in a list of within subjects factor names, as previously defined in the "Session" column of the dataframe.
+- PsyR identifies the within, between, and between-by-within families and their participating factors from the model and contrast coefficients.
 
 - Alpha is set as the previously defined `alphas` where ⍺ = 0.05.
 
 ```{r, bon, message = FALSE, warning = FALSE}
 all_fx <- c(win_fx, btwn_fx, int_fx)
-family_list = list("w", "b", "bw") 
 alphas = .05 # 3 * alpha / nk
 
 psyci(
   model = mod, contrast_tables = all_fx, method = "bf", 
-  family_list = family_list, between_factors = list("Group"),
-  within_factors = list("Session"), alpha = alphas
+  alpha = alphas
 ) %>%
   bind_rows() %>%
   rename(
@@ -218,8 +212,7 @@ Using near-identical code, we will now demonstrate the post-hoc method. To run a
 ```{r, psyci, message = FALSE, warning = FALSE}
 psyci(
   model = mod, contrast_tables = all_fx, method = "ph", 
-  family_list = family_list, between_factors = list("Group"),
-  within_factors = list("Session"), alpha = alphas
+  alpha = alphas
 ) %>%
   bind_rows() %>%
   rename(

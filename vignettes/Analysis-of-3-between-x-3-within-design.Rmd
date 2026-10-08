@@ -113,16 +113,24 @@ For the between subjects comparisons, we compare about the following things, whi
 -   The simple effect of the Treatment 2 Group
 -   As above, for the Control Group
 
-Lets code these contrasts into a list.
+Lets code these into separate lists of genuine contrasts and selectors. The
+contrast coefficients are then put on a mean-difference scale, while the
+selectors used for simple effects are deliberately left unchanged.
 
 ```{r btwn_contrasts}
 
-between_contrasts = list(
-  "Ts_v_Ctrl" = c(-1, 0.5, 0.5),
-  "T1_v_T2" = c(0, 1, -1),
+raw_between_contrasts <- list(
+  "Ts_v_Ctrl" = c(-2, 1, 1),
+  "T1_v_T2" = c(0, 1, -1)
+)
+between_selectors <- list(
   "T1*" = c(0, 1, 0),
   "T2*" = c(0, 0, 1),
   "Ctrl*" = c(1, 0, 0)
+)
+between_contrasts <- c(
+  rescale_contrasts(raw_between_contrasts, mode = "mean_difference"),
+  between_selectors
 )
 between_contrasts
 ```
@@ -154,11 +162,17 @@ Now we lay out what we are thinking regarding the comparisons we will make among
 
 ```{r within_contrasts}
 
-within_contrasts = list(
+raw_within_contrasts <- list(
   "Post_vs_Pre" = c(-1, 1, 0),
-  "FU_vs_Post" = c(0, -1, 1),
+  "FU_vs_Post" = c(0, -1, 1)
+)
+within_selectors <- list(
   "Post*" = c(0, 1, 0),
   "FU*" = c(0, 0, 1)
+)
+within_contrasts <- c(
+  rescale_contrasts(raw_within_contrasts, mode = "mean_difference"),
+  within_selectors
 )
 within_contrasts
 ```
@@ -167,7 +181,13 @@ within_contrasts
 
 We have defined how we would want to compare the groups, and how we want to compare across the time points, but of course, what we really want to know about is a difference of differences. How do the groups compare when we compare their happiness trajectories across the time points?
 
-Defining these contrasts by hand is tricky. Luckily we can use the emmeans `contrast` function to not only define them for us, but also to calculate the contrast effects themselves - huzzah!
+Defining these product coefficients by hand is tricky. Luckily we can use the
+emmeans `contrast` function to form products of the supplied coefficients and
+calculate the effects. `emmeans` does not normalize the components: the two
+genuine contrast lists were mean-difference scaled above, so a product of one
+between and one within contrast is correctly scaled as a first-order
+interaction. Products involving an unchanged selector instead retain their
+simple-effect interpretation.
 
 ```{r int_contrasts}
 
@@ -186,7 +206,6 @@ emm_win = emmeans(mod, c("Time"))
 within_fx = contrast(emm_win, within_contrasts[1:2], adjust = "bonferroni")
 
 all_fx = list(interaction_fx, between_fx, within_fx)
-family_list = list("bw", "b", "w") # to be documented
 ```
 
 ## Obtaining Confidence Intervals over the Contrast Effects
@@ -196,9 +215,19 @@ Now that we have our table of interaction contrasts and associated simple effect
 ```{r}
 
 this_alpha = 3*0.05
-contrasts_w_cis = psyci(mod, contrast_tables=all_fx, family_list=family_list, method="bf", alpha=this_alpha)
+contrasts_w_cis = psyci(
+  mod,
+  contrast_tables = all_fx,
+  method = "bf",
+  alpha = this_alpha,
+  family_group = rep("all_factorial", length(all_fx))
+)
 ```
 
-Let's take a look at the interaction contrasts
+The three tables belong to one non-standard all-factorial family. PsyR drops
+the six selector-by-selector rows, which are cell means rather than contrasts,
+and applies the Bonferroni correction across the 18 genuine contrasts that
+remain.
 
+Let's take a look at the interaction contrasts
 

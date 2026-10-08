@@ -4,3 +4,8 @@
 ^README\.Rmd$
 ^\.positai$
 ^\.claude$
+^CURRENT_MATURITY_AND_CONSTRAINTS\.md$
+^FUNCTION_ADDITION_WORKFLOW\.md$
+^scripts$
+^PSY-source_no-touchy$
+^references$

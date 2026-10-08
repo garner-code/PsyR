@@ -136,8 +136,6 @@ Now we're ready to use PsyR to get our simultaneous CIs -
 ```{r psyci}
 
 psyci(model=mod, contrast_tables = c(btwn_fx, win_fx, int_fx), 
-      method = "bf", family_list = list("b", "w", "bw"), 
-      within_factors = list("Time"),
-      between_factors = list("Group"))
+      method = "bf")
 
 ```

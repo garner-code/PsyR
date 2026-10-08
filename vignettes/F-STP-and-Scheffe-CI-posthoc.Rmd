@@ -139,9 +139,7 @@ Such analysis establishes that significant effects exist in our chosen contrasts
 
 - The method is set as "ph", creating confidence intervals (estimate ± SE · cc) using a post-hoc method [@bird2002a].
 
-- The family list is set as "b", specifying that the contrast table is between-subjects. The family_list must take in a list of the same length as contrast_tables.
-
-- The between_factors argument takes in a list of between subjects factor names, as previously defined in the `Group` object.
+- PsyR infers that the original `emmGrid` contains a between-subjects family and identifies `Group` as its participating factor.
 
 - Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate.
 
@@ -149,10 +147,8 @@ Such analysis establishes that significant effects exist in our chosen contrasts
 contrasts_w_cis <- psyci(
   model = mod,
   contrast_tables = list(btwn_fx),
-  family_list = list("b"),
   method = "ph",
-  alpha = .05,
-  between_factors = list("Group")
+  alpha = .05
 )
 knitr::kable(contrasts_w_cis, digits = 3)
 ```

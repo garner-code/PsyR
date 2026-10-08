@@ -14,7 +14,8 @@ update_attributes(
   v_w = NA,
   v_b = NA,
   alpha = 0.05,
-  smr_params = NULL
+  smr_params = NULL,
+  p_value_method = NULL
 )
 }
 \arguments{
@@ -40,13 +41,20 @@ see "?psyci" for further details}
 
 \item{smr_params}{a list of parameters used for the Studentized Maximum Root method,
 if this methods was used. Must have named elements p and q. default = NULL}
+
+\item{p_value_method}{Optional method code used to compute a
+\code{psyr_p_value} column. When supplied, the friendly method label is added to
+the \code{mesg} attribute and to the machine-readable
+\code{psyr_p_value_method} attribute. Default is \code{NULL} for compatibility with
+direct calls that have not computed PsyR p-values.}
 }
 \value{
 an emmeans contrast table with attributes updated
 }
 \description{
 This function adds to the attributes of the contrast table, to let you know
-the method that has been applied by PsyR to compute confidence intervals.
+the methods that have been applied by PsyR to compute confidence intervals
+and, when requested by \code{psyci()}, PsyR-compatible p-values.
 The added attributes tell you the key parameters that were used. Specifically,
 the method applied, the family of contrasts (if relevant), factors that were
 interpreted as between or within factors (where relevant), degrees of freedom

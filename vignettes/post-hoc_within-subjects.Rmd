@@ -137,9 +137,7 @@ The above analysis outputs two p-values, with most of them indicating a failure 
 
 - The method is set as "ph", creating confidence intervals (estimate ± SE · cc) using a post-hoc method [@bird2004].
 
-- The family list is set as "w", specifying that the contrast table is within-subjects. The family_list must take in a list of the same length as contrast_tables.
-
-- The within_factors argument takes in a list of between subjects factor names, as previously defined in the "Session" column.
+- PsyR infers that the original `emmGrid` contains a within-subjects family and identifies `Session` as its participating factor.
 
 - Alpha is set at 0.05 (both here and by default), indicating the desired type I error rate.
 
@@ -148,8 +146,6 @@ psyci(
   model = mod, 
   contrast_tables = cnt_res, 
   method = "ph", 
-  family_list = list("w"),
-  within_factors = list("Session"),
   alpha = .05
 ) %>%
 knitr::kable(digits = 3)

@@ -20,7 +20,18 @@
 #' btwn_con <- emmeans::contrast(sum_emm_btwn, con) # get contrast table
 #' get_contrast_coefficients(btwn_con)
 get_contrast_coefficients <- function(contrast_tables){
+    if (inherits(contrast_tables, "emmGrid")) {
+        contrast_tables <- list(contrast_tables)
+    }
 
-  cs <- lapply(contrast_tables, stats::coef)
-  lapply(cs, function(x) x[, grep("^c\\.[0-9]+$", colnames(x))])
+    lapply(contrast_tables, function(contrast_table) {
+        extracted <- .extract_emm_family_data(contrast_table)
+        if (extracted$provenance == "unavailable") {
+            stop(
+                paste(extracted$issues, collapse = " "),
+                call. = FALSE
+            )
+        }
+        extracted$coefficients
+    })
 }

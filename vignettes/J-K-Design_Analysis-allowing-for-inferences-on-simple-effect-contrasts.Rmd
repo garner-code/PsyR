@@ -140,11 +140,9 @@ Thus k = 16, alpha = .1, for all families (as they are actually one family, as a
 ```{r, get_cis}
 
 all_fx <- c(exp_fx, Ab_fx, interaction_fx)
-family_list = list("b") # to be documented
 alphas = rep(list(2*.05), times=3)
 
-psyci(model=mod, contrast_tables = all_fx, method = "bf", family_list = list("b"), 
-      between_factors = list("Therapy", "Experience"), alpha = alphas,
+psyci(model=mod, contrast_tables = all_fx, method = "bf", alpha = alphas,
       independent = FALSE)
 
 ```
@@ -167,8 +165,7 @@ B(A) = J*(K-1)
 alphas = rep(list(1-(1-0.05)^2), times=3)
 nu1 = length(unique(levels(experience$Therapy))) * (length(unique(levels(experience$Experience))) - 1)
 
-psyci(model=mod, contrast_tables = all_fx, method = "ph", family_list = list("b"), 
-      between_factors = list("Therapy", "Experience"), alpha = alphas,
+psyci(model=mod, contrast_tables = all_fx, method = "ph", alpha = alphas,
       independent = FALSE, nu1=nu1)
 
 ```
@@ -190,7 +187,6 @@ Now get the CIs for the main effects and interactions, with no simple effects
 
 ```{r}
 
-psyci(model=mod, contrast_tables = stndrd_fx, method = "bf", family_list = list("b"), 
-      between_factors = list("Therapy", "Experience"), alpha = 0.05)
+psyci(model=mod, contrast_tables = stndrd_fx, method = "bf", alpha = 0.05)
 
 ```

@@ -122,8 +122,7 @@ Now we're ready to compute SCIs
 ```{r scis}
 
 psyci(model=mod, contrast_tables = c(aud_fx, vis_fx, int_fx), 
-      method = "bf", family_list = list("w", "w", "w"), 
-      within_factors = list("Auditory", "Visual"))
+      method = "bf")
 
 ```
 Now run the same thing, but with individual 95% confidence intervals
@@ -132,6 +131,5 @@ Now run the same thing, but with individual 95% confidence intervals
 ```{r scis}
 
 psyci(model=mod, contrast_tables = c(aud_fx, vis_fx, int_fx), 
-      method = "ind", family_list = list("w", "w", "w"), 
-      within_factors = list("Auditory", "Visual"))
+      method = "ind")
 ```

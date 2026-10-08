@@ -1,7 +1,8 @@
 #' Update attributes of contrast table with Psy CI info
 #'
 #' This function adds to the attributes of the contrast table, to let you know
-#' the method that has been applied by PsyR to compute confidence intervals.
+#' the methods that have been applied by PsyR to compute confidence intervals
+#' and, when requested by `psyci()`, PsyR-compatible p-values.
 #' The added attributes tell you the key parameters that were used. Specifically,
 #' the method applied, the family of contrasts (if relevant), factors that were
 #' interpreted as between or within factors (where relevant), degrees of freedom
@@ -21,6 +22,11 @@
 #' @param alpha single value. applied alpha rate. default = .05
 #' @param smr_params  a list of parameters used for the Studentized Maximum Root method,
 #' if this methods was used. Must have named elements p and q. default = NULL
+#' @param p_value_method Optional method code used to compute a
+#'   `psyr_p_value` column. When supplied, the friendly method label is added to
+#'   the `mesg` attribute and to the machine-readable
+#'   `psyr_p_value_method` attribute. Default is `NULL` for compatibility with
+#'   direct calls that have not computed PsyR p-values.
 #'
 #' @returns an emmeans contrast table with attributes updated
 #' @export
@@ -47,7 +53,8 @@ update_attributes <- function(contrast_table, method, family = NA,
                               between_factors = NA, within_factors = NA,
                               v_e, v_w = NA, v_b = NA,
                               alpha = 0.05,
-                              smr_params = NULL){
+                              smr_params = NULL,
+                              p_value_method = NULL){
 
   btwn_msg = FALSE
   wthn_msg = FALSE
@@ -66,29 +73,28 @@ update_attributes <- function(contrast_table, method, family = NA,
     family_full = "unknown family" #prob not necessary as earlier messages should catch this
   }
 
-  # set full names for method for messages
-  if (method == "ind"){
-    method = "independent"
-  } else if (method == "bf"){
-    method = "Bonferroni"
-  } else if (method == "ph"){
-    if (family == "b"){
-      method = "Scheffe"
-    } else if (family == "w"){
-      method = "post-hoc within"
-    } else if (family == "bw"){
-      method = "post-hoc between x within (Roy's GCR)"
-    } else
-      method = "post-hoc"
-  } else if (method == "smr"){
-    method = "Studentized Maximum Root (SMR)"
+  # set full names for methods used in messages and attributes
+  method = .psyci_method_label(method, family)
+  p_value_method = if (is.null(p_value_method)) {
+    NULL
   } else {
-    method = "unknown method" #prob not necessary as earlier messages should catch this
+    .psyci_method_label(p_value_method, family)
+  }
+
+  p_value_message = character()
+  if (!is.null(p_value_method)) {
+    attr(contrast_table, "psyr_p_value_method") <- p_value_method
+    p_value_message = paste(
+      "PsyR p-value method:",
+      p_value_method,
+      "has been applied"
+    )
   }
 
   # apply message update that will be applied to all contrast tables
   attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
                                     paste("PsyR CI method:", method, "has been applied"),
+                                    p_value_message,
                                     paste("Family-wise correction assumes current contrasts are:", family_full),
                                     paste("PsyR used an alpha rate of:", alpha)
                                     )
@@ -123,4 +129,26 @@ update_attributes <- function(contrast_table, method, family = NA,
                                     paste("PsyR used df error of:", v_e)
   )
   contrast_table
+}
+
+.psyci_method_label <- function(method, family) {
+  if (method == "ind") {
+    "independent"
+  } else if (method == "bf") {
+    "Bonferroni"
+  } else if (method == "ph") {
+    if (identical(family, "b")) {
+      "Scheffe"
+    } else if (identical(family, "w")) {
+      "post-hoc within"
+    } else if (identical(family, "bw")) {
+      "post-hoc between x within (Roy's GCR)"
+    } else {
+      "post-hoc"
+    }
+  } else if (method == "smr") {
+    "Studentized Maximum Root (SMR)"
+  } else {
+    "unknown method"
+  }
 }

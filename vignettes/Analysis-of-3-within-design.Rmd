@@ -108,10 +108,8 @@ contrast_table <- contrast(emm, planned_contrasts, adjust="bonferroni")
 ```{r}
 scis <- psyci(
   model = mod,
-  contrast_table = list(contrast_table),
-  method = "bf",         # Bonferroni correction
-  family_list=list("w"),
-  within_factors = list("Prime")
+  contrast_tables = list(contrast_table),
+  method = "bf"         # Bonferroni correction
 )
 scis
 ```

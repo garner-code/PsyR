@@ -120,7 +120,6 @@ Now we apply the SMR correction to all our contrasts, and get the confidence int
 
 
 all_fx <- c(mfx, int, nvh_simp_fx, sdep_simp_fx) 
-family_list = as.list(rep("b", length(all_fx)))
 alphas = 0.05 # because we adjust by contrast
 
 # because we are testing for A(b) and B(a) (and implicitly for A, B, and AB)
@@ -139,8 +138,6 @@ psyci(model=mod,
       contrast_tables = all_fx, 
       method = "smr", 
       smr_params = smr_params,
-      family_list = family_list, 
-      between_factors = list("sleep_deprivation", "nvh"),       
       alpha = alphas)
 
 ```
