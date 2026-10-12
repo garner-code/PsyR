@@ -69,5 +69,14 @@ contrasts_w_cis <- psyci(
     contrast_tables = all_fx,
     method = "bf",
     alpha = this_alpha,
-    family_group = rep("all_factorial", length(all_fx))
+    family_group = rep("all_factorial", length(all_fx)),
+)
+
+contrasts_w_cis <- psyci(
+  mod,
+  contrast_tables = within_fx,
+  method = "bf",
+  alpha = 0.05,
+  family_group = "within",
+  standardized_ci = "algina_keselman"
 )
