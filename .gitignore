@@ -24,3 +24,4 @@ scripts/*
 !scripts/compare-vignettes-with-original-psy.R
 PSY-source_no-touchy/
 *.md
+!AGENTS.md
