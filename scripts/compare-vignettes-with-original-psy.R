@@ -147,6 +147,13 @@ read_original_psy_ci_table <- function(file, heading, end_heading = NULL) {
 
 # Analysis of a 3-between x 3-within design -------------------------------
 analysis <- run_analysis_script("scripts/Analysis-of-3-between-x-3-within-design.R")
+all_factorial_results <- psyci(
+    analysis$mod,
+    contrast_tables = analysis$all_fx,
+    method = "bf",
+    alpha = analysis$this_alpha,
+    family_group = rep("all_factorial", length(analysis$all_fx))
+)
 design <- legacy_psy_design(
     analysis$depression, "Subject", "Happiness", "Group", "Time"
 )
@@ -168,17 +175,17 @@ legacy <- legacy_psy_analyse(
     design, items, "bf", alpha = 0.15, n_k = 18L
 )
 results[[length(results) + 1L]] <- compare_result(
-    "3-between x 3-within", analysis$contrasts_w_cis, legacy,
+    "3-between x 3-within", all_factorial_results, legacy,
     paste0("One 18-contrast all-factorial family; selector-by-selector cell ",
         "means are dropped before correction.")
 )
 scaled_results <- list(compare_scaled_result(
     "3-between x 3-within",
-    analysis$contrasts_w_cis,
+    all_factorial_results,
     legacy,
     design
 ))
-printed_examples[["3-between x 3-within"]] <- analysis$contrasts_w_cis
+printed_examples[["3-between x 3-within"]] <- all_factorial_results
 
 # Between-subjects 2 x 2 simple effects, SMR ------------------------------
 analysis <- run_analysis_script("scripts/between_subjects_2x2_factorial-w-simple.R")

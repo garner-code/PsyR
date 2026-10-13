@@ -13,6 +13,8 @@ cc_smr(p, q, v_e, alpha, n_sim = 1e+05, seed = NULL)
 
 \item{q}{Integer. The degrees of freedom for the Wishart distribution.}
 
+\item{v_e}{Integer. The error degrees of freedom for the test statistic.}
+
 \item{alpha}{Numeric. The significance level (e.g., 0.05 for a 95\%
 confidence level).}
 
@@ -21,8 +23,6 @@ the moments. Default is 100000.}
 
 \item{seed}{Integer or NULL. The random seed for reproducibility.
 Default is NULL.}
-
-\item{n}{Integer. The degrees of freedom for the test statistic.}
 }
 \value{
 Numeric. The critical value for the confidence interval computation.

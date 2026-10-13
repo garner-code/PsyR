@@ -8,7 +8,9 @@
 #' @param p Integer. The first matrix dimension.
 #' @param q Integer. The second matrix dimension.
 #' @param n_sim Integer. The number of simulations to run. Default is
-#' 10000.
+#' 100000.
+#' @param return_samples Logical. Whether to include the simulated largest
+#' roots in the returned list. Default is `FALSE`.
 #' @param seed Integer or NULL. The random seed for reproducibility.
 #' Default is NULL.
 #'

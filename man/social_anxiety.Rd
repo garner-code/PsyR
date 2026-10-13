@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{social_anxiety}}{
 
-A longform data frame with 360 rows and 3 columns:
+A longform data frame with 360 rows and 4 columns:
 \describe{
 \item{Group}{Treatment Type: 1=New, 2=Standard, 3=MinContact}
 \item{Subject}{Subject Number: 1-90}

@@ -136,6 +136,7 @@ psyci <- function(model, contrast_tables, method,
   if (!method %in% c("ind", "bf", "ph", "smr")){
     stop("Error: method should be ind, bf, ph, or smr")
   }
+  .validate_alpha(alpha)
   standardized_ci <- match.arg(standardized_ci)
   if (standardized_ci == "algina_keselman" &&
       !method %in% c("ind", "bf")) {

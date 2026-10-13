@@ -1,7 +1,8 @@
 #' Get the contrast coefficient vectors from a list of contrast tables output by
 #' emmeans `contrast` function
 #'
-#' @param contrast_tables
+#' @param contrast_tables An `emmGrid` contrast table, or a list of `emmGrid`
+#'   contrast tables produced by [emmeans::contrast()].
 #'
 #' @returns a list of the same size as contrast tables. Each element of the list
 #' is a c x k matrix of contrast coefficient vectors

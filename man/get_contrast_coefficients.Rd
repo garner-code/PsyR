@@ -8,7 +8,8 @@ emmeans \code{contrast} function}
 get_contrast_coefficients(contrast_tables)
 }
 \arguments{
-\item{contrast_tables}{}
+\item{contrast_tables}{An \code{emmGrid} contrast table, or a list of \code{emmGrid}
+contrast tables produced by \code{\link[emmeans:contrast]{emmeans::contrast()}}.}
 }
 \value{
 a list of the same size as contrast tables. Each element of the list

@@ -33,7 +33,7 @@
 #' @seealso wishartlr_sample
 #' @export
 smr_crit <- function(alpha, p, q, n, n_sim = 100000, seed = NULL ) {
-
+  .validate_alpha_scalar(alpha)
   calc_f_params <- function(mu1, mu2, mu3, tau) {
 
     # Generate the parameters for the F-distribution based on the moments

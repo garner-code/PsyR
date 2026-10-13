@@ -98,7 +98,7 @@ btwn_fx
 
 Now do the same for within -
 
-```{r, btwn}
+```{r, within}
 
 within_contrasts = list(
   "Post_vs_Pre" = c(-1, 1, 0),

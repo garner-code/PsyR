@@ -20,7 +20,9 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of PsyR is to ...
+PsyR computes confidence intervals for planned and post-hoc contrasts
+from ANOVA models, including procedures described by Bird (2002) for
+psychology research.
 
 ## Installation
 
@@ -42,12 +44,10 @@ intervals. All of the following examples will use the post-hoc method
 ## load relevant packages
 library(emmeans)
 library(afex)
-library(readxl)
 library(PsyR)
 
 # load some data
 dat <- spacing
-# load(spacing)?
 
 # set emmeans option to multivariate
 afex_options(emmeans_model = "multivariate")
@@ -67,12 +67,7 @@ btwn_con <- contrast(emm_btwn, con_b)
 
 # feed the contrast table into psyci(); its family and participating factors
 # are inferred from the model and the original emmGrid
-# extra documentation needed re: mapping of method to specific. Potentially
-# add Sidak
-psyci(model=mod, contrast_tables = list(btwn_con), method="ph")
-# add attributes to the table about the method used to compute CIs
-# think about adding the critical constant as an attribute
-# specify df also as attributes
+psyci(model = mod, contrast_tables = list(btwn_con), method = "ph")
 
 ```
 
@@ -143,8 +138,6 @@ emm_int <- emmeans(mod, c("group", "spacing"))
 # order-1 interactions (differences between mean differences).
 
 con_int <- contrast(emm_int, interaction=list(con_b, con_w))
-# potentially add a scheffe function 
-# add p values from gcr etc procedures to the table
 # generate 95% CIs for the between x within subjects contrasts
 psyci(model=mod, contrast_tables = list(con_int), method="ph")
 

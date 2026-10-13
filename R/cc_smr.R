@@ -6,7 +6,7 @@
 #' confidence level).
 #' @param p Integer. The matrix dimension (number of variables).
 #' @param q Integer. The degrees of freedom for the Wishart distribution.
-#' @param n Integer. The degrees of freedom for the test statistic.
+#' @param v_e Integer. The error degrees of freedom for the test statistic.
 #' @param n_sim Integer. The number of simulations to run for estimating
 #' the moments. Default is 100000.
 #' @param seed Integer or NULL. The random seed for reproducibility.
@@ -19,7 +19,7 @@
 #' critical_constant <- cc_smr(2, 2, 96, .05)
 #' print(critical_constant)
 cc_smr <- function(p, q, v_e, alpha, n_sim = 100000, seed = NULL){
-
+  .validate_alpha_scalar(alpha)
   cc <- smr_crit(p=p, q=q, n=v_e, alpha=alpha,
                  n_sim = n_sim, seed = seed)
   cc <- sqrt(cc)

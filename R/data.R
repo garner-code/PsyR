@@ -37,7 +37,7 @@
 #' A synthetic dataset modeling a lexical decision task
 #' used to investigate automatic activation of stereotypes through priming.
 #' Participants are subliminally primed with a social category label
-#' (e.g., ‘unemployed’ or ‘elderly’) before responding to target words.
+#' (e.g., "unemployed" or "elderly") before responding to target words.
 #' The target words are either stereotypical attributes, atypical attributes,
 #' or neutral words. The dependent variable is reaction time (in tenths of a second).
 #'
@@ -46,12 +46,11 @@
 #' relative to neutral words.
 #'
 #' @format ## `priming`
-#' A data frame with 15 rows and 4 columns:
+#' A data frame with 45 rows and 3 columns:
 #' \describe{
-#'   \item{subj}{subject ID}
-#'   \item{Condition}{within-subjects factor with 3 levels: STEREO, ATYPICAL, NEUTRAL}
-#'   \item{WordType}{same as Condition, possibly labeled differently}
-#'   \item{RT}{reaction time in tenths of a second}
+#'   \item{Subject}{Subject ID}
+#'   \item{Prime}{Within-subjects condition: Stereotypical, Atypical, or Neutral}
+#'   \item{ReactionTime}{Reaction time in tenths of a second}
 #' }
 #' @source Dr. Melanie Gleitzman, UNSW
 "priming"
@@ -98,7 +97,7 @@
 #' https://methods.sagepub.com/book/mono/analysis-of-variance-via-confidence-intervals/toc
 #'
 #' @format ## `social_anxiety`
-#' A longform data frame with 360 rows and 3 columns:
+#' A longform data frame with 360 rows and 4 columns:
 #' \describe{
 #'   \item{Group}{Treatment Type: 1=New, 2=Standard, 3=MinContact}
 #'   \item{Subject}{Subject Number: 1-90}

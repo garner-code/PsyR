@@ -23,7 +23,7 @@
 #' alpha = 0.05
 #' cc_ph_b(v_b, v_e, alpha)
 cc_ph_b <- function(v_b, v_e, alpha = 0.05){
-
+  .validate_alpha_scalar(alpha)
   crit_F <- stats::qf(alpha, v_b, v_e, lower.tail = FALSE)
   sqrt(v_b * crit_F)
 }

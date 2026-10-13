@@ -128,7 +128,7 @@ psyci(model=mod, contrast_tables = c(aud_fx, vis_fx, int_fx),
 Now run the same thing, but with individual 95% confidence intervals
 
 
-```{r scis}
+```{r individual_cis}
 
 psyci(model=mod, contrast_tables = c(aud_fx, vis_fx, int_fx), 
       method = "ind")

@@ -183,13 +183,14 @@ To demonstrate the benefits of a post-hoc method, we must first showcase a plann
 - Alpha is set as the previously defined `alphas` where ⍺ = 0.05.
 
 ```{r, bon, message = FALSE, warning = FALSE}
-all_fx <- c(win_fx, btwn_fx, int_fx)
+all_fx <- list(win_fx, btwn_fx, int_fx)
 alphas = .05 # 3 * alpha / nk
 
 psyci(
   model = mod, contrast_tables = all_fx, method = "bf", 
   alpha = alphas
 ) %>%
+  unclass() %>%
   bind_rows() %>%
   rename(
     main_effect = contrast,
@@ -214,6 +215,7 @@ psyci(
   model = mod, contrast_tables = all_fx, method = "ph", 
   alpha = alphas
 ) %>%
+  unclass() %>%
   bind_rows() %>%
   rename(
     main_effect = contrast,

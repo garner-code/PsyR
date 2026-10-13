@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{fatigue}}{
 
-A data frame with 7,240 rows and 60 columns:
+A data frame with 44 rows and 3 columns:
 \describe{
 \item{Group}{Fatigue Group: 1=alert, 2=mild, 3=moderate, 4=extreme}
 \item{Errors}{Number of driving errors}

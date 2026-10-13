@@ -12,7 +12,10 @@ wishartlr_sample(p, q, n_sim = 1e+05, return_samples = FALSE, seed = NULL)
 \item{q}{Integer. The second matrix dimension.}
 
 \item{n_sim}{Integer. The number of simulations to run. Default is
-10000.}
+100000.}
+
+\item{return_samples}{Logical. Whether to include the simulated largest
+roots in the returned list. Default is \code{FALSE}.}
 
 \item{seed}{Integer or NULL. The random seed for reproducibility.
 Default is NULL.}

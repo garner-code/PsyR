@@ -28,6 +28,6 @@
 #' alpha = 0.05
 #' cc_ind_t(v_e, alpha)
 cc_ind_t <- function(v_e, alpha = 0.05){
-
+  .validate_alpha_scalar(alpha)
   stats::qt(alpha/2, v_e, lower.tail = FALSE)
 }

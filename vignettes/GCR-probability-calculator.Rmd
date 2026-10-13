@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(PsyR)
+library(tidyverse)
 ```
 
 ## Roy's Largest Root

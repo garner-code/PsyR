@@ -16,9 +16,21 @@
 #' get_levels(data, fctr)
 #'
 get_levels <- function(data, fctr){
-  if (!attributes(data[,fctr])$class %in% "factor"){
-    stop(sprintf("Error: '%s' is not of type factor", fctr))
-  }
+    if (!is.data.frame(data)) {
+        stop("`data` must be a data frame.", call. = FALSE)
+    }
+    if (!is.character(fctr) || length(fctr) != 1L || is.na(fctr) ||
+        !nzchar(fctr)) {
+        stop("`fctr` must be one non-empty column name.", call. = FALSE)
+    }
+    if (!fctr %in% names(data)) {
+        stop(sprintf("Column '%s' was not found in `data`.", fctr), call. = FALSE)
+    }
 
-  length(attributes(data[,fctr])$levels)
+    factor_column <- data[[fctr]]
+    if (!is.factor(factor_column)) {
+        stop(sprintf("Column '%s' is not a factor.", fctr), call. = FALSE)
+    }
+
+    nlevels(factor_column)
 }

@@ -173,7 +173,7 @@ Now do a standard analysis with independent families, using the planned bonferon
 
 Calculate the main effects for factor B
 
-```{r, factor_a_fx}
+```{r, factor_b_standard_analysis}
 
 emms_exp <- emmeans(mod, c("Therapy"))
 thrpy_fx <- contrast(emms_exp, therapy_contrasts)

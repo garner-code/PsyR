@@ -5,7 +5,7 @@
 #' \describe{
 #'   \item{Subject}{Subject ID}
 #'   \item{Auditory}{Level of Auditory distraction; Low, Medium, or High}
-#'   \item{Visual}{Level of Visual distraction; None, Dissimilar, Similar
+#'   \item{Visual}{Level of Visual distraction; None, Dissimilar, or Similar}
 #'   \item{Performance}{Performance Score}
 #'   ...
 #' }
