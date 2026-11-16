@@ -1,5 +1,6 @@
 ---
 output: github_document
+bibliography: references.bib
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -18,33 +19,56 @@ knitr::opts_chunk$set(
 # PsyR
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-PsyR computes confidence intervals for planned and post-hoc contrasts
-from ANOVA models, including procedures described by Bird (2002) for
-psychology research.
+PsyR utilises procedures described by @bird2002 to compute simultaneous confidence intervals for planned and post-hoc contrasts from ANOVA models. Simultaneous confidence intervals give a researcher greater insight into the magnitude of an effect captured by a contrast. This can allow for more nuanced interpretation of results with respect to directionality and effect size.
 
 ## Installation
 
-You can install the development version of PsyR from [GitHub](https://github.com/) with:
+Install the latest version of PsyR by running the below code.
 
 ``` {r, eval = FALSE}
+install.packages("PsyR")
+```
+
+Alternatively, you can install the development version of PsyR from [GitHub](eventual_link_UNSW_git). Only do so if you want to access early features. Warning: this version may contain bugs!
+
+```{r, eval = FALSE}
 # install.packages("devtools")
 devtools::install_github("garner-code/PsyR")
 ```
 
+## Cheat Sheet
+
+Click [here](link%20to%20be%20inserted) to view and download a cheat sheet for the package.
+
+## Classic Workflow
+
+An average workflow will go as follows:
+
+- Load data, tidy into longform.
+
+- Use `afex::aov_ez()` to generate an ANOVA model.
+
+- Use `emmeans::emmeans()` to obtain estimated marginal means.
+
+- Use `base::list()` to define contrasts.
+
+- Use `emmeans::contrast()` to generate statistical output pertaining to each contrast.
+
+- Use `psyci()` to generate simultaneous confidence intervals.
+
 ## Example
 
-This is a basic example which shows you how to obtain between subject confidence 
-intervals. All of the following examples will use the post-hoc method 
-(see Bird, 2002, for details on the post-hoc method):
+Below are some basic examples which shows you how to obtain simultaneous confidence intervals. All of the following examples will use the post-hoc method. See [@bird2002] for details. Also, check out the "Articles" tab for detailed examples of analysis pertaining to various designs.
 
-```{r b_example}
-
+```{r b_example, message = FALSE, warning = FALSE}
 ## load relevant packages
 library(emmeans)
 library(afex)
 library(PsyR)
+library(tidyverse)
 
 # load some data
 dat <- spacing
@@ -59,53 +83,55 @@ mod <- aov_ez("subj", "yield", dat, within = "spacing", between = "group")
 emm_btwn <- emmeans(mod, "group")
 raw_con_b <- list(
   "12vs34" = c(1, 1, -1, -1), # groups 1 & 2 vs groups 3 & 4
-  "1vs2" = c(1, -1, 0, 0), # and so on...
-  "3vs4" = c(0, 0, 1, -1)
+  "1vs2" = c(1, -1, 0, 0),    # group 1 vs group 2
+  "3vs4" = c(0, 0, 1, -1)     # group 3 vs group 4
 )
+
+#mean difference scale contrasts, then produce and store statistical output
 con_b <- rescale_contrasts(raw_con_b, mode = "mean_difference")
 btwn_con <- contrast(emm_btwn, con_b)
 
 # feed the contrast table into psyci(); its family and participating factors
 # are inferred from the model and the original emmGrid
-psyci(model = mod, contrast_tables = list(btwn_con), method = "ph")
-
+result <- psyci(
+  model = mod, 
+  contrast_tables = list(btwn_con), 
+  method = "ph"
+)
+```
+``` {r, display_result, echo = FALSE}
+result |> 
+  unclass() |> 
+  bind_rows() |> 
+  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  knitr::kable(digits = 3)
 ```
 
 `psyci()` prints each result twice. The first table reports the contrast
-effects and confidence intervals in the dependent variable's original units.
-The second reports the same values in sample standard-deviation units, using
-the pooled within-cell scaling method from the original Psy program. The raw
-tables remain available through ordinary list indexing. For example:
+effects and confidence intervals in the dependent variable's original
+units. The second reports the same values in sample standard-deviation
+units, using the pooled within-cell scaling method from the original Psy
+program [@bird2002]. The raw tables remain available through ordinary
+list indexing. For example:
 
-```{r scaled_example, eval = FALSE}
+```{r scaled_example}
 result <- psyci(mod, list(btwn_con), method = "ph")
 raw_table <- result[[1]]
 scaled_table <- attr(result, "scaled_tables")[[1]]
-attr(result, "scale_info")$divisor
+```
+``` {r, display_scale, echo = FALSE}
+scaled_table |> 
+  unclass() |> 
+  bind_rows() |> 
+  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  knitr::kable(digits = 3)
 ```
 
-The standard tables report `df_num = 1`, `df_error`, and Psy's ordinary
-observed contrast statistic in `F_value`. The `p_value` column is always the
-unadjusted upper-tail probability from `F(1, df_error)`, so it corresponds
-directly to the displayed statistic. `p_value_adjusted` reports the probability
-from the selected simultaneous-inference procedure, named explicitly in
-`p_adjustment`; this is the probability commensurate with the reported
-confidence interval. For Bonferroni output, for example,
-`p_value_adjusted = min(1, family_size * p_value)`. The applicable family is
-recorded in the `psyr_family_group` and `psyr_family_size` attributes and is
-also described in the printed messages. The original `emmeans` `t.ratio` and
-`p.value` columns are not retained. To print Psy's legacy SS/df/MS/F layout for
-the supplied contrasts and keep it with the result, use:
+It is possible to print Psy's legacy SS/df/MS/F layout for the supplied contrasts. The legacy table is printed once, before the raw and standardized confidence interval tables. It includes only supplied contrasts and their applicable error rows; it does not create absent between-by-within cross-products.
 
-For direct checks in Psy's probability calculator, Roy GCR tables attach
-`psyr_probability_parameters = list(s, m, n)`. SMR tables attach
-`psyr_probability_parameters = list(k, p, q, df)`, where `k` contains one
-`sqrt(F_value)` per table row and `df` is PsyR's error degrees of freedom. Roy
-GCR tables also include a `theta` column equal to
-`F_value / (df_error + F_value)`; this is the value entered into Psy's GCR
-field.
+To print Psy's legacy layout, set `legay_anova` as TRUE within the `psyci()` call.
 
-```{r legacy_anova_example, eval = FALSE}
+```{r legacy_anova_example}
 result <- psyci(
   mod,
   list(btwn_con),
@@ -113,18 +139,17 @@ result <- psyci(
   legacy_anova = TRUE
 )
 legacy_table <- attr(result, "legacy_anova_table")
-raw_table[["df_error"]]
+```
+``` {r, display_legacy, echo = FALSE}
+legacy_table |> 
+  unclass() |> 
+  bind_rows() |> 
+  knitr::kable(digits = 3)
 ```
 
-The legacy table is printed once, before the raw and standardized confidence
-interval tables. It includes only supplied contrasts and their applicable error
-rows; it does not create absent between-by-within cross-products.
-
-Here is an example, that carries on from the last, for obtaining within subject 
-confidence intervals:
+Here is an example, that carries on from the last, for obtaining within-subjects confidence intervals:
 
 ```{r w_example}
-
 # define and mean-difference scale some within-subject contrasts
 emm_win <- emmeans(mod, "spacing")
 raw_con_w <- list(
@@ -136,15 +161,14 @@ con_w <- rescale_contrasts(raw_con_w, mode = "mean_difference")
 con_win <- contrast(emm_win, con_w)
 
 # generate 95% CIs for the within subjects contrasts
-psyci(model=mod, contrast_tables = list(con_win), method="ph")
-
-
+win_result <- psyci(
+  model = mod, 
+  contrast_tables = list(con_win),
+  method = "ph"
+)
 ```
 
-For pairwise correlated within-subject means, PsyR also provides the asymmetric
-noncentral-*t* standardized-effect interval proposed by Algina and Keselman
-(2003). It is opt-in, so existing calls retain the original Psy/Bird output.
-Use it with individual or Bonferroni intervals:
+For pairwise correlated within-subject means, PsyR also provides the asymmetric noncentral-*t* standardized-effect interval proposed by Algina and Keselman (2003). It is opt-in, so existing calls retain the original Psy/Bird output. Use it with individual or Bonferroni intervals:
 
 ```{r algina_keselman_example, eval = FALSE}
 result_ak <- psyci(
@@ -156,15 +180,9 @@ result_ak <- psyci(
 ak_table <- attr(result_ak, "scaled_tables")[[1]]
 ```
 
-The new `algina_keselman_ci()` function also exposes the calculation directly
-when an estimated contrast, its standard error, error degrees of freedom, and
-the appropriate sample-SD scaling divisor are already available.
-
-And finally, here is an example of how to generate CIs for between x within 
-contrasts, using the same post-hoc method:
+And finally, here is an example of how to generate CIs for between x within contrasts, using the same post-hoc method:
 
 ```{r bw_example}
-
 # get emms for each cell from the between x within design
 emm_int <- emmeans(mod, c("group", "spacing"))
 
@@ -175,17 +193,32 @@ emm_int <- emmeans(mod, c("group", "spacing"))
 
 con_int <- contrast(emm_int, interaction=list(con_b, con_w))
 # generate 95% CIs for the between x within subjects contrasts
-psyci(model=mod, contrast_tables = list(con_int), method="ph")
-
+psyci(
+  model = mod, 
+  contrast_tables = list(con_int), 
+  method = "ph"
+  )
 ```
 
-Or even better, you can do all three at once:
+The "contrast_tables" argument can also take in all stored contrasts within a `base::list()`
 
 ```{r all_example}
-
 # enter contrast tables in one long list
-
-psyci(model=mod, contrast_tables = list(btwn_con, con_win, con_int), 
-      method="ph")
-
+psyci(
+  model = mod, 
+  contrast_tables = list(btwn_con, con_win, con_int), 
+  method = "ph"
+  )
 ```
+
+## Getting Help
+
+To report a bug, create an issue [here](eventual_link_UNSW_git).
+
+--------------------------------------------------------------------
+
+```{r, echo = FALSE, fig.align = 'center', out.width = '50%'}
+knitr::include_graphics("./man/figures/logo.png")
+```
+
+------------------------------------------------------------------------
