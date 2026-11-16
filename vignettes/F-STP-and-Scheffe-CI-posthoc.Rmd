@@ -158,8 +158,9 @@ contrasts_w_cis <- psyci(
 
 ```{r, kable_output, echo = FALSE}
 contrasts_w_cis |> 
-  as.data.frame() |> 
-  select(!b.p_value:b.p_adjustment) |> 
+  unclass() |> 
+  bind_rows() |> 
+  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
   knitr::kable(digits = 3)
 ```
 
