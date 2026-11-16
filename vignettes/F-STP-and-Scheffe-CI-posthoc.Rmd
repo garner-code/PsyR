@@ -8,7 +8,7 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to conduct a post-hoc analysis of single-factor between-subjects data. To do so, we will utilise an an ANOVA-F Simultaneous Test Procedure (STP) with a Scheffé adjustment. We will then use PsyR to generate Simultaneous Confidence Intervals (SCIs) for each of our contrasts of interst, as outlined in @bird2004. This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
+A vignette to help understand how to use PsyR to conduct a post-hoc analysis of single-factor between-subjects data. To do so, we will utilise an an ANOVA-F Simultaneous Test Procedure (STP) with a Scheffé adjustment. We will then use PsyR to generate Simultaneous Confidence Intervals (SCIs) for each of our contrasts of inteerst, as outlined in @bird2004. This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
