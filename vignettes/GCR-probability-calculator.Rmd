@@ -8,7 +8,7 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to demonstrate how to use PsyR to manually calculate Roy's Greatest Characteristic Root (GCR), as described in @roy1957some. This is useful for...
+A vignette to demonstrate how to use PsyR to manually calculate *p*-values pertaining to Roy's Greatest Characteristic Root (GCR), as described in @roy1957some. For further reading, see @chiani2016 and @bird2002.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -36,44 +36,59 @@ head(social_anxiety, 5)
 Let's also tidy the data, pivoting it to wide-form.
 
 ```{r, wideform}
-
 social_anxiety  <- social_anxiety %>% 
   pivot_wider(
     names_from = Session, 
     values_from = Score
   )
-
 ```
 
-Now we run a MANOVA analysis to get Roy's GCR of the co-variance matrix.
+Using `stats::manova()`, let's generate a MANOVA analysis to obtain Roy's GCR of the co-variance matrix, and store the result in `fit`.
 
 ```{r, multimod}
-
 fit <- manova(cbind(Pre, Post, FU1, FU2) ~ Group, data = social_anxiety)
 summary(fit, test = "Roy")
-
 ```
 
-So we are working with a value of 0.3903
+Thus, Roy's GCR in the current model is `0.3903`.
 
-## compute probability
+## Compute Probability
 
-Now we compute the probability of observing a GCR of 0.39 of our analysis.
+Let's now compute the probability of observing this GCR in our current analysis. To do so, let's first store the `0.3903` in the `theta` object. Next, let's define our degrees of freedom, where:
+
+- `v_w` = $p -1 = 3$
+
+- `v_b` = $J - 1 = 2$
+
+- `v_e` = $N - J = 87$
 
 ```{r, set params}
+theta <- 0.3903
 
-theta = 0.3903
-v_w = 3 # df within = number of levels of the within subject factor - 1
-v_b = 2 # df between = number of levels of the between subject factor - 1
-v_e = 87 # df error = total number of subjects - number of groups
-
-
+v_w <- 3
+v_b <- 2
+v_e <- 87
 ```
 
-Now the parameters are set, we can observe the probability of theta given v_w, v_b, and v_e
+With our parameters set, we can now compute the probability of observing the root of a covariance matrix of size `theta` given $s$, $m$ and $n$ [@bird2002], where:
+
+- $s =$ min$(v_B, v_W)$
+
+- $m = \frac{(|v_B - v_W| - 1)}{2}$
+
+- $n = \frac{(|v_E - v_W| - 1)}{2}$
+
+`pgcr()` will take in `v_w`, `v_b` and `v_e` and use these values to compute $s$, $m$ and $n$. The function will then output the *p*-value of `theta` as compared to the GCR distribution for $s$, $m$ and $n$.
 
 ```{r, compute prob}
-
-p = pgcr(theta, v_w, v_b, v_e)
+p <- pgcr(theta, v_w, v_b, v_e)
 p
 ```
+
+Here, p \< .001. This indicates that the model contains significant effects, such that follow-up analysis is appropriate.
+
+```{r, echo = FALSE, fig.align = 'center', out.width = '50%'}
+knitr::include_graphics("../man/figures/logo.png")
+```
+
+------------------------------------------------------------------------
