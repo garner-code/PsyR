@@ -1,0 +1,180 @@
+---
+title: "f-stp-melanie"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{F-STP-and-Scheffe-CI-posthoc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+---
+
+A vignette to help understand how to use PsyR to conduct a post-hoc analysis of single-factor between-subjects data. To do so, we will conduct an ANOVA-F Simultaneous Test Procedure (STP) with a Scheffé adjustment. We will then use PsyR to generate Simultaneous Confidence Intervals (SCIs) for each of our contrasts of interest, as outlined in @bird2004. 
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## The Packages
+
+To use PsyR to calculate confidence intervals for contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r, loadpackages, message = FALSE, warning = FALSE}
+library(afex)
+library(emmeans)
+library(PsyR)
+library(tidyverse)
+```
+
+## The Data
+
+The `fatigue` dataframe contains the results of a between-subjects experiment examining the impact of driver fatigue on driving errors, where a higher score is indicative of poorer performance. Participants were assigned to one of 4 levels of driver fatigue: Alert, Mild, Moderate, and Extreme.
+
+Let's load the data, then call the `head()` function to print the first 5 rows.
+
+```{r loaddata}
+data(fatigue)
+head(fatigue, 5)
+```
+
+To learn more about the `fatigue` dataframe, call the help function using `?df`.
+
+```{r, whatfatigue, message = FALSE, warning = FALSE, eval = FALSE}
+?fatigue
+```
+
+Also, let's tidy up the data, labelling the levels of our independent variable for greater clarity.
+
+```{r sortfatigue}
+fatigue <- fatigue %>%
+  mutate(
+    Group = factor(
+      Group,
+      levels = c(1, 2, 3, 4),
+      labels = c("Alert", "Mild", "Moderate", "Extreme")
+    )
+  )
+```
+
+Next, let's print out sample means for each level of the driver fatigue factor. This will help us understand the layout of the data.
+
+```{r, sample_means}
+means <- fatigue %>%
+  group_by(Group) %>%
+  summarise(
+    mean_errors = mean(Errors)
+  )
+```
+```{r, sample_means_printed, echo = FALSE}
+means |> 
+  knitr::kable(digits = 3)
+```
+
+
+## The Analysis
+
+Here we will conduct an overall ANOVA-F test. If this returns a significant result (where F \> F~c~), we shall follow this up by constructing contrasts of interest, and then testing said contrasts.
+
+To generate and store this ANOVA-F test, let's do the following. Create the `mod` object, and then call `afex::aov_ez`. Place `id` in the "id" argument, `Errors` in the "dv" argument, the `fatigue` dataframe in the "data" argument, and our between-subjects factor `Group` in the "between" argument. Note that the generation and storage of this ANOVA model in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
+
+```{r, aov, message = FALSE, warning = FALSE}
+mod <- aov_ez(
+  "id",
+  "Errors",
+  fatigue,
+  between = "Group"
+)
+```
+
+```{r, aov_hidden, echo = FALSE}
+mod |> 
+  nice() |> 
+  knitr::kable(digits = 3)
+```
+
+Having established that our overall ANOVA-F test is significant, it is valid and worthwhile to continue with our analysis. Thus, let's generate and store group means for each level of the driver fatigue factor. To do so, create `emms` and call `emmeans::emmeans()`. Place the ANOVA model `mod` in the "Object" argument and the independent variable `Group` in the "Specs" argument. This output will eventually be used by PsyR to generate SCIs. Note that the displayed output below is curated such that only the correct output is shown.
+
+```{r, emms, message = FALSE, warning = FALSE}
+emms <- emmeans(mod, "Group")
+```
+
+```{r, emms_hidden, echo = FALSE}
+emms |> 
+  as.data.frame() |> 
+  select(Group:df) |> 
+  knitr::kable(digits = 3)
+```
+
+Time to define our contrasts! Here, the following four contrasts are chosen for analysis.
+
+- "Fatigue - Alert" ➞ The difference between the average number of driving errors made under the three fatigued conditions as compared to driving errors made when Alert.
+
+- "Extreme - Mod, Mild" ➞ The difference between the average number of driving errors made by participants in the Extreme fatigue condition as compared to the average of the number of driving errors made in the Moderate and Mild fatigue conditions.
+
+- "Low - High" ➞ The difference between the average number of driving errors made by participants in the of Alert and Mild fatigue conditions versus the average number of driving errors made by participants in the Moderate and Extreme fatigue conditions.
+
+- "Alert - Mild" ➞ The difference between the average number of driving errors made in the Alert and Mild fatigue conditions.
+
+```{r definecontrasts}
+between_contrasts = list(
+  "Fatigue - Alert" = c(-1, 1/3, 1/3, 1/3),
+  "Extreme - Mod, Mild" = c(0, -0.5, -0.5, 1),
+  "Low - High" = c(0.5, 0.5, -0.5, -0.5),
+  "Alert - Mild" = c(1, -1, 0, 0)
+)
+```
+
+Let's now generate and store statistical test output pertaining to each of our chosen contrasts. To do so, create `btwn_fx` and call `emmeans::contrast()`. Place `emms` in the "Object" argument, `between_contrasts` in the "Interaction" argument, and enact a Scheffé adjustment. Displayed below is a curated table with only the correct output generated by `emmeans::contrast()`.
+
+```{r, between_fx}
+btwn_fx <- contrast(emms, between_contrasts, adjust = "scheffe")
+```
+
+```{r, btwnfx_hidden, echo = FALSE}
+btwn_fx |> 
+  as.data.frame() |> 
+  select(contrast:df) |> 
+  knitr::kable(digits = 3)
+```
+
+We may now use PsyR to generate Scheffé adjusted SCIs and *p*-values for each of our contrast estimates. The creation of SCIs allows a researcher to not only understand whether a contrast has yielded a significant effect, but also to understand the directionality and magnitude of that effect. To generate SCIs with PsyR, let's use the `psyci()` function and specify the following:
+
+- The model is the previously made `mod` object, where the model must be made using the afex package (and of class afex_aov).
+
+- The contrast_tables argument is set as the previously made `btwn_fx` object. Of note, if one has multiple contrast tables this argument can also take in a list.
+
+- The method is set as "ph", creating confidence intervals (estimate ± SE · cc) using a post-hoc method [@bird2002].
+
+Note that PsyR infers the family and participating factors for every original `emmGrid`, and as such there is no need to specify these features in the `psyci()` function call.
+
+```{r, psyci}
+contrasts_w_cis <- psyci(
+  model = mod,
+  contrast_tables = list(btwn_fx),
+  method = "ph"
+)
+```
+
+```{r, kable_output, echo = FALSE}
+contrasts_w_cis |> 
+  unclass() |> 
+  bind_rows() |> 
+  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  knitr::kable(digits = 3)
+```
+
+## The Interpretation
+
+In creating SCIs, we gain insight into the results which exceeds that of a traditional approach using only hypothesis testing. For example, a basic interpretation of our results may look as follows:
+
+The "Fatigue - Alert", "Extreme - Mod, Mild", and "Low - High" contrasts capture significant effects. Compared to Alert drivers, drivers with any level of fatigue made between 2.877 and 9.123 more driving errors. Drivers with Extreme fatigue make between 4.187 and 10.813 more errors as compared to the average of driver errors made in the Moderate and Mild fatigue conditions. Drivers with Low fatigue (the average of Alert and Mild conditions) make between 4.295 and 9.705 fewer errors than those with High fatigue (the average of Moderate and Extreme conditions). However, the "Alert - Mild" contrast does not capture a significant effect; alert drivers make between 1.825 more and 5.825 less driving errors than drivers with mild fatigue.
+
+------------------------------------------------------------------------
+
+```{r, echo = FALSE, fig.align = 'center', out.width = '50%'}
+knitr::include_graphics("../man/figures/logo.png")
+```
+
+------------------------------------------------------------------------
