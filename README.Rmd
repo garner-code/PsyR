@@ -127,9 +127,9 @@ scaled_table |>
   knitr::kable(digits = 3)
 ```
 
-It is possible to print Psy's legacy SS/df/MS/F layout for the supplied contrasts. The legacy table is printed once, before the raw and standardized confidence interval tables. It includes only supplied contrasts and their applicable error rows; it does not create absent between-by-within cross-products.
+It is possible to print Psy's legacy layout for the supplied contrasts. This will contain values for each contrast's sum of squares, degrees of freedom, mean squares error, and F statistic.
 
-To print Psy's legacy layout, set `legay_anova` as TRUE within the `psyci()` call.
+To print Psy's legacy layout, set `legacy_anova` as TRUE within the `psyci()` call.
 
 ```{r legacy_anova_example}
 result <- psyci(
@@ -182,7 +182,7 @@ ak_table <- attr(result_ak, "scaled_tables")[[1]]
 
 And finally, here is an example of how to generate CIs for between x within contrasts, using the same post-hoc method:
 
-```{r bw_example}
+```{r bw_example, eval = FALSE}
 # get emms for each cell from the between x within design
 emm_int <- emmeans(mod, c("group", "spacing"))
 
@@ -202,7 +202,7 @@ psyci(
 
 The "contrast_tables" argument can also take in all stored contrasts within a `base::list()`
 
-```{r all_example}
+```{r all_example, eval = FALSE}
 # enter contrast tables in one long list
 psyci(
   model = mod, 
