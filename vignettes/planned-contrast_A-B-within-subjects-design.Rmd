@@ -8,7 +8,7 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to demonstrate a planned contrast analysis of a factorial within- x within-subjects design using a multivariate model [@bird2004]. Specifically, this vignette highlights how one may use PsyR to create Simultaneous Confidence Intervals (SCIs) which allow a researcher to understand the magnitude of an effect.
+A vignette to demonstrate a planned contrast analysis of a factorial within- x within-subjects design using a multivariate model [@bird2004]. Specifically, this vignette highlights how one may use PsyR to create Simultaneous Confidence Intervals (SCIs) which allow a researcher to better understand the magnitude and directionality of an effect captured by any given contrast.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -71,9 +71,7 @@ distraction %>%
 
 ## The Analysis
 
-Let's prepare to run some statistical tests!
-
-Here we will create the building blocks for an ANOVA model in the first instance, and later our SCIs. To start, let's create the object `mod` by calling the `afex::aov_ez()` function. Note that the generation and storage of this ANOVA model in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR. Place the `Subject` column in the ID argument, `Performance` as the dependent variable, `distraction` as the dataframe, and `Auditory` and `Visual` as the within-subjects factors.
+Let's now begin laying the foundation for the eventual creation of SCIs pertaining to our contrasts of interest. First, let's generate and store an ANOVA model. To do so, create the object `mod`, within which we will store the output of a call of `afex::aov_ez()`. Note that the generation and storage of this ANOVA model in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR. Place the `Subject` column in the ID argument, `Performance` as the dependent variable, `distraction` as the dataframe, and `Auditory` and `Visual` as the within-subjects factors.
 
 ```{r, aov, message = FALSE, warning = FALSE}
 afex_options(emmeans_model = "multivariate")
@@ -88,7 +86,7 @@ mod <- aov_ez(
 
 Time to define our contrasts!
 
-Given this is a planned analysis, contrasts must be defined prior to data collection. In this example, the following contrasts are chosen for analysis:
+Given this is a planned analysis, contrasts must be defined prior to viewing the data. In this example, the following contrasts are chosen for analysis:
 
 **Auditory Distraction Main Effects Contrasts**
 
@@ -240,7 +238,7 @@ knitr::kable(display_ind, digits = 3)
 
 ## The Interpretation
 
-By using PsyR to generate SCIs, one can understand the effect captured by a contrast with respect to the magnitude and directionality of the effect. For example, and with reference to the output generated when controlling at the PCER, an interpretation of the chosen interaction contrasts may look as follows.
+By using PsyR to generate SCIs, one can understand the effect captured by a contrast with respect to the magnitude and directionality of the effect. For example, and with reference to the output generated when controlling at the PCER, an interpretation of the interaction contrasts may look as follows.
 
 - Exposure to some level of visual distraction (dissimilar or similar) as compared to no visual distraction resulted in between 7.449 and 1.551 fewer trial completions when in the high auditory distraction condition as compared to the average of the medium or low auditory distraction conditions. However, there was not a significant difference between the low and medium auditory distraction conditions (-7.102, 1.102).
 
