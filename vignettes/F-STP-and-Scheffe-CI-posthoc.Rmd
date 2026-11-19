@@ -8,7 +8,8 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to help understand how to use PsyR to conduct a post-hoc analysis of single-factor between-subjects data. To do so, we will utilise an an ANOVA-F Simultaneous Test Procedure (STP) with a Scheffé adjustment. We will then use PsyR to generate Simultaneous Confidence Intervals (SCIs) for each of our contrasts of inteerst, as outlined in @bird2004. This method is appropriate when participants are randomly allocated, and only 1 Independent Variable (with J levels) is present.
+
+A vignette to help understand how to use PsyR to conduct a post-hoc analysis of single-factor between-subjects data. To do so, we will conduct an ANOVA-F Simultaneous Test Procedure (STP) with a Scheffé adjustment. We will then use PsyR to generate Simultaneous Confidence Intervals (SCIs) for each of our contrasts of interest, as outlined in @bird2004. 
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -30,7 +31,7 @@ library(tidyverse)
 
 ## The Data
 
-The `fatigue` dataframe contains the results of a between-subjects experiment examining the impact of driver fatigue on driving errors, where a higher score is indicative of poorer performance. Participants were assigned to one of *J* = 4 levels of driver fatigue: Alert, Mild, Moderate, and Extreme.
+The `fatigue` dataframe contains the results of a between-subjects experiment examining the impact of driver fatigue on driving errors, where a higher score is indicative of poorer performance. Participants were assigned to one of 4 levels of driver fatigue: Alert, Mild, Moderate, and Extreme.
 
 Let's load the data, then call the `head()` function to print the first 5 rows.
 
@@ -58,21 +59,24 @@ fatigue <- fatigue %>%
   )
 ```
 
-Next, let's visualise our data. Doing so allows us to more intuitively understand its layout. This is especially important in a post-hoc analysis, where contrasts of interest may be defined after looking at the pattern of sample means in the data.
+Next, let's print out sample means for each level of the driver fatigue factor. This will help us understand the layout of the data.
 
-```{r boxplotit, fig.width = 7, fig.height = 4}
-fatigue %>%
-  ggplot(aes(x = Group, y = Errors, fill = Group)) +
-  geom_boxplot() +
-  theme_classic(base_size = 14) +
-  theme(legend.position = "none")
+```{r, sample_means}
+means <- fatigue %>%
+  group_by(Group) %>%
+  summarise(
+    mean_errors = mean(Errors)
+  )
+```
+```{r, sample_means_printed, echo = FALSE}
+means |> 
+  knitr::kable(digits = 3)
 ```
 
-As an example, one observation that may inform a contrast could be the following: the number of driving errors increases as level of fatigue increases, and this increase is particularly strong when comparing members in the "Extreme" condition to the other conditions.
 
 ## The Analysis
 
-Here we will conduct an overall ANOVA-F test. If this returns a significant result (where F \> F~c~), we shall follow this up by constructing and simultaneously testing contrasts of interest. An ANOVA-F test allows an ⍺-level test of the null hypothesis: that, at the population level, no difference exists between conditions. Should F \> F~c~, a heterogeneity inference may be made. Thus, the ANOVA F-test essentially pre-screens the data, assessing whether any contrasts with significant effects exist. However, it should be noted that a significant ANOVA-F test result does not guarantee said contrasts will be interpretable.
+Here we will conduct an overall ANOVA-F test. If this returns a significant result (where F \> F~c~), we shall follow this up by constructing contrasts of interest, and then testing said contrasts.
 
 To generate and store this ANOVA-F test, let's do the following. Create the `mod` object, and then call `afex::aov_ez`. Place `id` in the "id" argument, `Errors` in the "dv" argument, the `fatigue` dataframe in the "data" argument, and our between-subjects factor `Group` in the "between" argument. Note that the generation and storage of this ANOVA model in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
 
@@ -91,7 +95,7 @@ mod |>
   knitr::kable(digits = 3)
 ```
 
-Having established that our overall ANOVA-F test is significant, it is valid and worthwhile to continue with our analysis. Thus, let's generate and store group means for each level of the driver fatigue factor. To do so, create `emms` and call `emmeans::emmeans()`. Place the ANOVA model `mod` in the "Object" argument and a the independent variable `Group` in the "Specs" argument. This output will eventually be used by PsyR to generate SCIs. Note that the displayed output below is curated such that only the correct output is shown.
+Having established that our overall ANOVA-F test is significant, it is valid and worthwhile to continue with our analysis. Thus, let's generate and store group means for each level of the driver fatigue factor. To do so, create `emms` and call `emmeans::emmeans()`. Place the ANOVA model `mod` in the "Object" argument and the independent variable `Group` in the "Specs" argument. This output will eventually be used by PsyR to generate SCIs. Note that the displayed output below is curated such that only the correct output is shown.
 
 ```{r, emms, message = FALSE, warning = FALSE}
 emms <- emmeans(mod, "Group")
@@ -104,9 +108,7 @@ emms |>
   knitr::kable(digits = 3)
 ```
 
-Time to define our contrasts!
-
-In a post-hoc analysis, one should define contrasts with reference to the stated aims of the research, the pattern of sample means, and the maximal contrast. Here, the following four contrasts are chosen for analysis.
+Time to define our contrasts! Here, the following four contrasts are chosen for analysis.
 
 - "Fatigue - Alert" ➞ The difference between the average number of driving errors made under the three fatigued conditions as compared to driving errors made when Alert.
 
@@ -166,27 +168,9 @@ contrasts_w_cis |>
 
 ## The Interpretation
 
-In creating SCIs, we gain insight into the results which exceeds that of a traditional approach using only hypothesis testing. An interpretation of these results may look as follows.
+In creating SCIs, we gain insight into the results which exceeds that of a traditional approach using only hypothesis testing. For example, a basic interpretation of our results may look as follows:
 
-There is evidence of significant differences in the "Fatigue - Alert", "Extreme - Mod, Mild", and "Low - High" contrasts (*p* \< .001). Specifically:
-
-- Compared to Alert drivers, drivers with any level of fatigue made between 2.877 and 9.123 more driving errors.
-
-- Drivers with Extreme fatigue make between 4.187 and 10.813 more errors as compared to the average of driver errors made in the Moderate and Mild fatigue conditions.
-
-- Drivers with Low fatigue (the average of Alert and Mild conditions) make between 4.295 and 9.705 fewer errors than those with High fatigue (the average of Moderate and Extreme conditions).
-
-There is insufficient evidence to suggest a significant difference exists in the "Alert - Mild" contrast (p \> .05).
-
-- Alert drivers may make 5.825 fewer or 1.825 more driving errors than their Mildly fatigued counterparts.
-
-Such specificity is especially useful if thresholds of importance are introduced. For example, imagine that following new government guidelines, the researcher was only interested in interventions that resulted in a difference of **3 driving errors**. The addition of this stipulation once again alters our analysis. For example:
-
-- Compared to Alert drivers, having any level of fatigue results in between 2.877 and 9.123 more driving errors. While a significant effect has been detected, we cannot determine whether this effect meets the importance criterion set out by the government (as the lower bound 2.877 \< 3).
-
-- Alert drivers may make 5.825 fewer or 1.825 more mistakes than their Mildly fatigued counterparts. Thus, while no significant effect has been detected, it can be said with 95% confidence that Alert drivers may make an important amount fewer mistakes than Mildly fatigued drivers (5.825 \> 3), but do not make an important amount more mistakes than Mildly fatigued drivers (1.825 \< 3).
-
-Finally, in lieu of specific values, thresholds of importance may be defined according to standardised units using guidelines such as Cohen's *d* to determine importance [@cohen2013]. While not shown in this vignette, `psyci()` automatically produces a second output scaled in standard units. This scaling is generated by dividing the raw output by the within-group standard deviation (the square root of the within-group mean square error).
+The "Fatigue - Alert", "Extreme - Mod, Mild", and "Low - High" contrasts capture significant effects. Compared to Alert drivers, drivers with any level of fatigue made between 2.877 and 9.123 more driving errors. Drivers with Extreme fatigue make between 4.187 and 10.813 more errors as compared to the average of driver errors made in the Moderate and Mild fatigue conditions. Drivers with Low fatigue (the average of Alert and Mild conditions) make between 4.295 and 9.705 fewer errors than those with High fatigue (the average of Moderate and Extreme conditions). However, the "Alert - Mild" contrast does not capture a significant effect; alert drivers make between 1.825 more and 5.825 less driving errors than drivers with mild fatigue.
 
 ------------------------------------------------------------------------
 
