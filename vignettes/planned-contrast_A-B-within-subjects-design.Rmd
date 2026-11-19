@@ -244,8 +244,10 @@ By using PsyR to generate SCIs, one can understand the effect captured by a cont
 
 - Exposure to a dissimilar visual distractor, as compared to a similar visual distractor, resulted in between 0.132 and 5.868 more trial completions when in the high auditory distraction condition as compared to the average of the medium or low auditory distraction conditions. However, there was not a significant difference between the low and medium auditory distractions conditions (-6.089, 2.089).
 
+---------------------------------------------------------
+
 ```{r, echo = FALSE, fig.align = 'center', out.width = '50%'}
 knitr::include_graphics("../man/figures/logo.png")
 ```
 
-------------------------------------------------------------------------
+---------------------------------------------------------
