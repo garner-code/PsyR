@@ -28,7 +28,7 @@ features. Warning: this version may contain bugs!
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("garner-code/PsyR")
+pak::pak("garner-code/PsyR")
 ```
 
 ## Cheat Sheet

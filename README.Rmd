@@ -36,7 +36,7 @@ Alternatively, you can install the development version of PsyR from [GitHub](eve
 
 ```{r, eval = FALSE}
 # install.packages("devtools")
-devtools::install_github("garner-code/PsyR")
+pak::pak("garner-code/PsyR")
 ```
 
 ## Cheat Sheet
