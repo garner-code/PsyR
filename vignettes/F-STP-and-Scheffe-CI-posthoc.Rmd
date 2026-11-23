@@ -82,9 +82,9 @@ To generate and store this ANOVA-F test, let's do the following. Create the `aov
 
 ```{r, aov, message = FALSE, warning = FALSE}
 aov_out <- aov_ez(
-  "id",
-  "Errors",
-  fatigue,
+  id = "id",
+  dv = "Errors",
+  data = fatigue,
   between = "Group",
   anova_table = list(correction = "none")
 )
