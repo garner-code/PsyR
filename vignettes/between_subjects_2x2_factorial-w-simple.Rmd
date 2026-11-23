@@ -7,12 +7,19 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 bibliography: references.bib
 ---
+``` {r, flextable_settings, echo = FALSE}
+flextable::set_flextable_defaults(
+  theme_fun = "theme_apa",
+  table_align = "center",
+  digits = 4
+)
+```
 
-A vignette to demonstrate a planned contrast analysis for 2 x 2 between-subjects designs with simple effects, as described in chapter 4 of @bird2004. An analysis of simple effects allows a researcher to better understand interaction contrasts. This is because an interaction contrast may be divided into two constituent simple effects contrasts. A simple effects contrast compares cell mean differences at one level of a factor by the level (or levels) of the other factor while controlling the Family Wise Error Rate (FWER) at ⍺. This vignette will demonstrate a simple effects analysis where a single non-standard all-factorial contrasts family is defined. By defining a single family, this procedure allows for investigation of simple effects, main effects and interaction effects across both factors while protecting the FWER from inflating above the nominal ⍺. Further, the approach detailed in this vignette maximises power as compared to a traditional ANOVA F simultaneous test procedure approach to simple effects analysis.
+A vignette to demonstrate a planned contrast analysis for 2 x 2 between-subjects designs with simple effects, as described in chapter 4 of @bird2004. Specifically, PsyR will be used to generate Simultaneous Confidence Intervals (SCIs) for each contrast of interest, from which one can better understand the magnitude and directionality of an effect captured by a contrast.
 
 ## The Packages
 
-To use PsyR to calculate simultaneous confidence intervals, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use PsyR to calculate confidence intervals for contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to generate ANOVA output, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(afex)
@@ -56,30 +63,31 @@ Next, let's visualise our data. Doing so allows us to more intuitively understan
 ```{r graphit, fig.width = 7, fig.height = 4}
 drive_sleepy |> 
   ggplot(aes(x = nvh, y = performance, colour = sleep_deprivation, shape = sleep_deprivation)) +
-    stat_summary(fun = mean, geom = "point", size = 3, aes(group = sleep_deprivation)) +
-    stat_summary(fun = mean, geom = "line", aes(group = sleep_deprivation)) +
-    theme_classic(base_size = 14) +
+  stat_summary(fun = mean, geom = "point", size = 3, aes(group = sleep_deprivation)) +
+  stat_summary(fun = mean, geom = "line", aes(group = sleep_deprivation)) +
+  theme_classic(base_size = 14) +
   theme(legend.position = c(.85, .50))
 ```
 
 ## The Analysis
 
-Here we will generate the necessary statistical output from which to use PsyR to construct our Simultaneous Confidence Intervals (SCIs).
+Here we will generate the necessary statistical output from which to use PsyR to construct SCIs.
 
-To start, let's generate an ANOVA model using `afex::aov_ez()`, and store it in the `mod` object. To do so, place `subID` in the "id" argument, `performance` in the "dv" argument, the `drive_sleepy` dataframe in the "data" argument, and our between-subjects factors as a vector in the "between" argument. Note that the generation and storage of this ANOVA model in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
+To start, let's generate ANOVA output using `afex::aov_ez()`, and store it in the `aov_out` object. To do so, place `subID` in the "id" argument, `performance` in the "dv" argument, the `drive_sleepy` dataframe in the "data" argument, and our between-subjects factors as a vector in the "between" argument. Note that the generation and storage of `afex::aov_ez()` output in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
 
 ```{r model, message = FALSE, warning = FALSE}
-mod <- aov_ez(
-  "subID",
-  "performance",
-  drive_sleepy,
-  between = c("sleep_deprivation", "nvh")
+aov_out <- aov_ez(
+  id = "subID",
+  dv = "performance",
+  data = drive_sleepy,
+  between = c("sleep_deprivation", "nvh"),
+  anova_table = list(correction = "none")
 )
 ```
 
 Time to define our contrasts!
 
-Assembly of contrasts in this design will follow a slightly different workflow to other designs without simple effects. Following the Studentized Maximum Root (SMR) procedure outlined on pages 353 and 354 of @bird2005, we will place our contrasts of interest into a set of lists and then define our SMR parameters based on our family of models. For this analysis, we will define one all factorial family: A(b) $\cap$ B(a). This will allow us to investigate planned A and B main effects contrasts, their product interaction contrasts, and any planned simple effects contrasts pertaining to both the A and B families.
+Assembly of contrasts in this design will follow a slightly different workflow to other designs without simple effects. Following the Studentized Maximum Root (SMR) procedure outlined on pages 353 and 354 of @bird2005, we will place our contrasts of interest into a set of lists and then define our SMR parameters based on our family of models. We will define one all factorial family which will allow us to investigate planned A and B main effects contrasts, their product interaction contrasts, and any planned simple effects contrasts pertaining to both the A and B families.
 
 To start, let's define our between-subjects main effects contrasts for each factor and store them using `base::list()` within the `btwn_cont` object. These contrasts must be defined in mean difference scaling. The planned main effects contrasts are as follows:
 
@@ -94,71 +102,84 @@ btwn_cont <- list(
 )
 ```
 
-Next, let's generate and store cell means pertaining to the cross-over of each level of each factor. To do so, create `emms` and call `emmeans::emmeans()`. Place the ANOVA model `mod` in the "Object" argument and a vector containing our independent variables in the "Specs" argument. 
+Next, let's generate and store cell means for our data. To do so, create `emms` and call `emmeans::emmeans()`. Place `aov_out` in the "Object" argument and a vector containing our independent variables in the "Specs" argument. 
 
 ```{r, cellmeans}
-emms <- emmeans(mod, c("sleep_deprivation", "nvh"))
+emms <- emmeans(
+  object = aov_out, 
+  specs = c("sleep_deprivation", "nvh")
+)
 ```
 ``` {r, cellmeanshidden, echo = FALSE}
 emms |> 
   as.data.frame() |>  
-  select(sleep_deprivation:df) |> 
-  knitr::kable(digits = 3)
+  select(sleep_deprivation:emmean) |> 
+  flextable::flextable()
 ```
 
-Let's now generate and store statistical tests of each of our main effects contrasts. To do so, create `mfx` and call `emmeans::contrast()`. Place `emms` in the "Object" argument and `btwn_cont` in the "Interaction" argument. Displayed below is a curated table with only the correct output generated by `emmeans::contrast()`. Generating this output is necessary for when we later apply an SMR correction.
+Let's now generate and store statistical tests of each of our main effects contrasts. To do so, create `mfx` and call `emmeans::contrast()`. Place `emms` in the "Object" argument and `btwn_cont` in the "Method" argument. Displayed below is a curated table with only the correct output generated by `emmeans::contrast()`. Generating this output is necessary for when we later apply an SMR correction.
 
 ```{r contrasts}
-mfx <- contrast(emms, btwn_cont)
+mfx <- contrast(
+  object = emms,
+  method = btwn_cont
+)
 ```
 ``` {r, contrastshidden, echo = FALSE}
 mfx |> 
   as.data.frame() |> 
   select(contrast:df) |> 
-  knitr::kable(digits = 3)
+  flextable::flextable()
 ```
 
-We must also define our interaction contrast, which is the interaction scaled product of the main effects contrasts of sleep deprivation and NVH. For the sake of clarity this contrasts has been defined separately in this vignette, but it is also possible to add this contrast to the above `btwn_cont` list.
+We must also define our interaction contrast, which is the interaction scaled product of the main effects contrasts of sleep deprivation and NVH. For the sake of clarity, this contrast has been defined separately in this vignette, but it is also possible to add this contrast to the above `btwn_cont` list.
 
-- "int" ➞ The difference between driving performance scores at the average of high NVH + twelve hours of sleep deprivation and low NVH + zero hours of sleep deprivation versus at the average of low NVH + twelve hours of sleep deprivation and high NVH + zero hours of sleep deprivation. This is the product of each of our between-subjects main effects contrasts, in interaction scaling.
+- "int" ➞ The product of each of our between-subjects main effects contrasts, in interaction scaling.
 
 ```{r interaction_contrast}
-int <- contrast(emms, list("int" = c(1, -1, -1, 1)))
+int <- contrast(
+  object = emms, 
+  method = list("int" = c(1, -1, -1, 1))
+)
 ```
 ``` {r, inthidden, echo = FALSE}
 int |> 
   as.data.frame() |> 
   select(contrast:df) |> 
-  knitr::kable(digits = 3)
+  flextable::flextable()
 ```
 
-Next, let's produce simple effects contrasts of NVH at each level of sleep deprivation and of sleep deprivation at each level of NVH. First, create the `nvh_by_sleep_dep` object. This takes in a model which attempts to predict our previously made `mod` (which, as a reminder, is an ANOVA model containing simultaneous tests of the main effects of sleep deprivation, NVH and their interaction) by using driving error scores at each level of NVH. Next, create the `simp_fx_contrast` object which will take in a contrast defined within a `base::list()` which will be used to generically compare two levels of the same factor. Finally, create `nvh_simp_fx`, an object containing statistical output pertaining to two simple effects contrasts examining the effect of NVH in participants with twelve hours of sleep deprivation versus that same effect in participants with zero hours of sleep deprivation.
+Next, let's produce simple effects contrasts of NVH at each level of sleep deprivation and of sleep deprivation at each level of NVH. First, create the `nvh_by_sleep_dep` object. This will store a model which attempts to predict our previously made `aov_out` by using driving error scores at each level of NVH. Next, create the `simp_fx_contrast` object which will store a contrast defined within a `base::list()` which will be used to generically compare two levels of the same factor. Finally, create `nvh_simp_fx`, an object which will store statistical output pertaining to two simple effects contrasts examining the effect of NVH in participants with twelve hours of sleep deprivation versus that same effect in participants with zero hours of sleep deprivation.
 
 ```{r nvh_at_sleep_dep}
-nvh_by_sleep_dep <- emmeans(mod, ~ nvh | sleep_deprivation)
+nvh_by_sleep_dep <- emmeans(aov_out, ~ nvh | sleep_deprivation)
 simp_fx_contrast  <- list("sfx" = c(1, -1))
-nvh_simp_fx <- contrast(nvh_by_sleep_dep, method = simp_fx_contrast)
+nvh_simp_fx <- contrast(
+  object = nvh_by_sleep_dep, 
+  method = simp_fx_contrast
+)
 ```
 ```{r, kable_nvh, echo = FALSE}
-nvh_display <- as.data.frame(nvh_simp_fx)
-
-nvh_display |> 
+nvh_simp_fx |> 
+  as.data.frame() |> 
   select(contrast:df) |> 
-  knitr::kable(digits = 3)
+  flextable::flextable()
 ```
 
 Following similar steps, let's also produce simple effects contrasts of sleep deprivation at both high and low NVH.
 
 ```{r sleep_dep_at_nvh}
-sleep_dep_by_nvh <- emmeans(mod, ~ sleep_deprivation | nvh)
-sdep_simp_fx <- contrast(sleep_dep_by_nvh, method = simp_fx_contrast)
+sleep_dep_by_nvh <- emmeans(aov_out, ~ sleep_deprivation | nvh)
+sdep_simp_fx <- contrast(
+  object = sleep_dep_by_nvh, 
+  method = simp_fx_contrast
+)
 ```
 ```{r, kable_sdep, echo = FALSE}
-sdep_display <- as.data.frame(sdep_simp_fx)
-
-sdep_display |> 
+sdep_simp_fx |> 
+  as.data.frame() |> 
   select(contrast:df) |> 
-  knitr::kable(digits = 3)
+  flextable::flextable()
 ```
 
 Finally, let's apply the SMR correction to all our contrasts and produce their corresponding SCIs. To do so, we first need to create the `all_fx` and `alphas` objects. `all_fx` will take in a vector containing all contrasts tables, and `alphas` will be set at the nominal ⍺ = .05. Note that ⍺ levels will be be adjusted by the `psyci()` function to ensure the appropriate alpha is used per contrast.
@@ -167,11 +188,11 @@ Next, create the object `smr_params` using the `base::list()` function. Within t
 
 Finally, create the `output` object by calling `psyci()`, where:
 
-- The model is set as the previously made `mod` object, where the model must be made using the afex package (and of class afex_aov).
+- The model is set as the previously made `aov_out` object, where the model must be made using the afex package (and of class afex_aov).
 
 - The contrast_tables argument is set as the previously made `all_fx` list.
 
-- The method is set as "smr", constructing confidence intervals according to the SMR method set out in pages 359 - 360 of @bird2005. Here, $CC = \sqrt{SMR_{⍺*;p,qν_{E}}}$ and CIs are constructed where $\psi ∈ \hat{\psi} ± CC · SE$.
+- The method is set as "smr", constructing confidence intervals according to the SMR method set out in pages 359 - 360 of @bird2005.
 
 - Alpha is set at `alphas` (both here and by default), indicating the desired type I error rate. The `psyci()` function will adjust the nominal ⍺ to be appropriate per contrast so as to indirectly control the FWER \< .05.
 
@@ -191,7 +212,7 @@ smr_params <- list(
 )
 
 output <- psyci(
-  model = mod,
+  model = aov_out,
   contrast_tables = all_fx,
   method = "smr",
   smr_params = smr_params,
@@ -205,24 +226,23 @@ output %>%
   mutate(sfx = coalesce(sleep_deprivation, nvh)) %>%
   select(contrast:F_value, p_value_adjusted, cc:upper, sfx) %>% 
   relocate(contrast, sfx) %>%
-  knitr::kable(digits = 3)
+  flextable::flextable() %>%
+  flextable::width(j = 2, width = 4, unit = "cm")
 ```
 
 ## The Interpretation
 
 A simple effects analysis allows one to isolate and understand an interaction effect. This analysis is enhanced by creating SCIs which allow a researcher to understand the magnitude of effects pertaining to each contrast. SCIs thus facilitate comparison of effect sizes which can give greater clarity as to what is driving an interaction effect. For example, with reference to the current example's interaction effect, the following may be said.
 
-There is an interaction between sleep deprivation and NVH; when comparing participants at twelve hours of sleep deprivation to those with no sleep deprivation, the effect of high NVH was more pronounced in non-sleep deprived participants than in those with twelve hours of sleep deprivation (-16.422, -4.938)
+- There is an interaction between sleep deprivation and NVH. When comparing participants at twelve hours of sleep deprivation to those with no sleep deprivation, the effect of high NVH resulted in between 4.94 and 16.42 more driving errors than in those with twelve hours of sleep deprivation.
 
 To understand what may be driving this interaction, we may look towards simple effects contrasts.
 
-- When at twelve hours of sleep deprivation, there is insufficient evidence to suggest that NVH levels cause a difference in driving performance (-6.101, 2.021). However, participants at zero hours of sleep deprivation performed significantly worse when experiencing high rather than low NVH (4.579, 12.701). 
+- When at twelve hours of sleep deprivation, there is insufficient evidence to suggest that NVH levels cause a difference in driving performance (-6.101, 2.021). However, participants at zero hours of sleep deprivation performed between 4.58 and 12.70 more driving errors when experiencing high rather than low NVH.
 
-- When experiencing high levels of NVH, participants with twelve hours of sleep deprivation make more driving errors than participants with zero hours (2.579, 10.701). When experiencing low levels of NVH, this effect is directionally the same but of larger magnitude; participants with twelve hours of sleep deprivation make more driving errors than participants with zero hours (13.259, 21.381). Further, because this pair of simple effects contrasts contains non-overlapping SCIs, as the upper limit of A(b1) = 10.701 < lower limit of A(b2) = 13.259, we can make a stonger inference that this is likely representative of the true effect at the population level.
+- When experiencing high levels of NVH, participants with twelve hours of sleep deprivation made between 2.58 and 10.70 more driving errors than participants with zero hours. Likewise, when experiencing low levels of NVH, participants with twelve hours of sleep deprivation make between 13.26 and 21.38 more driving errors than participants with zero hours. Further, because this pair of simple effects contrasts contains non-overlapping SCIs, as the upper limit of A(b1) = 10.701 < lower limit of A(b2) = 13.259, we can make a stronger inference that this is likely representative of the true effect at the population level.
 
 Thus, the AB interaction effect of sleep deprivation x NVH seems to be driven by the simple effect of NVH at each level of sleep deprivation, where the effects of sleep deprivation are most pronounced when NVH is low.
-
-Finally, SCIs are also useful when thresholds of importance are introduced. Suppose that, following new guidelines, only differences in driving performance of **equal to or greater than 2 units** are of interest. With this stipulation, our analysis changes. For example, the main effect of NVH, while significant, may no longer be deemed important (as 0.429 \< 2).
 
 ------------------------------------------------------------------------
 
