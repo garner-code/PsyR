@@ -37,7 +37,7 @@ library(tidyverse)
 
 ## The Data
 
-The `distraction` dataframe contains the results of a (3 x 3) within-subjects factorial design. Here, *N* = 10 participants were asked to respond within a period of time to the presentation of a target stimulus viewed under three levels of auditory distraction (low, medium, high) and three levels of visual distraction (none, dissimilar, similar) such that *p* = 9. The dependent variable is the number of trials upon which participants responded within the required time period to the target stimulus, with a higher score indicating better performance.
+The `distraction` dataframe contains the results of a (3 x 3) within-subjects factorial design. Here, *N* = 10 participants were asked to respond within a period of time to the presentation of a target stimulus viewed under three levels of auditory distraction (low, medium, high) and three levels of visual distraction (none, dissimilar, similar). The dependent variable is the number of trials upon which participants responded within the required time period to the target stimulus, with a higher score indicating better performance.
 
 Let's load the data, then call the `head()` function to print the first 5 rows.
 
@@ -104,7 +104,7 @@ Given this is a planned analysis, contrasts must be defined prior to viewing the
 
 **Visual Distraction Main Effects Contrasts**
 
-- "None - Some" ➞ The difference between the number of completed trials when in the no visual distraction condition as compared tothe number of completed trials averaged across the dissimilar and similar visual distraction conditions.
+- "None - Some" ➞ The difference between the number of completed trials when in the no visual distraction condition as compared to the number of completed trials averaged across the dissimilar and similar visual distraction conditions.
 
 - "Dissim - Sim" ➞ The difference between the number of completed trials when in the dissimilar visual distraction condition as compared to the number of completed trials in the similar visual distraction condition.
 
@@ -120,7 +120,7 @@ vis_contrasts <- list(
 )
 ```
 
-Let's now generate and store the the row means for the levels of the auditory-distraction factor (collapsed across all levels of visual distraction). To do so, create the `emms_aud` object. Then, call `emmeans::emmeans()` and place `aov_out` in the "Object" argument and the `Auditory` column in the "Specs" argument.
+Let's now generate and store the the row means for the levels of the auditory-distraction factor (collapsed across all levels of visual-distraction). To do so, create the `emms_aud` object. Then, call `emmeans::emmeans()` and place `aov_out` in the "Object" argument and the `Auditory` column in the "Specs" argument.
 
 ```{r, emms_aud}
 emms_aud <- emmeans(
