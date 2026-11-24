@@ -97,7 +97,7 @@ aov_out |>
   flextable::flextable()
 ```
 
-Having established that our overall ANOVA-F test is significant, it is valid and worthwhile to continue with our analysis. Thus, let's generate and store group means for each level of the driver fatigue factor. To do so, create `emms` and call `emmeans::emmeans()`. Place `aov_out` in the "Object" argument and the independent variable `Group` in the "Specs" argument. This output will eventually be used by PsyR to generate SCIs. Note that the displayed output below is curated such that only the correct output is shown.
+Having established that our overall ANOVA-F test is significant, it is valid and worthwhile to continue with our analysis. Thus, let's generate and store group means for each level of the driver fatigue factor. To do so, create `emms` and call `emmeans::emmeans()`. Place `aov_out` in the "Object" argument and the independent variable `Group` in the "Specs" argument. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
 
 ```{r, emms, message = FALSE, warning = FALSE}
 emms <- emmeans(

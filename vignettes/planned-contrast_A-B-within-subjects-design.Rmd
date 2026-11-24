@@ -120,7 +120,7 @@ vis_contrasts <- list(
 )
 ```
 
-Let's now generate and store the the row means for the levels of the auditory-distraction factor (collapsed across all levels of visual-distraction). To do so, create the `emms_aud` object. Then, call `emmeans::emmeans()` and place `aov_out` in the "Object" argument and the `Auditory` column in the "Specs" argument.
+Let's now generate and store the the row means for the levels of the auditory-distraction factor (collapsed across all levels of visual-distraction). To do so, create the `emms_aud` object. Then, call `emmeans::emmeans()` and place `aov_out` in the "Object" argument and the `Auditory` column in the "Specs" argument. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
 
 ```{r, emms_aud}
 emms_aud <- emmeans(

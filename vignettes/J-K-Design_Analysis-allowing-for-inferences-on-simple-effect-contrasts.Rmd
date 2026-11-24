@@ -89,7 +89,7 @@ Here we will generate the necessary statistical output from which to demonstrate
 
 To start, let's generate output pertaining to a two-way ANOVA model of the current data. To do so, create the object `aov_out` by calling `afex::aov_ez()`. Place the `SubjID` column in the "ID" argument, `Outcome` as our dependent variable, `experience` as our dataframe, and `Experience` and `Therapy` as our between-subjects factors. Note that the generation and storage of `afex::aov_ez()` output in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
 
-Next, create the `emms` object by calling `emmeans::emmeans()` and specify that we want to take in `aov_out` and output according to both `Experience` and `Therapy`. Running this code will give us the cell means for each of the twelve possible cells of the between-subjects independent variables.
+Next, create the `emms` object by calling `emmeans::emmeans()` and specify that we want to take in `aov_out` and output according to both `Experience` and `Therapy`. Running this code will give us the cell means for each of the twelve possible cells of the between-subjects independent variables. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
 
 ```{r, aov, message = FALSE, warning = FALSE}
 aov_out <- aov_ez(

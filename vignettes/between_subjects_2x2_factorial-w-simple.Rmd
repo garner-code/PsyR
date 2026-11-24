@@ -102,7 +102,7 @@ btwn_cont <- list(
 )
 ```
 
-Next, let's generate and store cell means for our data. To do so, create `emms` and call `emmeans::emmeans()`. Place `aov_out` in the "Object" argument and a vector containing our independent variables in the "Specs" argument. 
+Next, let's generate and store cell means for our data. To do so, create `emms` and call `emmeans::emmeans()`. Place `aov_out` in the "Object" argument and a vector containing our independent variables in the "Specs" argument. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
 
 ```{r, cellmeans}
 emms <- emmeans(
