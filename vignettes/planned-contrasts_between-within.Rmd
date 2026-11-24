@@ -1,5 +1,5 @@
 ---
-title: "Planned Contrasts Analysis for Between x Within Designs"
+title: "Planned Contrasts Analysis for Between- x Within-Subjects Designs"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{planned-contrasts_between-within}
@@ -8,7 +8,7 @@ vignette: >
 bibliography: references.bib
 ---
 
-A vignette to demonstrate a planned contrast analysis of a between x within design using a multivariate model [@bird2004]. Specifically, this vignette highlights how one may use PsyR to create Simultaneous Confidence Intervals (SCIs) which allow a researcher to understand the magnitude of an effect. A multivariate model is appropriate and necessary for a design with within-subjects data. This is because within-subjects data necessarily violates assumptions of sphericity. A multivariate model addresses this through producing separate error terms for each contrast.
+A vignette to demonstrate a planned contrast analysis of a between- x within-subjects design using a multivariate model [@bird2004]. Specifically, this vignette highlights how one may use PsyR to create Simultaneous Confidence Intervals (SCIs) which allow a researcher to better understand the magnitude and directionality of an effect captured by a contrast.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -16,10 +16,17 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+``` {r, flextable_settings, echo = FALSE}
+flextable::set_flextable_defaults(
+  theme_fun = "theme_apa",
+  table_align = "center",
+  digits = 4
+)
+```
 
 ## The Packages
 
-To use PsyR to calculate confidence intervals over contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to implement ANOVA models, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+To use PsyR to calculate confidence intervals for contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to generate ANOVA output, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(afex)
@@ -30,7 +37,7 @@ library(tidyverse)
 
 ## The Data
 
-The `depression` dataframe contains the results of a longitudinal study examining the impact of treatments for depression on *N* = 15 patients. Patients are randomly assigned to one of *J* = 3 treatment conditions (Treatment 1, Treatment 2, or a waitlist Control), and their happiness is measured at *p* = 3 occasions (pre-treatment, immediately post-treatment, and at a follow up). The dependent variable is happiness, with a higher score being indicative of greater happiness.
+The `depression` dataframe contains the results of a longitudinal study examining the impact of treatments for depression on *N* = 15 patients. Patients were randomly assigned to one of 3 treatment conditions (Treatment 1, Treatment 2, or a waitlist Control), and their happiness was measured at 3 occasions (pre-treatment, immediately post-treatment, and at a follow up). The dependent variable is happiness, with a higher score being indicative of greater happiness.
 
 Let's load the data, then call the `head()` function to print the first 5 rows.
 
@@ -61,8 +68,8 @@ Next, let's visualise our data. Doing so allows us to more intuitively understan
 ```{r plothappiness,  fig.width = 7, fig.height = 4, message = FALSE, warning = FALSE}
 depression %>% 
   group_by(Group, Time) %>%
-  summarise(mean_happiness = mean(Happiness)) %>%
-  ggplot(aes(x = Time, y = mean_happiness, group = Group, colour = Group)) +
+  summarise(Happiness = mean(Happiness)) %>%
+  ggplot(aes(x = Time, y = Happiness, group = Group, colour = Group)) +
   geom_point(aes(fill = Group, shape = Group), size = 3) +
   geom_line() + 
   scale_shape_manual(values = c(21:24)) +
@@ -74,39 +81,43 @@ depression %>%
 
 Here we will obtain and store the necessary output from which to use PsyR to generate SCIs.
 
-To start, we must generate an ANOVA model of our data. To do so, let's specify that we want a multivariate analysis, using `afex::afex_options()`. Next, create a new object `mod` by calling `afex::aov_ez()`. `mod` will take in the `Subject` column to identify subjects, the `Happiness` column as the dependent variable, the `depression` dataframe, the `Group` column as the between-subjects factor, and the `Time` column as the within-subjects factor. Note that the generation and storage of this ANOVA model in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
+To start, we must generate ANOVA output pertaining to our data. To do so, let's specify that we want a multivariate analysis, using `afex::afex_options()`. Next, create a new object `aov_out`, and then call `afex::aov_ez()`. Take in the `Subject` column to identify subjects, the `Happiness` column as the dependent variable, the `depression` dataframe, the `Group` column as the between-subjects factor, and the `Time` column as the within-subjects factor. Note that the generation and storage of `afex::aov_ez()` output in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
 
 ```{r aov, message = FALSE, warning = FALSE}
 afex_options(emmeans_model = "multivariate")
 
-mod <- aov_ez(
-  "Subject", 
-  "Happiness", 
-  depression, 
+aov_out <- aov_ez(
+  id = "Subject", 
+  dv = "Happiness", 
+  data = depression, 
   between = "Group",
-  within = "Time" 
+  within = "Time",
+  anova_table = list(correction = "none")
 )
 ```
 
-Next, let's obtain cell means for each of the nine possible cells in our design. To do so, create a new object `emms`. Then, call `emmeans::emmeans()` and specify that we want to take in `mod` (the object we just made) and output based upon `Group` and `Time`. 
+Next, let's obtain cell means for each of the nine possible cells in our design. To do so, create a new object `emms`. Then, call `emmeans::emmeans()` and specify that we want to take in `aov_out` and output based upon `Group` and `Time`. 
 
 ``` {r, emms_cell_means}
-emms <- emmeans(mod, c("Group", "Time"))
+emms <- emmeans(
+  object = aov_out, 
+  specs = c("Group", "Time")
+)
 ```
 ``` {r, emms_cell_means_hidden, echo = FALSE}
 emms |> 
   as.data.frame() |> 
-  select(Group:df) |> 
-  knitr::kable(digits = 3)
+  select(Group:emmean) |> 
+  flextable::flextable()
 ```
 
 Time to define our contrasts!
 
-Given this is a planned analysis, contrasts must be defined prior to data collection. In this example, the following between-subjects main effects contrasts are chosen for analysis:
+Given this is a planned analysis, contrasts must be defined prior to data collection. In this example, the following between-subjects main effects contrasts were chosen for analysis:
 
-- "Ts - Ctrl" ➞ The difference between the average happiness scores of Treatments 1 and 2 and the waitlist Control.
+- "Ts - Ctrl" ➞ The difference between the average happiness scores of patients who received Treatments 1 and 2 and patients who were on the waitlist Control.
 
-- "T1 - T2" ➞ The difference between the average happiness scores of Treatment 1 and Treatment 2.
+- "T1 - T2" ➞ The difference between the average happiness scores of patients who received Treatment 1 versus those who received Treatment 2.
 
 ```{r, btwn}
 between_contrasts = list(
@@ -115,35 +126,41 @@ between_contrasts = list(
 )
 ```
 
-Now that we have defined our between-subjects main effects contrasts, let's obtain the row means for the between-subjects Group condition. To do so, create `emms_grp` by calling `emmeans::emmeans()`, placing `mod` in the "object" argument and outputting based upon the between-subjects factor `Group`. 
+Now that we have defined our between-subjects main effects contrasts, let's obtain the row means for the between-subjects Group factor. To do so, create `emms_grp` by calling `emmeans::emmeans()`, placing `aov_out` in the "Object" argument and outputting based upon the between-subjects factor `Group`. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
 
 ``` {r, get_btwn_emms}
-emms_grp <- emmeans(mod, c("Group"))
+emms_grp <- emmeans(
+  object = aov_out, 
+  specs = c("Group")
+)
 ```
 ``` {r, get_btwn_emms_hidden, echo = FALSE}
 emms_grp |> 
   as.data.frame() |> 
-  select(Group:df) |> 
-  knitr::kable(digits = 3)
+  select(Group:emmean) |> 
+  flextable::flextable()
 ```
 
 Next, let's generate and store statistical output pertaining to our between-subjects main effects contrasts. To do so, create the `btwn_fx` object. Next, call `emmeans::contrast()`, setting `emms_grp` in the "Object" argument and `btwn_contrasts` in the "Method" argument.
 
 ```{r, getbtwnfx}
-btwn_fx <- contrast(emms_grp, between_contrasts)
+btwn_fx <- contrast(
+  object = emms_grp, 
+  method = between_contrasts
+)
 ```
 ```{r, kable_btwnfx, echo = FALSE}
 btwn_fx |> 
   as.data.frame() |> 
   select(contrast:df) |> 
-  knitr::kable(digits = 3)
+  flextable::flextable()
 ```
 
-Let's also define our within-subjects main effect contrasts. As with our between-subjects main effect contrasts, these must be defined prior to data collection. In this example, the following contrasts are chosen for analysis:
+Let's also define our within-subjects main effects contrasts. As with our between-subjects main effect contrasts, these must be defined prior to data collection. In this example, the following contrasts were chosen for analysis:
 
-- "Post - Pre" ➞ The difference between average happiness scores taken post versus pre-treatment.
+- "Post - Pre" ➞ The difference between average happiness scores of participants as measured post versus pre-treatment.
 
-- "FU - Post" ➞ The difference between average happiness scores taken at follow-up versus post-treatment.
+- "FU - Post" ➞ The difference between average happiness scores of participants as measured at follow-up versus post-treatment.
 
 ```{r, within}
 within_contrasts = list(
@@ -155,47 +172,54 @@ within_contrasts = list(
 Following similar steps as with our between-subjects contrasts, let's obtain the column means for the different time points of measurement and store the results of statistical output of the main effects contrasts in the `win_fx` object.
 
 ``` {r, emms_win}
-emms_win <- emmeans(mod, "Time")
+emms_win <- emmeans(
+  object = aov_out, 
+  specs = "Time"
+)
 ``` 
 ``` {r, emms_win_hidden, echo = FALSE}
 emms_win |> 
   as.data.frame() |> 
-  select(Time:df) |> 
-  knitr::kable(digits = 3)
+  select(Time:emmean) |> 
+  flextable::flextable()
 ```
 
 ```{r wthn}
-win_fx <- contrast(emms_win, within_contrasts)
+win_fx <- contrast(
+  object = emms_win, 
+  method = within_contrasts
+)
 ```
 ```{r, kable_winfx, echo = FALSE}
 win_fx |> 
   as.data.frame() |> 
   select(contrast:df) |> 
-  knitr::kable(digits = 3)
+  flextable::flextable()
 ```
 
-Finally, let's obtain statistical output pertaining to our interaction contrasts. Note that our interaction contrasts will be the product of each combination of our between- and within-subjects main effects contrasts. 
+Finally, let's obtain statistical output pertaining to our interaction contrasts. Note that our interaction contrasts will necessarily be the product of each combination of our between- and within-subjects main effects contrasts. 
 
-To generate and store this output, create `int_fx` and call `emmeans::contrast()`. Place `emms` in the "Object" argument, and place a list of our between and within-subjects contrasts in the "Interaction" argument.
+To generate and store this output, create `int_fx` and call `emmeans::contrast()`. Place `emms` in the "Object" argument, and place a list of our between- and within-subjects contrasts in the "Interaction" argument.
 
 ```{r int_fx}
 int_fx <- contrast(
-  emms, 
+  object = emms, 
   interaction = list(between_contrasts, within_contrasts)
 )
 ```
 ```{r, kable_intfx, echo = FALSE}
 int_fx |> 
   as.data.frame() |> 
-  select(Group_custom:df) |> 
-  knitr::kable(digits = 3)
+  rename(Group = Group_custom, Time = Time_custom) |> 
+  select(Group:df) |> 
+  flextable::flextable()
 ```
 
 Finally, let's call `psyci()` to generate our SCIs. Within `psyci()`, specify the following:
 
-- The model is the previously made `mod` object, where the model must be made using the afex package (and of class afex_aov).
+- The model is the previously made `aov_out` object, where the model must be made using the afex package (and of class afex_aov).
 
-- The contrast_tables argument is set to take in a list containing the results of significance tests of our between, within and interaction contrasts.
+- The contrast_tables argument is set to take in a list containing statistical output pertaining to each of our main effects and interaction contrasts.
 
 - The method is set as "bf" to indicate a Bonferroni adjustment should be enacted.
 
@@ -203,7 +227,7 @@ Note that PsyR infers the family and participating factors for every original `e
 
 ```{r psyci}
 output <- psyci(
-  model = mod, 
+  model = aov_out, 
   contrast_tables = list(btwn_fx, win_fx, int_fx), 
   method = "bf"
 ) 
@@ -224,36 +248,25 @@ display[4, 1] <- NA
 display[1, 2] <- NA
 display[2, 2] <- NA
 
-knitr::kable(display, digits = 3)
+flextable::flextable(display) |> 
+  flextable::width(j = 1:2, width = 3, unit = "cm")
 ```
 
 ## The Interpretation
 
-Including SCIs in our analysis can strengthen our understanding of our results by allowing for more nuanced interpretation of directionality and magnitude. To demonstrate this, an interpretation of the results could look as follows.
+Including SCIs in our analysis can strengthen interpretation in that a researcher may better comment on the directionality and magnitude of an effect captured by a contrast. To demonstrate this, an interpretation of the results could look as follows.
 
 **Main Effects**
 
-It should be noted that in a factorial design, main effects contrasts tend to be of little interest to a researcher. This is because they average across all points of one of the independent variables. To illustrate why this is often of little interest, the current design features the within-subject variable Time of Measurement. As such, the main effect of treatment type, which holds constant time of measurement, in part assesses differences between subjects before treatments are administered. In a design with random assignment to conditions, there will be no differences between groups pre-treatment, and as such an analysis of just main effects is somewhat redundant. Nonetheless, the following may be said.
+- Participants who received any treatment, as compared to the waitlist control, scored between 0.19 and 5.81 points higher on happiness. However, a significant difference between treatments was not detected (-5.25, 1.25).
 
-- Holding constant time of measurement, participants who received a treatment as compared to the waitlist control scored between 0.189 and 5.811 points higher on happiness. However, a significant difference between treatments was not detected (-5.246, 1.246).
-
-- Holding constant treatment type, participants scored between 4.111 and 7.889 points higher on happiness at the post-treatment measure as compared to pre-treatment. However their happiness scores were between 1.359 and 4.641 points lower at follow-up as compared to post-treatment.
+- Participants scored between 4.11 and 7.89 points higher on happiness at the post-treatment measure as compared to the pre-treatment measure. However their happiness scores were between 1.36 and 4.64 points lower at follow-up as compared to post-treatment.
 
 **Interactions**
 
-Given the goal of the current research is to quantify the impact of a simultaneous manipulation to both a between and within-subjects IV, the contrasts of greatest interest tend to be interactions. For our interaction contrasts, the following conclusions may be drawn.
+- Participants who received a treatment, as compared to the waitlist control, scored between 1.41 and 10.59 points higher on happiness at the post-treatment measure as compared to pre-treatment measure. However, there is insufficient evidence to conclude that happiness was different at follow-up as compared to post treatment (-6.99, 0.99).
 
-- Participants who received a treatment as compared to the waitlist control scored between 1.407 and 10.593 points higher on happiness at the post-treatment measure as compared to pre-treatment. However, there is insufficient evidence to conclude that happiness was different at follow-up as compared to post treatment (-6.991, 0.991).
-
-- There was insufficient evidence of a significant difference between Treatments 1 and 2 at post-treatment as compared to pre-treatment (-1.304, 9.304). However, in comparison to Treatment 1, Treatment 2 resulted in between 3.391 and 12.609 more happiness points at follow-up as compared to post-treatment.
-
-**Thresholds of Importance**
-
-In situations in which there are established thresholds of importance, an SCI approach further strengthens analysis. For example, imagine that the researcher was only interested in interventions that resulted in a difference of **3 happiness points**. The addition of this stipulation once again alters our analysis. With reference to our interaction contrasts, this may look as follows:
-
-- As compared to a waitlist control, participants who received a treatment scored between 1.407 and 10.593 points higher on happiness post-treatment than pre-treatment. This difference may or may not be of clinical importance (as 1.407 \< 3). Further, there was insufficient evidence to conclude that happiness was different at follow-up as compared to post treatment (-6.991, 0.991).
-
-- There was insufficient evidence of a significant difference between Treatments 1 and 2 at post-treatment as compared to pre-treatment (-1.304, 9.304). However, in comparison to Treatment 1, Treatment 2 resulted in between 3.391 and 12.609 more happiness points at follow-up as compared to post-treatment, a difference which is clinically important (as 3.391 > 3).
+- There was insufficient evidence of a significant difference between Treatments 1 and 2 at post-treatment as compared to pre-treatment (-1.30, 9.30). However, in comparison to Treatment 1, Treatment 2 resulted in between 3.39 and 12.61 more happiness points at the follow-up measure as compared to the post-treatment measure.
 
 ------------------------------------------------------------------------
 
