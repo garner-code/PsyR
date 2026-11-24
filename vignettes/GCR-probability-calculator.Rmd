@@ -33,7 +33,7 @@ library(tidyverse)
 
 To generate Roy's GCR, we first need to fit some data to a MANOVA model. 
 
-Here, we will use the `social_anxiety` dataframe, which contains the results of a 3 x (4) between x within experiment that assessed a new treatment for social anxiety. *N* = 90 participants were randomly allocated to one of three levels of the between-subjects independent variable: a minimum contact control condition, a standard treatment, or a new treatment. All participants were then measured on four occasions: immediately before treatment, immediately after treatment, at a 3 month follow-up, and at a 6 month follow-up. The dependent variable is social anxiety rating, where a lower score is indicative of lower social anxiety.
+Here, we will use the `social_anxiety` dataframe, which contains the results of a 3 x (4) between- x within-subjects experiment that assessed a new treatment for social anxiety. Here, *N* = 90 participants were randomly allocated to one of three levels of the treatment type factor: a minimum contact control condition, a standard treatment, or a new treatment. All participants were then measured on four occasions: immediately before treatment, immediately after treatment, at a 3 month follow-up, and at a 6 month follow-up. The dependent variable is social anxiety rating, where a lower score is indicative of lower social anxiety.
 
 Let's load the data, then call the `head()` function to print the first 5 rows.
 
