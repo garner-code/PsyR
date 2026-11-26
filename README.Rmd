@@ -41,7 +41,7 @@ pak::pak("garner-code/PsyR")
 
 ## Cheat Sheet
 
-Click [here](link%20to%20be%20inserted) to view and download a cheat sheet for the package.
+Click [here](link%20to%20be%20inserted) to access a cheat sheet for the package.
 
 ## Classic Workflow
 
