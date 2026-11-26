@@ -4,7 +4,6 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Kelly", "Garner", , "kelly.grace.garner@unsw.edu.au", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-0690-6941")),
-    person(, role = "ctb"),
     person("Sadie", "Lane", role = "aut",
            comment = c(ORCID = "0009-0007-6359-8264")),
     person("Melanie", "Gleitzman", role = "aut"),
