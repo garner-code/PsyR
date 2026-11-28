@@ -94,7 +94,7 @@
 #'   repeated-measure cells involved in each contrast. The latter is available
 #'   only for pairwise within-subject contrasts with `method = "ind"` or
 #'   `method = "bf"`. The default is `"bird"`.
-#' @param legacy_anova A non-missing logical value. When `TRUE`, calculate and
+#' @param legacy_summary A non-missing logical value. When `TRUE`, calculate and
 #'   print a Psy-style analysis-of-variance summary table containing the SS,
 #'   df, MS, and F statistic for each supplied contrast and its applicable
 #'   error row. The table is attached to the result as `legacy_anova_table`.
@@ -121,7 +121,7 @@
 #'   `standardized_ci = "algina_keselman"`, each scaled table additionally
 #'   reports its contrast-specific `scale`, `ncp`, `ncp_lower`, and `ncp_upper`
 #'   values. Existing list indexing continues to return the raw tables. When
-#'   `legacy_anova = TRUE`, the supplied-contrast ANOVA table is available as
+#'   `legacy_summary = TRUE`, the supplied-contrast ANOVA table is available as
 #'   `attr(result, "legacy_anova_table")` and is printed once before the raw and
 #'   scaled confidence-interval tables.
 #' @export
@@ -152,7 +152,7 @@ psyci <- function(model, contrast_tables, method,
                   family_check = c("error", "warn", "none"),
                   family_check_tol = sqrt(.Machine$double.eps),
                   standardized_ci = c("bird", "algina_keselman"),
-                  legacy_anova = FALSE){
+                  legacy_summary = FALSE){
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
@@ -173,9 +173,9 @@ psyci <- function(model, contrast_tables, method,
     ))
   }
   .validate_alpha(alpha)
-  if (!is.logical(legacy_anova) || length(legacy_anova) != 1L ||
-      is.na(legacy_anova)) {
-    stop("`legacy_anova` must be one non-missing logical value.", call. = FALSE)
+  if (!is.logical(legacy_summary) || length(legacy_summary) != 1L ||
+      is.na(legacy_summary)) {
+    stop("`legacy_summary` must be one non-missing logical value.", call. = FALSE)
   }
   standardized_ci <- match.arg(standardized_ci)
   if (standardized_ci == "algina_keselman" &&
@@ -679,7 +679,7 @@ psyci <- function(model, contrast_tables, method,
     alphas = alphas,
     adjustments = standardized_adjustments
   )
-  if (legacy_anova) {
+  if (legacy_summary) {
     attr(result, "legacy_anova_table") <- legacy_statistics$table
   }
   result

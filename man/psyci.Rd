@@ -20,7 +20,7 @@ psyci(
   family_check = c("error", "warn", "none"),
   family_check_tol = sqrt(.Machine$double.eps),
   standardized_ci = c("bird", "algina_keselman"),
-  legacy_anova = FALSE
+  legacy_summary = FALSE
 )
 }
 \arguments{
@@ -122,7 +122,7 @@ repeated-measure cells involved in each contrast. The latter is available
 only for pairwise within-subject contrasts with \code{method = "ind"} or
 \code{method = "bf"}. The default is \code{"bird"}.}
 
-\item{legacy_anova}{A non-missing logical value. When \code{TRUE}, calculate and
+\item{legacy_summary}{A non-missing logical value. When \code{TRUE}, calculate and
 print a Psy-style analysis-of-variance summary table containing the SS,
 df, MS, and F statistic for each supplied contrast and its applicable
 error row. The table is attached to the result as \code{legacy_anova_table}.
@@ -151,7 +151,7 @@ SDs from its \code{scale_info} attribute. With
 \code{standardized_ci = "algina_keselman"}, each scaled table additionally
 reports its contrast-specific \code{scale}, \code{ncp}, \code{ncp_lower}, and \code{ncp_upper}
 values. Existing list indexing continues to return the raw tables. When
-\code{legacy_anova = TRUE}, the supplied-contrast ANOVA table is available as
+\code{legacy_summary = TRUE}, the supplied-contrast ANOVA table is available as
 \code{attr(result, "legacy_anova_table")} and is printed once before the raw and
 scaled confidence-interval tables.
 }

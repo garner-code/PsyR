@@ -126,7 +126,7 @@ It is possible to print Psy’s legacy layout for the supplied contrasts.
 This will contain values for each contrast’s sum of squares, degrees of
 freedom, mean squares error, and F statistic.
 
-To print Psy’s legacy layout, set `legacy_anova` as TRUE within the
+To print Psy’s legacy layout, set `legacy_summary` as TRUE within the
 `psyci()` call.
 
 ``` r
@@ -134,7 +134,7 @@ result <- psyci(
   mod,
   list(btwn_con),
   method = "ph",
-  legacy_anova = TRUE
+  legacy_summary = TRUE
 )
 legacy_table <- attr(result, "legacy_anova_table")
 ```

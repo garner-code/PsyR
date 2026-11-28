@@ -78,7 +78,7 @@ test_that("get_cis skips polynomial widths and rejects summaries", {
 
 test_that("psyci retains polynomial tests and correction counts in mixed tables", {
     fixture <- make_polynomial_fixture()
-    observed <- psyci(fixture$model, fixture$tables, method = "bf", legacy_anova = TRUE)
+    observed <- psyci(fixture$model, fixture$tables, method = "bf", legacy_summary = TRUE)
     raw <- observed[[1L]]
     scaled <- attr(observed, "scaled_tables")[[1L]]
     expect_identical(raw$is_polynomial, c(TRUE, FALSE))

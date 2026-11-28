@@ -61,7 +61,7 @@ test_that("psyci exposes the new inferential schema", {
     expect_equal(table$df_error, rep(40, nrow(table)))
 })
 
-test_that("legacy_anova is validated", {
+test_that("legacy_summary is validated", {
     fixture <- make_between_fixture()
     for (invalid in list(NA, 1, "yes", logical(), c(TRUE, FALSE))) {
         expect_error(
@@ -69,21 +69,30 @@ test_that("legacy_anova is validated", {
                 fixture$model,
                 fixture$tables,
                 method = "ind",
-                legacy_anova = invalid
+                legacy_summary = invalid
             ),
-            "one non-missing logical"
+            "`legacy_summary` must be one non-missing logical value.",
+            fixed = TRUE
         )
     }
+    expect_error(
+        psyci(fixture$model, fixture$tables, method = "ind", legacy_anova = TRUE),
+        "unused argument"
+    )
 })
 
 test_that("legacy table is attached and printed only on request", {
     fixture <- make_mixed_fixture()
     without <- psyci(fixture$model, fixture$tables, method = "ind")
+    expect_identical(
+        psyci(fixture$model, fixture$tables, method = "ind", legacy_summary = FALSE),
+        without
+    )
     with <- psyci(
         fixture$model,
         fixture$tables,
         method = "ind",
-        legacy_anova = TRUE
+        legacy_summary = TRUE
     )
     legacy <- attr(with, "legacy_anova_table", exact = TRUE)
 
@@ -122,7 +131,7 @@ test_that("legacy table obeys Psy SS, MS, df, and error invariants", {
         fixture$model,
         fixture$tables,
         method = "ind",
-        legacy_anova = TRUE
+        legacy_summary = TRUE
     )
     legacy <- attr(result, "legacy_anova_table")
     contrasts <- legacy$row_type == "contrast"
@@ -163,7 +172,7 @@ test_that("legacy output does not synthesize absent interaction rows", {
         fixture$model,
         fixture$tables[1:2],
         method = "ind",
-        legacy_anova = TRUE
+        legacy_summary = TRUE
     )
     legacy <- attr(result, "legacy_anova_table")
     expect_false(any(grepl("^B[0-9]+W[0-9]+$", legacy$source)))
@@ -222,7 +231,7 @@ test_that("legacy anxiety statistics reproduce the original Psy table", {
         fixture$model,
         fixture$tables,
         method = "ph",
-        legacy_anova = TRUE
+        legacy_summary = TRUE
     )
     legacy <- attr(result, "legacy_anova_table")
     contrast_rows <- legacy$row_type == "contrast"
