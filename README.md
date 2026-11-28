@@ -33,8 +33,7 @@ pak::pak("garner-code/PsyR")
 
 ## Cheat Sheet
 
-Click [here](link%20to%20be%20inserted) to access a cheat sheet for the
-package.
+[Download the PsyR cheat sheet](inst/doc/psyr-cheatsheet.pdf).
 
 ## Classic Workflow
 
@@ -98,11 +97,11 @@ result <- psyci(
 )
 ```
 
-| contrast | estimate | SE | df_num | df_error | F_value | p_value_adjusted | cc | lower | upper |
-|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 12vs34 | 2.958 | 2.116 | 1 | 12 | 1.955 | 0.597 | 3.236 | -3.888 | 9.805 |
-| 1vs2 | -14.083 | 2.992 | 1 | 12 | 22.155 | 0.005 | 3.236 | -23.765 | -4.401 |
-| 3vs4 | -2.500 | 2.992 | 1 | 12 | 0.698 | 0.872 | 3.236 | -12.182 | 7.182 |
+| contrast | is_polynomial | estimate | SE | df_num | df_error | F_value | p_value_adjusted | cc | lower | upper |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 12vs34 | FALSE | 2.958 | 2.116 | 1 | 12 | 1.955 | 0.597 | 3.236 | -3.888 | 9.805 |
+| 1vs2 | FALSE | -14.083 | 2.992 | 1 | 12 | 22.155 | 0.005 | 3.236 | -23.765 | -4.401 |
+| 3vs4 | FALSE | -2.500 | 2.992 | 1 | 12 | 0.698 | 0.872 | 3.236 | -12.182 | 7.182 |
 
 `psyci()` prints each result twice. The first table reports the contrast
 effects and confidence intervals in the dependent variable’s original
@@ -117,11 +116,11 @@ raw_table <- result[[1]]
 scaled_table <- attr(result, "scaled_tables")[[1]]
 ```
 
-| contrast | estimate | SE | df_num | df_error | F_value | p_value_adjusted | cc | lower | upper |
-|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 12vs34 | 0.640 | 0.457 | 1 | 12 | 1.955 | 0.597 | 3.236 | -0.841 | 2.120 |
-| 1vs2 | -3.045 | 0.647 | 1 | 12 | 22.155 | 0.005 | 3.236 | -5.138 | -0.952 |
-| 3vs4 | -0.540 | 0.647 | 1 | 12 | 0.698 | 0.872 | 3.236 | -2.634 | 1.553 |
+| contrast | is_polynomial | estimate | SE | df_num | df_error | F_value | p_value_adjusted | cc | lower | upper |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 12vs34 | FALSE | 0.640 | 0.457 | 1 | 12 | 1.955 | 0.597 | 3.236 | -0.841 | 2.120 |
+| 1vs2 | FALSE | -3.045 | 0.647 | 1 | 12 | 22.155 | 0.005 | 3.236 | -5.138 | -0.952 |
+| 3vs4 | FALSE | -0.540 | 0.647 | 1 | 12 | 0.698 | 0.872 | 3.236 | -2.634 | 1.553 |
 
 It is possible to print Psy’s legacy layout for the supplied contrasts.
 This will contain values for each contrast’s sum of squares, degrees of

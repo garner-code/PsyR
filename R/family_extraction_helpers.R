@@ -159,7 +159,7 @@
     )
     storage.mode(coefficients) <- "double"
 
-    summary_table <- as.data.frame(summary(contrast_table))
+    summary_table <- as.data.frame(summary(contrast_table, infer = c(FALSE, FALSE)))
     misc <- tryCatch(
         methods::slot(contrast_table, "misc"),
         error = function(error) list()

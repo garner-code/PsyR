@@ -193,6 +193,7 @@
         retained <- extraction
         retained$coefficients <- extraction$coefficients[, genuine, drop = FALSE]
         retained$contrasts <- extraction$contrasts[genuine, , drop = FALSE]
+        retained$is_polynomial <- .polynomial_contrast_rows(retained, tol)
         retained_extractions[[index]] <- retained
     }
 

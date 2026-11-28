@@ -225,6 +225,7 @@
         participating_keys <- unique(extraction_key[participating_rows])
         matched <- match(participating_keys, variance_key)
         if (length(matched) != 2L || anyNA(matched)) {
+            if (isTRUE(extraction$is_polynomial[[index]])) return(NA_real_)
             stop(
                 paste(
                     "Each Algina-Keselman contrast must involve exactly two",
@@ -239,23 +240,28 @@
 }
 
 .scale_psyci_table_ak <- function(table, divisor, alpha, adjust) {
-    interval <- algina_keselman_ci(
-        estimate = table$estimate,
-        se_contrast = table$SE,
-        df = table$df_error,
-        scale = divisor,
-        alpha = alpha,
-        adjust = adjust
-    )
     scaled <- table
-    scaled$estimate <- interval$effect_size
-    scaled$SE <- interval$standard_error
-    scaled$lower <- interval$lower
-    scaled$upper <- interval$upper
-    scaled$ncp <- interval$ncp
-    scaled$ncp_lower <- interval$ncp_lower
-    scaled$ncp_upper <- interval$ncp_upper
-    scaled$scale <- interval$scale
+    scaled$estimate <- table$estimate / divisor
+    scaled$SE <- table$SE / divisor
+    scaled$ncp <- table$estimate / table$SE
+    scaled$scale <- divisor
+    for (column in c("lower", "upper", "ncp_lower", "ncp_upper")) {
+        scaled[[column]] <- rep(NA_real_, nrow(table))
+    }
+    keep <- !table$is_polynomial
+    if (any(keep)) {
+        interval <- algina_keselman_ci(
+            estimate = table$estimate[keep],
+            se_contrast = table$SE[keep],
+            df = table$df_error[keep],
+            scale = divisor[keep],
+            alpha = alpha,
+            adjust = adjust
+        )
+        for (column in c("lower", "upper", "ncp_lower", "ncp_upper")) {
+            scaled[[column]][keep] <- interval[[column]]
+        }
+    }
     attr(scaled, "psyr_scale_divisor") <- divisor
     attr(scaled, "psyr_scale_units") <- "sample SD"
     attr(scaled, "psyr_standardized_ci_method") <- "Algina-Keselman"
@@ -268,6 +274,12 @@
             "."
         )
     )
+    if (any(table$is_polynomial & is.na(divisor))) {
+        attr(scaled, "mesg") <- c(
+            attr(scaled, "mesg"),
+            "Polynomial effects outside pairwise scaling have no Algina-Keselman standardized estimate or SE; raw effects are retained."
+        )
+    }
     scaled
 }
 

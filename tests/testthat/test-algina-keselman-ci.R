@@ -176,7 +176,7 @@ test_that("psyci enforces the published scope of Algina-Keselman intervals", {
     mixed <- make_mixed_fixture()
     nonpairwise <- emmeans::contrast(
         mixed$emmeans$within,
-        list("Quadratic" = c(1, -2, 1)),
+        list("Non-polynomial" = c(1, -3, 2)),
         adjust = "none"
     )
     expect_error(

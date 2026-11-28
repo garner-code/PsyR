@@ -25,8 +25,18 @@
 #' the retained coefficient information to remove non-contrast rows and assess
 #' cross-table orthogonality; already summarised `summary_emm` inputs are not
 #' accepted. If there is only one table, it need not be wrapped in a list.
+#' Standard equally spaced polynomial contrasts over three or more levels,
+#' including interactions containing a polynomial component, are flagged by
+#' `is_polynomial`. Their estimates and tests are retained, but confidence limits
+#' are missing and printed blank in both raw and standardized tables. Detection
+#' uses coefficients, so equivalent custom contrasts also match; unequal spacing
+#' is not inferred. Rows remain in correction counts and orthogonality checks.
+#' This suppression is new PsyR behavior, not a rule from the original Psy.
+#' Algina-Keselman standardized estimates and SEs are unavailable for polynomial
+#' rows outside its pairwise scaling scope; their raw effects remain available.
 #' @param method a single string - method for confidence interval computation -
-#' "ind", "bf", "ph", or "smr" - see further details below
+#' `"individual"` (alias `"ind"`), `"bonferroni"` (alias `"bf"`),
+#' `"post-hoc"` (alias `"ph"`), or `"smr"` - see further details below
 #' @param family_list Optional list containing one family code per contrast
 #' table: `"b"`, `"w"`, or `"bw"`. The default, `NULL`, infers each family
 #' from the `afex_aov` model and the coefficients retained by the original
@@ -147,8 +157,20 @@ psyci <- function(model, contrast_tables, method,
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
   }
+  method_aliases <- c(
+      individual = "ind",
+      bonferroni = "bf",
+      "post-hoc" = "ph"
+  )
+  if (length(method) == 1L && !is.na(method) &&
+      method %in% names(method_aliases)) {
+    method <- unname(method_aliases[[method]])
+  }
   if (!method %in% c("ind", "bf", "ph", "smr")){
-    stop("Error: method should be ind, bf, ph, or smr")
+    stop(paste0(
+        'Error: method should be "individual" ("ind"), ',
+        '"bonferroni" ("bf"), "post-hoc" ("ph"), or "smr"'
+    ))
   }
   .validate_alpha(alpha)
   if (!is.logical(legacy_anova) || length(legacy_anova) != 1L ||
@@ -535,7 +557,10 @@ psyci <- function(model, contrast_tables, method,
 
   # now get SE from each contrast table in contrast_tables, compute CIs using appropriate
   # cc, and save results to a concatenated summary table
-  contrasts_w_cis <- mapply(get_cis, contrast_tables, critical_constant, SIMPLIFY=FALSE)
+  contrasts_w_cis <- Map(
+    .get_cis, contrast_tables, critical_constant,
+    lapply(contrast_preparation$extractions, `[[`, "is_polynomial")
+  )
 
   # Add the ordinary observed Psy F statistic, its ordinary F(1, df_error)
   # probability, and the probability from the selected simultaneous-inference

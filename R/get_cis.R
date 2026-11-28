@@ -1,10 +1,13 @@
 #' Calculate CIs for a contrast table (emmeans object) given a critical constant
 #'
-#' @param contrast_table - a table of contrasts, produced using the 'contrast'
-#' function from emmeans
+#' @param contrast_table An original `emmGrid` contrast table from emmeans.
 #' @param cc - a critical constrant, to be used to calculate CIs.
 #'
 #' @returns contrast_table - a summary table of the contrasts with the CI info added
+#' @details Standard equally spaced polynomial trends over three or more levels,
+#' including polynomial interactions, retain estimates and tests but receive
+#' missing confidence limits. This is new PsyR behavior, not a legacy Psy rule.
+#' Summarised inputs are rejected because they lack contrast coefficients.
 #' @export
 #'
 #' @examples
@@ -21,11 +24,37 @@
 #' cc <- cc_ind_t(v_e=12, alpha=0.05) # for example
 #' get_cis(btwn_con, cc)
 get_cis <- function(contrast_table, cc){
-  contrast_table = summary(contrast_table)
-  se_cont = contrast_table[,"SE"]
-  cis = unlist(lapply(se_cont, compute_contrast_ci, cc))
-  contrast_table$cc = cc
-  contrast_table$lower = contrast_table$estimate - cis
-  contrast_table$upper = contrast_table$estimate + cis
-  contrast_table
+    if (!inherits(contrast_table, "emmGrid")) {
+        stop("`contrast_table` must be an original emmGrid object.", call. = FALSE)
+    }
+    extraction <- .extract_emm_family_data(contrast_table)
+    if (extraction$provenance == "unavailable") {
+        stop(paste(extraction$issues, collapse = " "), call. = FALSE)
+    }
+    .get_cis(contrast_table, cc, .polynomial_contrast_rows(extraction))
+}
+
+.get_cis <- function(contrast_table, cc, is_polynomial) {
+    contrast_table <- summary(contrast_table, infer = c(FALSE, TRUE))
+    inherited_limits <- intersect(
+        c("lower.CL", "upper.CL", "asymp.LCL", "asymp.UCL"), names(contrast_table)
+    )
+    contrast_table[inherited_limits] <- NULL
+    keep <- !is_polynomial
+    width <- rep(NA_real_, nrow(contrast_table))
+    if (any(keep)) {
+        width[keep] <- compute_contrast_ci(cc, contrast_table$SE[keep])
+    }
+    contrast_table$is_polynomial <- is_polynomial
+    contrast_table$cc <- cc
+    contrast_table$lower <- contrast_table$estimate - width
+    contrast_table$upper <- contrast_table$estimate + width
+    if (any(is_polynomial)) {
+        attr(contrast_table, "mesg") <- c(
+            attr(contrast_table, "mesg"),
+            "PsyR suppressed confidence intervals for polynomial contrasts (is_polynomial = TRUE)."
+        )
+    }
+    class(contrast_table) <- unique(c("psyr_contrast_table", class(contrast_table)))
+    contrast_table
 }

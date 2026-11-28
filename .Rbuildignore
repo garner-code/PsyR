@@ -9,3 +9,9 @@
 ^scripts$
 ^PSY-source_no-touchy$
 ^references$
+^AGENTS\.md$
+^LEGACY_PSY_COMPARISON_RESULTS\.txt$
+^SCALED_CI_COMPARISON_RESULTS\.txt$
+^references\.bib$
+^doc$
+^Meta$

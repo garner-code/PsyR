@@ -4,7 +4,8 @@
 .httr-oauth
 .DS_Store
 .quarto
-inst/doc
+/inst/doc/*
+!/inst/doc/psyr-cheatsheet.pdf
 .positai
 references/*
 references
@@ -13,6 +14,7 @@ scripts/*
 !scripts/example-psyci-post-hoc-mixed.R
 !scripts/example-psyci-smr.R
 !scripts/example-psyci-a-priori-between-subjects.R
+!scripts/example-psyci-polynomial.R
 !scripts/Analysis-of-3-between-x-3-within-design.R
 !scripts/between_subjects_2x2_factorial-w-simple.R
 !scripts/J-K-Design_Analysis-allowing-for-inferences-on-simple-effect-contrasts.R
@@ -23,3 +25,5 @@ scripts/*
 !scripts/compare-vignettes-with-original-psy.R
 PSY-source_no-touchy/
 *.md
+/doc/
+/Meta/

@@ -46,7 +46,7 @@ test_that("psyci exposes the new inferential schema", {
     expect_named(
         table,
         c(
-            "contrast", "estimate", "SE", "df_num", "df_error", "F_value",
+            "contrast", "is_polynomial", "estimate", "SE", "df_num", "df_error", "F_value",
             "p_value", "p_value_adjusted", "p_adjustment", "cc", "lower",
             "upper"
         )

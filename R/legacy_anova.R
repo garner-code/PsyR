@@ -264,7 +264,9 @@
     for (table_index in seq_along(extractions)) {
         extraction <- extractions[[table_index]]
         family <- families[[table_index]]
-        summary_table <- as.data.frame(summary(contrast_tables[[table_index]]))
+        summary_table <- as.data.frame(summary(
+            contrast_tables[[table_index]], infer = c(FALSE, FALSE)
+        ))
         f_values[[table_index]] <- rep(NA_real_, ncol(extraction$coefficients))
         for (row_index in seq_len(ncol(extraction$coefficients))) {
             coefficient_matrix <- .psyci_legacy_coefficient_matrix(
@@ -465,7 +467,13 @@
 #' @return `x`, invisibly.
 #' @export
 print.psyr_contrast_table <- function(x, ...) {
-    print.data.frame(x, ...)
+    display <- x
+    for (column in intersect(c("lower", "upper", "ncp_lower", "ncp_upper"), names(x))) {
+        if (!anyNA(x[[column]])) next
+        display[[column]] <- format(x[[column]], digits = list(...)$digits, na.encode = FALSE)
+        display[[column]][is.na(x[[column]])] <- ""
+    }
+    print.data.frame(display, ...)
     messages <- attr(x, "mesg", exact = TRUE)
     if (length(messages) > 0L) {
         cat("\n", paste(messages, collapse = "\n"), "\n", sep = "")

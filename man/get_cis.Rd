@@ -7,10 +7,7 @@
 get_cis(contrast_table, cc)
 }
 \arguments{
-\item{contrast_table}{\itemize{
-\item a table of contrasts, produced using the 'contrast'
-function from emmeans
-}}
+\item{contrast_table}{An original \code{emmGrid} contrast table from emmeans.}
 
 \item{cc}{\itemize{
 \item a critical constrant, to be used to calculate CIs.
@@ -21,6 +18,12 @@ contrast_table - a summary table of the contrasts with the CI info added
 }
 \description{
 Calculate CIs for a contrast table (emmeans object) given a critical constant
+}
+\details{
+Standard equally spaced polynomial trends over three or more levels,
+including polynomial interactions, retain estimates and tests but receive
+missing confidence limits. This is new PsyR behavior, not a legacy Psy rule.
+Summarised inputs are rejected because they lack contrast coefficients.
 }
 \examples{
 data(spacing)
