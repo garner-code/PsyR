@@ -1,11 +1,14 @@
 ---
-title: "planned-contrasts_within-subjects"
+title: "Planned Contrasts Analysis for Single Factor Within-Subjects Designs"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{planned-contrasts_within-subjects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: references.bib
 ---
+
+A vignette to demonstrate how to conduct a planned contrasts analysis of a single factor within-subjects design using a multivariate model [@bird2002]. Specifically, this vignette highlights how one may use PsyR to create Simultaneous Confidence Intervals (SCIs) which allow a researcher to better understand the directionality and magnitude of an effect captured by a given contrast.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -13,79 +16,155 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+``` {r, flextable_settings, echo = FALSE}
+flextable::set_flextable_defaults(
+  theme_fun = "theme_apa",
+  table_align = "center",
+  digits = 4
+)
+```
 
-```{r setup}
+## The Packages
+
+To use PsyR to calculate confidence intervals for contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to generate ANOVA output, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
+
+```{r setup, message = FALSE, warning = FALSE}
 library(afex)
 library(emmeans)
-library(tidyverse)
-library(ggplot2)
 library(PsyR)
+library(tidyverse)
 ```
 
-## Load the data
+## The Data
+
+The `priming` dataframe contains the results of a lexical decision-making task used to investigate automatic activation of stereotypes through priming. *N* = 15 participants were subliminally primed with a social category label (e.g., "unemployed" or "elderly") before responding to target words. The target words were either stereotypical attributes, atypical attributes, or neutral words, such that there are 3 levels of the independent variable. The dependent variable is reaction time (in tenths of a second), where a faster reaction time is indicative of a greater priming effect.
+
+Let's load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r data}
-
 data(priming)
 head(priming, 5)
-
 ```
 
-and sort and plot
+To learn more about the `priming` dataframe, call the help function using `?df`.
 
+```{r, whatpriming, message = FALSE, warning = FALSE, eval = FALSE}
+?priming
+```
+
+Also, for our convenience, let's change our independent variable and subject columns to the `factor` data type.
 
 ```{r sortexp}
-
 priming <- priming %>%
-                mutate(Prime = factor(Prime),
-                       Subject = factor(Subject))
+  mutate(
+    Prime = factor(Prime),
+    Subject = factor(Subject)
+  )
 ```
 
+Next, let's visualise our data. Doing so allows one to more intuitively understand its layout.
 
-```{r plotdata}
-
-priming %>% ggplot(aes(x=Prime, y=ReactionTime, fill=Prime)) +
-  geom_boxplot() + theme_minimal()
-
+```{r plotdata, fig.width = 7, fig.height = 4}
+priming %>% 
+  ggplot(aes(x = Prime, y = ReactionTime, fill = Prime)) +
+  geom_boxplot() +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "none")
 ```
 
-```{r, aov}
+## The Analysis
 
-# perform the statistical model
-mod <- aov_ez(id="Subject", 
-              dv="ReactionTime", 
-              data=priming, 
-              within = "Prime")
+Here we will create the building blocks needed by PsyR to construct SCIs for each contrast. First, we must generate multivariate ANOVA output pertaining to our data. To do so, call `afex::afex_options()` to specify that we want a multivariate analysis. Next, create a new object `aov_out`, and then call `afex::aov_ez()`. `afex::aov_ez()` will take in the `Subject` column to identify subjects, the `ReactionTime` column as the dependent variable, the `priming` dataframe, and the `Prime` column set as within-subjects. Note that the generation and storage of `afex::aov_ez()` output in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR. 
 
-emms <- emmeans(mod, "Prime")
-emms
+```{r, aov, message = FALSE, warning = FALSE}
+afex_options(emmeans_model = "multivariate")
 
+aov_out <- aov_ez(
+  id = "Subject",
+  dv = "ReactionTime",
+  data = priming,
+  within = "Prime",
+  anova_table = list(correction = "none")
+)
 ```
 
-Now define contrasts
+Next, let's generate and store group means for each level of the `Prime` within-subjects factor. To do so, create a new object `emms`, calling the `emmeans::emmeans()` function and specifying that we want to take in `aov_out` and output based upon `Prime`. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
+
+``` {r, emms}
+emms <- emmeans(aov_out, "Prime")
+```
+```{r, emms_hidden, echo = FALSE}
+emms |> 
+  as.data.frame() |> 
+  select(Prime:emmean) |> 
+  flextable::flextable()
+```
+
+Time to define our contrasts!
+
+Given this is a planned analysis, contrasts must be defined prior to data collection. In this example, the following contrasts were chosen for analysis:
+
+- "Stereo - Others" ➞ The difference between the average of reaction times after either Atypical or Neutral primes versus after Stereotypical primes.
+
+- "Atyp - Neutral" ➞ The difference between reaction times after an Atypical versus a Neutral prime.
 
 ```{r wthn_contrasts}
-
 experience_contrasts = list(
-  "stereo_vs_others" = c(0.5, 0.5, -1),
-  "atyp_vs_neural" = c(1, -1, 0)
+  "others - stereo" = c(0.5, 0.5, -1),
+  "atyp - neutral" = c(1, -1, 0)
 )
-
 ```
 
-Calculate contrasts
+Let's now obtain relevant statistical output pertaining to each of our chosen contrasts. To do so, create the `wthn_fx` object, then call `emmeans::contrast()`, setting `emms` in the "Object" argument and `experience_contrasts` in the "Method" argument.
 
 ```{r, compute_contrasts}
-
-wthn_fx = contrast(emms, experience_contrasts)
-wthn_fx
+wthn_fx <- contrast(
+  object = emms, 
+  method = experience_contrasts
+)
+```
+```{r, kable_wthnfx, echo = FALSE}
+wthn_fx |> 
+  as.data.frame() |> 
+  select(contrast:df) |> 
+  flextable::flextable() |> 
+  flextable::width(j = 1, width = 3, unit = "cm")
 ```
 
-## Use PsyR to get a prior CIs on effects
+Finally, let's call `psyci()` to generate our SCIs. Within `psyci()`, specify the following:
+
+- The model is the previously made `aov_out` object, where the model must be made using the afex package (and of class afex_aov).
+
+- The contrast_tables argument is set as the previously made `wthn_fx` object. Of note, if one has multiple contrast tables this argument can also take in a list.
+
+- The method is set as "bf" to indicate a Bonferroni adjustment should be enacted.
+
+Note that PsyR infers the family and participating factors for every original `emmGrid`, and as such there is no need to specify these features in the `psyci()` function call.
 
 ```{r, get_cis}
-
-wthn_fx
-psyci(model=mod, contrast_tables = wthn_fx, method = "bf")
-
+output <- psyci(
+  model = aov_out, 
+  contrast_tables = wthn_fx, 
+  method = "bf"
+)
 ```
+``` {r, get_cis_hidden, echo = FALSE}
+output |> 
+  unclass() |> 
+  bind_rows() |> 
+  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  flextable::flextable() |> 
+  flextable::width(j = 1, width = 3, unit = "cm")
+```
+
+## The Interpretation
+
+One interpretation of our analysis may be as follows. Being primed with a stereotypical word, as opposed to either an atypical or neutral word, results in between 2.09 and 4.91 tenths of a second faster reaction time. However, there is insufficient evidence to suggest a difference in reaction time exists after priming using an atypical versus a neutral word (-1.32, 3.32).
+
+------------------------------------------------------------------------
+
+```{r, echo = FALSE, fig.align = 'center', out.width = '50%'}
+knitr::include_graphics("../man/figures/logo.png")
+```
+
+------------------------------------------------------------------------

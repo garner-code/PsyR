@@ -1,5 +1,5 @@
 ---
-title: "planned-factorial_mixed-designs_simple-effects"
+title: "Planned Factorial Analysis of Mixed Designs with Simple Effects"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{planned-factorial_mixed-designs_simple-effects}
@@ -7,158 +7,368 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+A vignette to demonstrate how to conduct a planned analysis with simple effects contrasts of a between- x within-subjects design. Specifically, this vignette highlights how one may use PsyR to create Simultaneous Confidence Intervals (SCIs) which allow a researcher to better understand the magnitude and directionality of an effect captured by a contrast.
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
-
-```{r setup}
-library(PsyR)
-library(tidyverse)
-library(emmeans)
-library(afex)
+``` {r, flextable_settings, echo = FALSE}
+flextable::set_flextable_defaults(
+  theme_fun = "theme_apa",
+  table_align = "center",
+  digits = 4
+)
 ```
 
-## The data
+## The Packages
 
-We will be using the 'depression' dataset that comes with the PsyR package. The data is from an experimental design where 15 individuals being treated for depression are assigned to one of three treatment groups. Happiness ratings are collected pre and post treatment, and once again at follow up.
+To use PsyR to calculate confidence intervals for contrast effects, we will utilise a workflow with functions from [afex](https://www.rdocumentation.org/packages/afex/versions/1.4-1) to generate ANOVA output, and [emmeans](https://rvlenth.github.io/emmeans/) to obtain estimated marginal means and the required contrast estimates. So let's load those packages, and any others that are helpful for our workflow.
 
-Let's take a look at the data.
+```{r setup, message = FALSE, warning = FALSE}
+library(afex)
+library(emmeans)
+library(PsyR)
+library(tidyverse)
+```
+
+## The Data
+
+The `depression` dataframe contains the results of a longitudinal study examining the impact of treatments for depression on *N* = 15 patients. Patients were randomly assigned to one of 3 treatment conditions (Treatment 1, Treatment 2, or a waitlist Control), and their happiness was measured at 3 occasions (pre-treatment, immediately post-treatment, and at a follow up). The dependent variable is happiness, with a higher score being indicative of greater happiness.
+
+Let's load the data, then call the `head()` function to print the first 5 rows.
 
 ```{r loaddata}
-
 data(depression)
 head(depression, 5)
 ```
 
-To get a better idea of what the variables are coding, we can run `?depression` to get some further, useful information -
+To learn more about the `depression` dataframe, call the help function using `?df`.
 
-```{r whatdepression, warning=FALSE}
-
+```{r, whatdepression, message = FALSE, warning = FALSE, eval = FALSE}
 ?depression
 ```
 
-Let's define some factors and their corresponding levels in the dataset. This will make our life easier when it comes to plotting and analysing the data.
+Also, let's tidy up the data, labelling the levels of our factors for greater clarity.
 
 ```{r sortdep}
-
 depression <- depression %>%
-               mutate(Group = fct_relevel(Group, 'Ctrl', 'Tmt1', 'Tmt2'),
-                      Time = fct_relevel(Time, 'Pre', 'Post', 'FU'),
-                      Subject = as_factor(Subject))
+  mutate(
+    Group = fct_relevel(Group, 'Ctrl', 'Tmt1', 'Tmt2'),
+    Time = fct_relevel(Time, 'Pre', 'Post', 'FU'),
+    Subject = factor(Subject)
+  )
 ```
 
-Now that we have a better idea about what the data is, let's make a plot to take a look at the impact of treatment on happiness scores over time.
+Next, let's visualise our data. Doing so allows us to more intuitively understand its layout.
 
-```{r plothappiness}
-
-depression %>% group_by(Group, Time) %>%
+```{r plothappiness,  fig.width = 7, fig.height = 4, message = FALSE, warning = FALSE}
+depression %>% 
+  group_by(Group, Time) %>%
   summarise(mean_happiness = mean(Happiness)) %>%
-  ggplot(aes(x=Time, y=mean_happiness, 
-             group=Group, colour=Group)) +
-  geom_line() + theme_classic()
+  ggplot(aes(x = Time, y = mean_happiness, group = Group, colour = Group)) +
+  geom_point(aes(fill = Group, shape = Group), size = 3) +
+  geom_line() + 
+  scale_shape_manual(values = c(21:24)) +
+  theme_classic(base_size = 14) +
+  theme(legend.position = c(.15, .80))
 ```
 
-## Run the model
+## The Analysis
 
-```{r aov}
+Here we will obtain and store the necessary output from which to use PsyR to construct SCIs.
 
-# set emmeans option to multivariate
+To start, we must generate ANOVA output pertaining to our data. To do so, let's specify that we want a multivariate analysis, using `afex::afex_options()`. Next, create a new object `aov_out`, and then call `afex::aov_ez()`. Take in the `Subject` column to identify subjects, the `Happiness` column as the dependent variable, the `depression` dataframe, the `Group` column as the between-subjects factor, and the `Time` column as the within-subjects factor. Note that the generation and storage of `afex::aov_ez()` output in this specific manner is essential for downstream compatibility with functions in the `emmeans` package, and for eventual generation of SCIs with PsyR.
+
+```{r aov, message = FALSE, warning = FALSE}
 afex_options(emmeans_model = "multivariate")
-# perform the statistical model
-mod <- aov_ez("Subject", 
-              "Happiness", 
-              depression, 
-              within = "Time", 
-              between = "Group")
 
-emms <- emmeans(mod, c("Group", "Time"))
-emms
-```
-
-## Contrasts
-
-### All contrasts not including simple effects
-
-Now we define all contrasts not including simple fx
-
-```{r all_contrasts}
-
-between_contrasts = list(
-  "Ts_v_Ctrl" = c(-1, 0.5, 0.5),
-  "T1_v_T2" = c(0, 1, -1)
+aov_out <- aov_ez(
+  id = "Subject", 
+  dv = "Happiness", 
+  data = depression, 
+  between = "Group",
+  within = "Time",
+  anova_table = list(correction = "none")
 )
+```
 
+Next, let's obtain cell means for each of the nine possible cells in our design. To do so, create a new object `emms`. Then, call `emmeans::emmeans()` and specify that we want to take in `aov_out` (the object we just made) and output based upon `Group` and `Time`. Note that the displayed output, both here and throughout the remainder of this vignette, will be curated such that only correct and relevant output is shown.
+
+``` {r, emms_cell_means}
+emms <- emmeans(
+  object = aov_out, 
+  specs = c("Group", "Time")
+)
+```
+``` {r, emms_cell_means_hidden, echo = FALSE}
+emms |> 
+  as.data.frame() |> 
+  select(Group:emmean) |> 
+  flextable::flextable()
+```
+
+Time to define our contrasts!
+
+Given this is a planned analysis, contrasts must be defined prior to data collection. In this example, the following between-subjects main effects contrasts were chosen for analysis:
+
+- "Ts - Ctrl" ➞ The difference between the average happiness scores of Treatments 1 and 2 and the waitlist Control.
+
+- "T1 - T2" ➞ The difference between the average happiness scores of Treatment 1 and Treatment 2.
+
+```{r, btwn}
+between_contrasts = list(
+  "Ts - Ctrl" = c(-1, 0.5, 0.5),
+  "T1 - T2" = c(0, 1, -1)
+)
+```
+
+Now that we have defined our between-subjects main effects contrasts, let's obtain the row means for the between-subjects Group factor. To do so, create `emms_btwn` by calling `emmeans::emmeans()`, placing `aov_out` in the "Object" argument and outputting based upon the between-subjects factor `Group`. 
+
+``` {r, get_btwn_emms}
+emms_btwn <- emmeans(
+  object = aov_out, 
+  specs = c("Group")
+)
+```
+``` {r, get_btwn_emms_hidden, echo = FALSE}
+emms_btwn |> 
+  as.data.frame() |> 
+  select(Group:emmean) |> 
+  flextable::flextable()
+```
+
+Next, let's generate and store statistical output pertaining to our between-subjects main effects contrasts. To do so, create the `btwn_fx` object. Next, call `emmeans::contrast()`, setting `emms_grp` in the "Object" argument and `btwn_contrasts` in the "Method" argument.
+
+```{r, getbtwnfx}
+btwn_fx <- contrast(
+  object = emms_btwn, 
+  method = between_contrasts
+)
+```
+```{r, kable_btwnfx, echo = FALSE}
+btwn_fx |> 
+  as.data.frame() |> 
+  select(contrast:df) |> 
+  flextable::flextable()
+```
+
+Let's also define our within-subjects main effects contrasts. As with our between-subjects main effect contrasts, these must be defined prior to data collection. In this example, the following contrasts were chosen for analysis:
+
+- "Post - Pre" ➞ The difference between average happiness scores taken post versus pre-treatment.
+
+- "FU - Post" ➞ The difference between average happiness scores taken at follow-up versus post-treatment.
+
+```{r, within}
 within_contrasts = list(
-  "Post_vs_Pre" = c(-1, 1, 0),
-  "FU_vs_Post" = c(0, -1, 1)
-) 
-
+  "Post - Pre" = c(-1, 1, 0),
+  "FU - Post" = c(0, -1, 1)
+)
 ```
 
+Following similar steps as with our between-subjects contrasts, let's obtain the column means for the different time points of measurement and store the results of statistical output of the main effects contrasts in the `win_fx` object.
 
-```{r, win_fx}
-
-emms_win <- emmeans(mod, c("Time"))
-win_fx <- contrast(emms_win, within_contrasts)
-win_fx
-
+``` {r, emms_win}
+emms_win <- emmeans(
+  object = aov_out, 
+  specs = "Time"
+)
+``` 
+``` {r, emms_win_hidden, echo = FALSE}
+emms_win |> 
+  as.data.frame() |> 
+  select(Time:emmean) |> 
+  flextable::flextable()
 ```
 
-```{r, btwn_fx}
-
-emms_btwn <- emmeans(mod, c("Group"))
-btwn_fx <- contrast(emms_btwn, between_contrasts)
-btwn_fx
-
+```{r wthn}
+win_fx <- contrast(
+  object = emms_win, 
+  method = within_contrasts
+)
+```
+```{r, kable_winfx, echo = FALSE}
+win_fx |> 
+  as.data.frame() |> 
+  select(contrast:df) |> 
+  flextable::flextable()
 ```
 
-We also care about the interaction effects, so lets get those
+Finally, let's obtain statistical output pertaining to our interaction contrasts. Note that our interaction contrasts will necessarily be the product of each combination of our between- and within-subjects main effects contrasts. 
 
-```{r int}
+To generate and store this output, create `int_fx` and call `emmeans::contrast()`. Place `emms` in the "Object" argument, and a list of our between- and within-subjects contrasts in the "Interaction" argument.
 
-int_fx <- contrast(emms, interaction = list(between_contrasts, within_contrasts))
-int_fx
+```{r int_fx}
+int_fx <- contrast(
+  object = emms, 
+  interaction = list(between_contrasts, within_contrasts)
+)
+```
+```{r, kable_intfx, echo = FALSE}
+int_fx |> 
+  as.data.frame() |>
+  rename(Group = Group_custom, Time = Time_custom) |> 
+  select(Group:df) |> 
+  flextable::flextable()
 ```
 
-## Now, lets sort the simple effects contrasts
+### Simple Effects
 
-First, lets get the effect of the within contrasts at each level of group
+In this analysis, we will define a single all factorial family consisting of the A(b), B(a), A, B and AB effects. This will allow us to investigate both *a* and *b* simple effects.
 
-```{r, win_at_grp}
+To obtain output pertaining to simple effects contrasts, we require the cell means from our data. While we had previously stored these within `emms`, the way in which they are stored in `emms` is incompatible with the methodology used regarding simple effects contrasts. Instead, we must generate and store cell means as split by the column of our dataframe pertaining to the desired simple effects family, in this case `Group`. To generate these cell means, create `win_by_grp` and call `emmeans::emmeans()`. Place `aov_out` in the "Object" argument, and `Time` by `Group` in the "Specs" argument. 
 
-win_by_grp <- emmeans(mod, ~ Time|Group)
-win_by_grp_fx <- contrast(win_by_grp, method=within_contrasts)
-win_by_grp_fx
+``` {r win_by_grp_emms}
+win_by_grp <- emmeans(object = aov_out, ~ Time | Group)
 ```
 
-And now, lets get the effect of the between contrasts for post and follow up. Its a little different, because we only want the post and follow up timepoints.
+Next, let's generate statistical output pertaining to each cell in our design. To do so, create `win_by_grp_fx` and call `emmeans::contrast()`. Place our newly made `win_by_grp` in the "Object" argument and `within_contrasts` in the "Method" argument.
 
-```{r, btwn_at_within}
+```{r, win_by_grp_fx}
+win_by_grp_fx <- contrast(
+  object = win_by_grp, 
+  method = within_contrasts
+)
+```
+```{r, kable_wingrp_fx, echo = FALSE}
+win_by_grp_fx |> 
+  as.data.frame() |> 
+  select(contrast:df) |> 
+  flextable::flextable()
+```
 
+Let's now store output from which emmeans can compute simple effects contrasts related to our between-subjects main effects contrasts. To do so, call `base::list()` and define coefficient vectors which point to the "Post" and "FU" levels of our within-subjects factor.
+
+```{r, btwn_at_within_conts}
 within_simple <-  list(
   "Post*" = c(0, 1, 0),
   "FU*" = c(0, 0, 1)
 )
-btwn_by_treat_fx <- contrast(emms, interaction=list(between_contrasts, within_simple))
-btwn_by_treat_fx
 ```
-## SCIs
+
+Next, create the `win_sfx` object. Call `emmeans::contrast()`, placing `emms` in the "Object" argument and a list of our between-subjects and within-subjects simple effects contrasts in the "Interaction" argument. This will allow emmeans to compute four simple effects contrasts pertaining to our between-subjects main effects contrasts at the cell levels of "post" and "FU".
+
+``` {r, win_sfx}
+win_sfx <- contrast(
+  object = emms, 
+  interaction = list(between_contrasts, within_simple)
+)
+```
+```{r, kable_win, echo = FALSE}
+win_sfx |> 
+  as.data.frame() |> 
+  select(Group_custom:df) |> 
+  flextable::flextable()
+```
+
+Following similar steps, let's generate and store statistical output of simple effects contrasts capturing differences between levels of the between-subjects factor for each within-subjects main effects contrast.
+
+```{r, btwn_by_grp_fx}
+btwn_by_grp <- emmeans(object = aov_out, ~ Group | Time)
+
+btwn_by_grp_fx <- contrast(
+  object = btwn_by_grp, 
+  method = between_contrasts
+)
+```
+```{r, kable_btwngrp_fx, echo = FALSE}
+btwn_by_grp_fx |> 
+  as.data.frame() |> 
+  select(contrast:df) |> 
+  flextable::flextable()
+```
+
+```{r, btwn_simp_conts}
+between_simple <-  list(
+  "Ctrl*" = c(1, 0, 0),
+  "T1*" = c(0, 1, 0),
+  "T2*" = c(0, 0, 1)
+)
+btwn_sfx <- contrast(
+  object = emms, 
+  interaction = list(between_simple, within_contrasts)
+)
+```
+```{r, kable_btwntreat, echo = FALSE}
+btwn_sfx |> 
+  as.data.frame() |> 
+  select(Group_custom:df) |> 
+  flextable::flextable()
+```
+
+### Applying PsyR to generate SCIs
+
+To generate SCIs relevant to each contrast within our planned analysis, let's do the following. First, create the object `all_fx`, within which we will store a `base::list()` that contains statistical output pertaining to all contrasts of interest within our all factorial family. Next, create `alphas`, which will take in a list of alphas of $m$ length, where $m$ = 3 = the number of families in our analysis. Here, ⍺ will be set at $m · ⍺ = 3 · .05 = .15$. Finally, we must define `family_group`. Note that while PsyR generally infers the family and participating factors for every original emmgrid, the family_group argument must be manually defined when conducting an all-factorial simple effects analysis. To do so, call `base::rep()` to generate the string "all_factorial" a number of times equal to the length of `all_fx` (3).
+
+Next, we will call psyci() and input the following.
+
+- The model is set as the previously made `aov_out` object, where the model must be made using the afex package (and of class afex_aov).
+
+- The contrast_tables argument is set as the previously made `all_fx` list.
+
+- The method is set as "bf" to indicate a Bonferonni adjustment should be enacted.
+
+- alpha is set at `alphas`, indicating the desired type I error rate should be set per family at .15 (as has been previously established).
+
+- family_group is set as the previously made `family_group`.
 
 ```{r, psyci}
-
-all_fx <- c(win_fx, btwn_fx, int_fx, win_by_grp_fx, btwn_by_treat_fx)
+all_fx <- list(win_fx, btwn_fx, int_fx, win_sfx, btwn_sfx)
 alphas = 3*.05 # 3 * alpha / nk
+family_group <- rep("all_factorial", length(all_fx))
 
-psyci(
-  model = mod,
+output <- psyci(
+  model = aov_out,
   contrast_tables = all_fx,
   method = "bf",
   alpha = alphas,
-  family_group = rep("all_factorial", length(all_fx))
+  family_group = family_group
 )
-
-
 ```
+``` {r, kable_output, echo = FALSE}
+display <- output %>%
+  unclass() %>%
+  bind_rows() %>%
+  mutate(
+   Group = coalesce(contrast, Group_custom),
+   Time = coalesce(contrast, Time_custom),
+  ) %>%
+  select(estimate:F_value, p_value_adjusted, cc:upper, Group, Time) %>%
+  relocate(Group, Time)
+
+display[1, 1] <- NA
+display[2, 1] <- NA
+display[3, 2] <- NA
+display[4, 2] <- NA
+
+flextable::flextable(display) |> 
+  flextable::width(j = 2, width = 3, unit = "cm")
+```
+
+## The Interpretation
+
+Simple Effects Contrasts are generally used to clarify what may be driving an interaction effect. To demonstrate this, let's examine the interaction between **T1 - T2 × FU - Post**, as well as its constituent simple effects contrasts.
+
+This interaction contrast looks at how treatments 1 and 2 differentially impact happiness scores at follow-up versus immediately post treatment. Our SCIs allow us to say the following: patients who received treatment 2, as compared to treatment 1, were on average between 3.05 and 12.95 points happier at follow-up than at post. 
+
+To understand what is driving the interaction, we may partition it into its two constituent simple effects contrasts. From these, we learn the following:
+
+- T1 - T2 (Post\*) & T1 - T2 (FU\*): There is insufficient evidence of a significant difference between treatments at the post-treatment measure (-2.07, 6.07), and at the follow-up measure (-12.41, 0.41). 
+
+- FU - Post (Tmt1\*) & FU - Post (Tmt2\*): Happiness scores in patients who received treatment 1 are between 4.50 and 11.50 points lower at follow-up as compared to post treatment. There is insufficient evidence of this effect in treatment 2, such that patients are just as happy at follow-up as at post-treatment (-3.50, 3.50).
+
+### The Benefits of SCIs
+
+In conducting a simple effects analysis with SCIs, we have been able to clarify our understanding of the T1 - T2 × FU - Post interaction effect. Specifically, we have shown that it is driven by the tendency of patients who received treatment 1 to experience significantly reduced happiness at follow-up as compared to immediately post-treatment.
+
+Further, by examining the overlap (or lack thereof) between simple effects confidence intervals, one can infer differences at the population level. For example, the SCIs of the simple effects of treatments 1 and 2 at follow-up versus immediately post-treatment allows us to make a stronger inference that the respective population means are different, as the upper bound (-4.50) of FU - Post (Tmt1\*) does not overlap with the lower bound (-3.50) of FU - Post (Tmt 2\*).
+
+------------------------------------------------------------------------
+
+```{r, echo = FALSE, fig.align = 'center', out.width = '50%'}
+knitr::include_graphics("../man/figures/logo.png")
+```
+
+------------------------------------------------------------------------
