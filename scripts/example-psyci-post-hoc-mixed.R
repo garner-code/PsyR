@@ -118,38 +118,38 @@ post_hoc_results <- local({
 
     for (index in seq_along(results)) {
         table <- results[[index]]
-        available_p_values <- !is.na(table$p_value_adjusted)
+        available_p_values <- !is.na(table$p_adj)
         comparable <- stats::complete.cases(
-            table$p_value_adjusted,
+            table$p_adj,
             table$lower,
             table$upper
         )
 
         stopifnot(
             all(c(
-                "df_num", "df_error", "F_value", "p_value",
-                "p_value_adjusted", "p_adjustment"
+                "df1", "df2", "F_value", "p_value",
+                "p_adj", "method"
             ) %in% names(table)),
             !any(c("df", "t.ratio", "p.value") %in% names(table)),
-            all(table$df_num == 1L),
+            all(table$df1 == 1L),
             isTRUE(all.equal(
                 table$p_value,
                 stats::pf(
-                    table$F_value, 1, table$df_error,
+                    table$F_value, 1, table$df2,
                     lower.tail = FALSE
                 )
             )),
-            all(is.finite(table$p_value_adjusted[available_p_values])),
-            all(table$p_value_adjusted[available_p_values] >= 0),
-            all(table$p_value_adjusted[available_p_values] <= 1),
-            all(table$p_adjustment == expected_methods[[index]]),
+            all(is.finite(table$p_adj[available_p_values])),
+            all(table$p_adj[available_p_values] >= 0),
+            all(table$p_adj[available_p_values] <= 1),
+            all(table$method == expected_methods[[index]]),
             any(grepl(
                 "PsyR simultaneous-inference procedure:",
                 attr(table, "mesg"),
                 fixed = TRUE
             )),
             all(
-                (table$p_value_adjusted[comparable] <= alpha) ==
+                (table$p_adj[comparable] <= alpha) ==
                     (table$lower[comparable] > 0 |
                         table$upper[comparable] < 0)
             )
@@ -159,7 +159,7 @@ post_hoc_results <- local({
             "\n",
             names(results)[[index]],
             " family — ",
-            unique(table$p_adjustment),
+            unique(table$method),
             "\n",
             sep = ""
         )
@@ -172,15 +172,15 @@ post_hoc_results <- local({
         "psyr_probability_parameters"
     )
     stopifnot(
-        identical(names(gcr_parameters), c("s", "m", "n")),
+        identical(names(gcr_parameters), c("s", "m", "n", "theta")),
         isTRUE(all.equal(gcr_parameters$s, 2)),
         isTRUE(all.equal(gcr_parameters$m, 0)),
         isTRUE(all.equal(gcr_parameters$n, 41.5)),
-        "theta" %in% names(results[[3L]]),
+        !"theta" %in% names(results[[3L]]),
         isTRUE(all.equal(
-            results[[3L]]$theta,
+            gcr_parameters$theta,
             results[[3L]]$F_value /
-                (results[[3L]]$df_error + results[[3L]]$F_value)
+                (results[[3L]]$df2 + results[[3L]]$F_value)
         ))
     )
 

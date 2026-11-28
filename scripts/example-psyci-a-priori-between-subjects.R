@@ -121,38 +121,38 @@ a_priori_between_results <- local({
     expected_method <- "Bonferroni"
     for (index in seq_along(results)) {
         table <- results[[index]]
-        available_p_values <- !is.na(table$p_value_adjusted)
+        available_p_values <- !is.na(table$p_adj)
         comparable <- stats::complete.cases(
-            table$p_value_adjusted,
+            table$p_adj,
             table$lower,
             table$upper
         )
 
         stopifnot(
             all(c(
-                "df_num", "df_error", "F_value", "p_value",
-                "p_value_adjusted", "p_adjustment"
+                "df1", "df2", "F_value", "p_value",
+                "p_adj", "method"
             ) %in% names(table)),
             !any(c("df", "t.ratio", "p.value") %in% names(table)),
-            all(table$df_num == 1L),
+            all(table$df1 == 1L),
             isTRUE(all.equal(
                 table$p_value,
                 stats::pf(
-                    table$F_value, 1, table$df_error,
+                    table$F_value, 1, table$df2,
                     lower.tail = FALSE
                 )
             )),
-            all(is.finite(table$p_value_adjusted[available_p_values])),
-            all(table$p_value_adjusted[available_p_values] >= 0),
-            all(table$p_value_adjusted[available_p_values] <= 1),
-            all(table$p_adjustment == expected_method),
+            all(is.finite(table$p_adj[available_p_values])),
+            all(table$p_adj[available_p_values] >= 0),
+            all(table$p_adj[available_p_values] <= 1),
+            all(table$method == expected_method),
             any(grepl(
                 "PsyR simultaneous-inference procedure:",
                 attr(table, "mesg"),
                 fixed = TRUE
             )),
             all(
-                (table$p_value_adjusted[comparable] <= alpha) ==
+                (table$p_adj[comparable] <= alpha) ==
                     (table$lower[comparable] > 0 |
                         table$upper[comparable] < 0)
             )
@@ -162,7 +162,7 @@ a_priori_between_results <- local({
             "\nTable ",
             index,
             " — ",
-            unique(table$p_adjustment),
+            unique(table$method),
             "\n",
             sep = ""
         )

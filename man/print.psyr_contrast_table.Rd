@@ -15,5 +15,9 @@
 \code{x}, invisibly.
 }
 \description{
-Print a PsyR contrast table
+Numeric values print to three decimal places, with integer degrees of
+freedom and blank unavailable values. Polynomial indicators and the
+unadjusted p-value are hidden. Interaction component labels are combined
+into a single printed \code{contrast} column when their metadata is available.
+Stored column names \code{df1}, \code{df2}, \code{p_adj}, and \code{method} print unchanged.
 }

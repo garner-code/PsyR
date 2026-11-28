@@ -125,17 +125,25 @@ only for pairwise within-subject contrasts with \code{method = "ind"} or
 \item{legacy_summary}{A non-missing logical value. When \code{TRUE}, calculate and
 print a Psy-style analysis-of-variance summary table containing the SS,
 df, MS, and F statistic for each supplied contrast and its applicable
-error row. The table is attached to the result as \code{legacy_anova_table}.
+error row, plus printed \code{F_crit} and \code{p_adj} values from the selected
+PsyR procedure. The table is attached to the result as \code{legacy_anova_table}.
 The default is \code{FALSE}.}
 }
 \value{
 A list of PsyR contrast tables with confidence intervals added.
-Each table reports \code{df_num = 1}, \code{df_error}, the ordinary observed Psy
-\code{F_value}, its unadjusted \code{F(1, df_error)} upper-tail \code{p_value}, the
-procedure-specific \code{p_value_adjusted}, and an explicit \code{p_adjustment}
-label. Roy GCR tables additionally report \code{theta}, calculated as
-\code{F_value / (df_error + F_value)} for entry into Psy's GCR probability
-calculator. The original \code{emmeans} \code{t.ratio} and \code{p.value} columns are removed.
+Each table reports \code{df1 = 1}, \code{df2}, the ordinary observed Psy
+\code{F_value}, its unadjusted \code{F(1, df2)} upper-tail \code{p_value}, the
+procedure-specific \code{p_adj}, and an explicit \code{method}
+label. These stored names also serve as printed headings; they replace
+\code{df_num}, \code{df_error}, \code{p_value_adjusted}, and \code{p_adjustment}, respectively.
+Code accessing the former column names must use the new names.
+\code{F_crit} is the squared critical constant, replacing \code{cc}.
+\code{sig} is \code{"*"} when the full-precision adjusted p-value is below the table's
+alpha, \code{""} otherwise, and \code{NA} when inference is unavailable.
+Roy GCR tables store row-aligned \code{theta} values, calculated as
+\code{F_value / (df2 + F_value)}, in \code{psyr_probability_parameters$theta}
+for entry into Psy's GCR probability calculator.
+The original \code{emmeans} \code{t.ratio} and \code{p.value} columns are removed.
 Non-contrast rows are removed before correction. The attributes
 \code{psyr_dropped_noncontrasts}, \code{psyr_orthogonality}, and
 \code{psyr_family_group} and \code{psyr_family_size} record filtering and

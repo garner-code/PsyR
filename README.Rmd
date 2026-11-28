@@ -61,6 +61,13 @@ An average workflow will go as follows:
 
 ## Example
 
+`psyci()` results now use `df1`, `df2`, `p_adj`, and `method` as both stored
+column names and printed headings. This is a breaking change: code using
+`df_num`, `df_error`, `p_value_adjusted`, or `p_adjustment` must use the new
+names. The unadjusted `p_value` and polynomial indicator remain stored but
+are hidden when printing. Printed families are labelled `between`, `within`,
+and `mixed`; interaction component labels share one printed `contrast` column.
+
 Below are some basic examples which shows you how to obtain simultaneous confidence intervals. All of the following examples will use the post-hoc method. See [@bird2002] for details. Also, check out the "Articles" tab for detailed examples of analysis pertaining to various designs.
 
 ```{r b_example, message = FALSE, warning = FALSE}
@@ -103,15 +110,19 @@ result <- psyci(
 result |> 
   unclass() |> 
   bind_rows() |> 
-  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  select(contrast, estimate:F_value, p_adj, F_crit, sig, lower, upper) |>
   knitr::kable(digits = 3)
 ```
 
-`psyci()` prints each result twice. The first table reports the contrast
+`psyci()` prints all contrasts in two combined tables, each with a `family`
+column (`between`, `within`, or `mixed`). The first table reports the contrast
 effects and confidence intervals in the dependent variable's original
 units. The second reports the same values in sample standard-deviation
 units, using the pooled within-cell scaling method from the original Psy
-program [@bird2002]. The raw tables remain available through ordinary
+program [@bird2002]. Numeric values print to three decimal places, and only
+PsyR's adjusted p-value is shown (`p_adj`). `F_crit` replaces the critical
+constant column; `sig` shows `*` when the adjusted p-value is below the
+applicable alpha and is blank otherwise. The raw tables remain available through ordinary
 list indexing. For example:
 
 ```{r scaled_example}
@@ -123,7 +134,7 @@ scaled_table <- attr(result, "scaled_tables")[[1]]
 scaled_table |> 
   unclass() |> 
   bind_rows() |> 
-  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  select(contrast, estimate:F_value, p_adj, F_crit, sig, lower, upper) |>
   knitr::kable(digits = 3)
 ```
 

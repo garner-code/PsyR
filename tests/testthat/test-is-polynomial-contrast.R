@@ -82,8 +82,8 @@ test_that("psyci retains polynomial tests and correction counts in mixed tables"
     raw <- observed[[1L]]
     scaled <- attr(observed, "scaled_tables")[[1L]]
     expect_identical(raw$is_polynomial, c(TRUE, FALSE))
-    expect_equal(raw$p_value_adjusted, pmin(1, 2 * raw$p_value))
-    expect_equal(raw$cc, rep(stats::qt(1 - .05 / 4, raw$df_error[1]), 2))
+    expect_equal(raw$p_adj, pmin(1, 2 * raw$p_value))
+    expect_equal(sqrt(raw$F_crit), rep(stats::qt(1 - .05 / 4, raw$df2[1]), 2))
     expect_true(all(is.finite(raw$estimate)))
     expect_true(all(is.finite(raw$F_value)))
     expect_equal(sum(attr(observed, "legacy_anova_table")$row_type == "contrast"), 2L)
@@ -132,7 +132,7 @@ test_that("Algina-Keselman skips polynomial inversion and retains ordinary inter
                     standardized_ci = "algina_keselman")
     raw <- result[[1L]]
     scaled <- attr(result, "scaled_tables")[[1L]]
-    expected <- original(raw$estimate[2], raw$SE[2], raw$df_error[2],
+    expected <- original(raw$estimate[2], raw$SE[2], raw$df2[2],
                          scaled$scale[2], adjust = 2)
     expect_equal(scaled$lower[2], expected$lower)
     expect_equal(scaled$upper[2], expected$upper)

@@ -1267,7 +1267,7 @@ test_that("single-contrast Bonferroni intervals count one contrast", {
     error_df <- unique(as.data.frame(summary(fixture$table))$df)
 
     expect_equal(
-        unique(result[[1L]]$cc),
+        unique(sqrt(result[[1L]]$F_crit)),
         cc_bonf_t(n_k = 1, v_e = error_df, alpha = 0.05),
         tolerance = 1e-12
     )
@@ -1350,18 +1350,18 @@ test_that("post-hoc dimensions are calculated separately for each table", {
     error_df <- unique(as.data.frame(summary(table_a))$df)
 
     expect_equal(
-        unique(result[[1L]]$cc),
+        unique(sqrt(result[[1L]]$F_crit)),
         cc_ph_b(v_b = 1, v_e = error_df, alpha = 0.05),
         tolerance = 1e-12
     )
     expect_equal(
-        unique(result[[2L]]$cc),
+        unique(sqrt(result[[2L]]$F_crit)),
         cc_ph_b(v_b = 2, v_e = error_df, alpha = 0.05),
         tolerance = 1e-12
     )
     expect_false(isTRUE(all.equal(
-        unique(result[[1L]]$cc),
-        unique(result[[2L]]$cc)
+        unique(sqrt(result[[1L]]$F_crit)),
+        unique(sqrt(result[[2L]]$F_crit))
     )))
 })
 
@@ -1460,7 +1460,7 @@ test_that("psyci documents strict handling of summary_emm inputs", {
     for (mode in c("error", "warn", "none")) {
         expect_error(
             do.call(psyci, c(args, list(family_check = mode))),
-            regexp = "original emmGrid|genuine contrasts|orthogonality",
+            regexp = "original emmGrid|interpretable contrasts|orthogonality",
             ignore.case = TRUE
         )
     }
@@ -1470,7 +1470,7 @@ test_that("psyci documents strict handling of summary_emm inputs", {
             contrast_tables = summary_table,
             method = "ind"
         ),
-        regexp = "original emmGrid|genuine contrasts|orthogonality",
+        regexp = "original emmGrid|interpretable contrasts|orthogonality",
         ignore.case = TRUE
     )
 })

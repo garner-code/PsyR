@@ -57,8 +57,8 @@ planned_results <- psyci(
 # two probability columns show that ordinary tail area and the Bonferroni
 # familywise adjustment separately.
 planned_interaction_example <- planned_results[[3]][1, c(
-    "df_num", "df_error", "F_value", "p_value", "p_value_adjusted",
-    "p_adjustment"
+    "df1", "df2", "F_value", "p_value", "p_adj",
+    "method"
 )]
 post_hoc_results <- psyci(
     model = mod,

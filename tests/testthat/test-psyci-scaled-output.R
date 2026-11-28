@@ -49,8 +49,8 @@ test_that("psyci scales between-subject results using Psy's pooled sample SD", {
         )
     }
     for (column in c(
-        "df_num", "df_error", "F_value", "p_value", "p_value_adjusted",
-        "p_adjustment", "cc"
+        "df1", "df2", "F_value", "p_value", "p_adj",
+        "method", "F_crit", "sig"
     )) {
         expect_equal(standardized[[column]], raw[[column]])
     }
@@ -126,7 +126,7 @@ test_that("zero sample variance leaves raw results available", {
     expect_true(all(is.infinite(observed[[1L]]$F_value)))
     expect_equal(observed[[1L]]$p_value, rep(0, nrow(observed[[1L]])))
     expect_equal(
-        observed[[1L]]$p_value_adjusted,
+        observed[[1L]]$p_adj,
         rep(0, nrow(observed[[1L]]))
     )
 })

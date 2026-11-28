@@ -45,7 +45,7 @@ procedure. The default is \code{NA}.}
 if this methods was used. Must have named elements p and q. default = NULL}
 
 \item{p_value_method}{Optional method code used to compute
-\code{p_value_adjusted}. When supplied, messages distinguish the ordinary
+\code{p_adj}. When supplied, messages distinguish the ordinary
 \code{F_value} and \code{p_value} from the procedure-specific adjusted probability
 and confidence interval. Default is \code{NULL} for direct calls that have not
 computed PsyR p-values.}

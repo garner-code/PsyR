@@ -46,7 +46,7 @@ make_tutorial_family_fixture <- function() {
     )
 }
 
-test_that("family_group pools genuine contrasts after selector rows are dropped", {
+test_that("family_group pools interpretable contrasts after selector rows are dropped", {
     fixture <- make_tutorial_family_fixture()
     on.exit(
         afex::afex_options(emmeans_model = fixture$old_emmeans_model),
@@ -66,7 +66,7 @@ test_that("family_group pools genuine contrasts after selector rows are dropped"
         c(14L, 2L, 2L)
     )
     expected_cc <- sqrt(stats::qf(1 - 0.15 / 18, 1, 12))
-    expect_equal(unique(unlist(lapply(observed, `[[`, "cc"))), expected_cc)
+    expect_equal(unique(unlist(lapply(observed, function(x) sqrt(x$F_crit)))), expected_cc)
     expect_equal(expected_cc, 3.15268131217, tolerance = 1e-10)
 
     for (table in observed) {
@@ -74,11 +74,11 @@ test_that("family_group pools genuine contrasts after selector rows are dropped"
             estimate = table$estimate,
             se_contrast = table$SE,
             method = "bf",
-            v_e = unique(table$df_error),
+            v_e = unique(table$df2),
             n_k = 18
         )
-        expect_equal(table$p_value_adjusted, expected_p)
-        expect_equal(table$p_value_adjusted, pmin(1, 18 * table$p_value))
+        expect_equal(table$p_adj, expected_p)
+        expect_equal(table$p_adj, pmin(1, 18 * table$p_value))
     }
 
     dropped <- attr(observed[[1L]], "psyr_dropped_noncontrasts")
@@ -97,7 +97,7 @@ test_that("family_group pools genuine contrasts after selector rows are dropped"
     expect_identical(attr(observed[[1L]], "psyr_family_size"), 18L)
     expect_true(any(grepl("dropped 6 non-contrast", attr(observed[[1L]], "mesg"))))
     expect_true(any(grepl(
-        "family_group 'all_factorial', containing 18",
+        "family_group 'all_factorial', containing k=18",
         attr(observed[[1L]], "mesg"),
         fixed = TRUE
     )))
@@ -148,11 +148,11 @@ test_that("separate correction warns for cross-table nonorthogonality", {
         ignore.case = TRUE
     )
     expect_equal(
-        unique(observed[[1L]]$cc),
+        unique(sqrt(observed[[1L]]$F_crit)),
         cc_bonf_t(v_e = 12, n_k = 14, alpha = 0.15)
     )
     expect_equal(
-        unique(observed[[2L]]$cc),
+        unique(sqrt(observed[[2L]]$F_crit)),
         cc_bonf_t(v_e = 12, n_k = 2, alpha = 0.15)
     )
     expect_true(length(
@@ -201,15 +201,15 @@ test_that("different family_group identifiers receive different pooled sizes", {
         family_group = c("primary", "primary", "secondary")
     ))
     expect_equal(
-        unique(observed[[1L]]$cc),
+        unique(sqrt(observed[[1L]]$F_crit)),
         cc_bonf_t(v_e = 12, n_k = 16, alpha = 0.15)
     )
     expect_equal(
-        unique(observed[[2L]]$cc),
+        unique(sqrt(observed[[2L]]$F_crit)),
         cc_bonf_t(v_e = 12, n_k = 16, alpha = 0.15)
     )
     expect_equal(
-        unique(observed[[3L]]$cc),
+        unique(sqrt(observed[[3L]]$F_crit)),
         cc_bonf_t(v_e = 12, n_k = 2, alpha = 0.15)
     )
 })
@@ -243,7 +243,7 @@ test_that("a table containing only selectors is rejected", {
     )
     expect_error(
         psyci(fixture$model, selector, "bf"),
-        regexp = "no genuine contrasts",
+        regexp = "no interpretable contrasts",
         fixed = TRUE
     )
 })

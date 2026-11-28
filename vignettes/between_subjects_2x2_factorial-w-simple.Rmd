@@ -224,7 +224,7 @@ output %>%
   unclass() %>%
   bind_rows() %>%
   mutate(sfx = coalesce(sleep_deprivation, nvh)) %>%
-  select(contrast:F_value, p_value_adjusted, cc:upper, sfx) %>% 
+  select(contrast, estimate:F_value, p_adj, F_crit, sig, lower, upper, sfx) %>%
   relocate(contrast, sfx) %>%
   flextable::flextable() %>%
   flextable::width(j = 2, width = 4, unit = "cm")

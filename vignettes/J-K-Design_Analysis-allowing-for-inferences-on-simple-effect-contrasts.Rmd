@@ -268,7 +268,7 @@ display_bf <- output_bf %>%
     Experience = coalesce(contrast, Experience_custom),
     Therapy = coalesce(Therapy, Therapy_custom),
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Experience, Therapy) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Experience, Therapy) %>%
   relocate(Experience, Therapy)
 
 flextable::flextable(display_bf) |> 
@@ -307,7 +307,7 @@ display_ph <- output_ph %>%
     Experience = coalesce(contrast, Experience_custom),
     Therapy = coalesce(Therapy, Therapy_custom),
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Experience, Therapy) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Experience, Therapy) %>%
   relocate(Experience, Therapy)
 
 flextable::flextable(display_ph)|> 
@@ -374,7 +374,7 @@ display_ind <- output_ind %>%
     Experience = coalesce(contrast, Experience_custom),
     Therapy = coalesce(contrast, Therapy_custom),
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Experience, Therapy) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Experience, Therapy) %>%
   relocate(Experience, Therapy)
 
 display_ind[3, 1] <- NA

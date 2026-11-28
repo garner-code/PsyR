@@ -54,6 +54,14 @@ An average workflow will go as follows:
 
 ## Example
 
+`psyci()` results now use `df1`, `df2`, `p_adj`, and `method` as both
+stored column names and printed headings. This is a breaking change:
+code using `df_num`, `df_error`, `p_value_adjusted`, or `p_adjustment`
+must use the new names. The unadjusted `p_value` and polynomial
+indicator remain stored but are hidden when printing. Printed families
+are labelled `between`, `within`, and `mixed`; interaction component
+labels share one printed `contrast` column.
+
 Below are some basic examples which shows you how to obtain simultaneous
 confidence intervals. All of the following examples will use the
 post-hoc method. See (Bird 2002) for details. Also, check out the
@@ -97,18 +105,23 @@ result <- psyci(
 )
 ```
 
-| contrast | is_polynomial | estimate | SE | df_num | df_error | F_value | p_value_adjusted | cc | lower | upper |
-|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 12vs34 | FALSE | 2.958 | 2.116 | 1 | 12 | 1.955 | 0.597 | 3.236 | -3.888 | 9.805 |
-| 1vs2 | FALSE | -14.083 | 2.992 | 1 | 12 | 22.155 | 0.005 | 3.236 | -23.765 | -4.401 |
-| 3vs4 | FALSE | -2.500 | 2.992 | 1 | 12 | 0.698 | 0.872 | 3.236 | -12.182 | 7.182 |
+| contrast | estimate |    SE | df1 | df2 | F_value | p_adj | F_crit | sig |   lower |  upper |
+|:---------|---------:|------:|----:|----:|--------:|------:|-------:|:----|--------:|-------:|
+| 12vs34   |    2.958 | 2.116 |   1 |  12 |   1.955 | 0.597 | 10.471 |     |  -3.888 |  9.805 |
+| 1vs2     |  -14.083 | 2.992 |   1 |  12 |  22.155 | 0.005 | 10.471 | \*  | -23.765 | -4.401 |
+| 3vs4     |   -2.500 | 2.992 |   1 |  12 |   0.698 | 0.872 | 10.471 |     | -12.182 |  7.182 |
 
-`psyci()` prints each result twice. The first table reports the contrast
-effects and confidence intervals in the dependent variable’s original
-units. The second reports the same values in sample standard-deviation
-units, using the pooled within-cell scaling method from the original Psy
-program (Bird 2002). The raw tables remain available through ordinary
-list indexing. For example:
+`psyci()` prints all contrasts in two combined tables, each with a
+`family` column (`between`, `within`, or `mixed`). The first table
+reports the contrast effects and confidence intervals in the dependent
+variable’s original units. The second reports the same values in sample
+standard-deviation units, using the pooled within-cell scaling method
+from the original Psy program (Bird 2002). Numeric values print to three
+decimal places, and only PsyR’s adjusted p-value is shown (`p_adj`).
+`F_crit` replaces the critical constant column; `sig` shows `*` when the
+adjusted p-value is below the applicable alpha and is blank otherwise.
+The raw tables remain available through ordinary list indexing. For
+example:
 
 ``` r
 result <- psyci(mod, list(btwn_con), method = "ph")
@@ -116,11 +129,11 @@ raw_table <- result[[1]]
 scaled_table <- attr(result, "scaled_tables")[[1]]
 ```
 
-| contrast | is_polynomial | estimate | SE | df_num | df_error | F_value | p_value_adjusted | cc | lower | upper |
-|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 12vs34 | FALSE | 0.640 | 0.457 | 1 | 12 | 1.955 | 0.597 | 3.236 | -0.841 | 2.120 |
-| 1vs2 | FALSE | -3.045 | 0.647 | 1 | 12 | 22.155 | 0.005 | 3.236 | -5.138 | -0.952 |
-| 3vs4 | FALSE | -0.540 | 0.647 | 1 | 12 | 0.698 | 0.872 | 3.236 | -2.634 | 1.553 |
+| contrast | estimate |    SE | df1 | df2 | F_value | p_adj | F_crit | sig |  lower |  upper |
+|:---------|---------:|------:|----:|----:|--------:|------:|-------:|:----|-------:|-------:|
+| 12vs34   |    0.640 | 0.457 |   1 |  12 |   1.955 | 0.597 | 10.471 |     | -0.841 |  2.120 |
+| 1vs2     |   -3.045 | 0.647 |   1 |  12 |  22.155 | 0.005 | 10.471 | \*  | -5.138 | -0.952 |
+| 3vs4     |   -0.540 | 0.647 |   1 |  12 |   0.698 | 0.872 | 10.471 |     | -2.634 |  1.553 |
 
 It is possible to print Psy’s legacy layout for the supplied contrasts.
 This will contain values for each contrast’s sum of squares, degrees of

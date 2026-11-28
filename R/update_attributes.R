@@ -30,7 +30,7 @@
 #' @param smr_params  a list of parameters used for the Studentized Maximum Root method,
 #' if this methods was used. Must have named elements p and q. default = NULL
 #' @param p_value_method Optional method code used to compute
-#'   `p_value_adjusted`. When supplied, messages distinguish the ordinary
+#'   `p_adj`. When supplied, messages distinguish the ordinary
 #'   `F_value` and `p_value` from the procedure-specific adjusted probability
 #'   and confidence interval. Default is `NULL` for direct calls that have not
 #'   computed PsyR p-values.
@@ -92,18 +92,17 @@ update_attributes <- function(contrast_table, method, family = NA,
   p_value_message = character()
   if (!is.null(p_adjustment)) {
     ordinary_message <- paste0(
-      "PsyR reports `F_value` as the ordinary F(1, df_error) contrast ",
-      "statistic and `p_value` as its unadjusted upper-tail probability."
+      "PsyR reports `F_value` as the ordinary F(1, df2) contrast statistic."
     )
     adjusted_message <- if (identical(p_adjustment, "none")) {
       paste0(
-        "PsyR p-value adjustment: none. `p_value_adjusted` equals ",
-        "`p_value`, and the confidence interval is individual."
+        "PsyR p-value adjustment: none. `p_adj` is unadjusted, ",
+        "and the confidence interval is individual."
       )
     } else {
       paste0(
         "PsyR simultaneous-inference procedure: ", p_adjustment,
-        ". `p_value_adjusted` and the confidence interval use this procedure."
+        ". `p_adj` and the confidence interval use this procedure."
       )
     }
     p_value_message <- c(ordinary_message, adjusted_message)
@@ -221,8 +220,8 @@ update_attributes <- function(contrast_table, method, family = NA,
     return(paste0(
       "Psy probability-calculator parameters for Roy GCR: s = ",
       parameters$s, ", m = ", parameters$m, ", n = ", parameters$n,
-      ". They are stored in `psyr_probability_parameters`; the `theta` ",
-      "column contains the value for Psy's GCR field."
+      ". They are stored in `psyr_probability_parameters`; its row-aligned ",
+      "`theta` attribute entry contains the values for Psy's GCR field."
     ))
   }
   if (identical(method, "smr")) {

@@ -28,6 +28,7 @@ flatten_psyr <- function(result) {
 
 compare_result <- function(analysis, psyr, legacy, note = "") {
     psyr <- flatten_psyr(psyr)
+    psyr$cc <- sqrt(psyr$F_crit)
     if (nrow(psyr) != nrow(legacy)) {
         stop(sprintf("%s: PsyR has %d rows but the legacy port has %d.",
             analysis, nrow(psyr), nrow(legacy)))
@@ -47,7 +48,7 @@ compare_result <- function(analysis, psyr, legacy, note = "") {
         psyr_SE = psyr$SE,
         SE_difference = psyr$SE - legacy$SE,
         legacy_df = legacy$df,
-        psyr_df = psyr$df_error,
+        psyr_df = psyr$df2,
         legacy_cc = legacy$cc,
         psyr_cc = psyr$cc,
         cc_difference = psyr$cc - legacy$cc,

@@ -140,7 +140,7 @@ test_that("psyci adds Algina-Keselman scaling without changing raw results", {
         scaled$estimate - scaled$lower
     )))
     expect_equal(
-        stats::pt(raw$estimate / raw$SE, raw$df_error, scaled$ncp_lower),
+        stats::pt(raw$estimate / raw$SE, raw$df2, scaled$ncp_lower),
         rep(1 - 0.05 / (2 * nrow(raw)), nrow(raw)),
         tolerance = 1e-8
     )

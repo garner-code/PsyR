@@ -277,7 +277,7 @@ display_bon <- output_bon %>%
     Group = coalesce(contrast, Group_custom),
     Session = coalesce(contrast, Session_custom)
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Group, Session) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Group, Session) %>%
   relocate(Group, Session)
 
 display_bon[1, 1] <- NA
@@ -312,7 +312,7 @@ display_ph <- output_ph %>%
     Group = coalesce(contrast, Group_custom),
     Session = coalesce(contrast, Session_custom)
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Group, Session) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Group, Session) %>%
   relocate(Group, Session)
 
 display_ph[1, 1] <- NA

@@ -240,7 +240,7 @@ display <- output %>%
     Group = coalesce(contrast, Group_custom),
     Time = coalesce(contrast, Time_custom)
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Group, Time) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Group, Time) %>%
   relocate(Group, Time)
 
 display[3, 1] <- NA

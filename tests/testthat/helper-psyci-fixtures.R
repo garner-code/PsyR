@@ -178,30 +178,30 @@ make_mixed_fixture <- function() {
 expect_psyci_table <- function(result, n_rows) {
   expect_true(is.data.frame(result))
   expect_true(all(c(
-    "estimate", "SE", "df_num", "df_error", "F_value", "p_value",
-    "p_value_adjusted", "p_adjustment", "cc", "lower", "upper"
+    "estimate", "SE", "df1", "df2", "F_value", "p_value",
+    "p_adj", "method", "F_crit", "sig", "lower", "upper"
   ) %in% names(result)))
   expect_false(any(c("df", "t.ratio", "p.value") %in% names(result)))
   expect_equal(nrow(result), n_rows)
   expect_true(all(is.finite(result$estimate)))
   expect_true(all(is.finite(result$SE)))
-  expect_true(all(result$df_num == 1L))
-  expect_true(all(is.finite(result$df_error)))
+  expect_true(all(result$df1 == 1L))
+  expect_true(all(is.finite(result$df2)))
   expect_true(all(is.finite(result$F_value)))
   expect_true(all(is.finite(result$p_value)))
-  expect_true(all(is.finite(result$p_value_adjusted)))
-  expect_true(all(is.finite(result$cc)))
+  expect_true(all(is.finite(result$p_adj)))
+  expect_true(all(is.finite(sqrt(result$F_crit))))
   expect_true(all(is.finite(result$lower)))
   expect_true(all(is.finite(result$upper)))
   expect_true(all(result$lower <= result$upper))
   expect_equal(
     result$lower,
-    result$estimate - result$cc * result$SE,
+    result$estimate - sqrt(result$F_crit) * result$SE,
     tolerance = 1e-12
   )
   expect_equal(
     result$upper,
-    result$estimate + result$cc * result$SE,
+    result$estimate + sqrt(result$F_crit) * result$SE,
     tolerance = 1e-12
   )
   invisible(result)

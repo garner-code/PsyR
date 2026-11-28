@@ -224,7 +224,7 @@ display <- output %>%
     Auditory = coalesce(Auditory_custom, contrast),
     Visual = coalesce(Visual_custom, contrast)
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Auditory, Visual) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Auditory, Visual) %>%
   relocate(Auditory, Visual)
 
 display[1, 2] <- NA
@@ -254,7 +254,7 @@ display_ind <- output_ind %>%
     Auditory = coalesce(Auditory_custom, contrast),
     Visual = coalesce(Visual_custom, contrast)
   ) %>%
-  select(estimate:F_value, p_value_adjusted, cc:upper, Auditory, Visual) %>%
+  select(estimate:F_value, p_adj, F_crit, sig, lower, upper, Auditory, Visual) %>%
   relocate(Auditory, Visual)
 
 display_ind[1, 2] <- NA

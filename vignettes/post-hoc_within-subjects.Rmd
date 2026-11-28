@@ -166,7 +166,7 @@ output <- psyci(
 output |> 
   unclass() |> 
   bind_rows() |> 
-  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  select(contrast, estimate:F_value, p_adj, F_crit, sig, lower, upper) |>
   flextable::flextable()
 ```
 

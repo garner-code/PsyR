@@ -97,15 +97,23 @@
 #' @param legacy_summary A non-missing logical value. When `TRUE`, calculate and
 #'   print a Psy-style analysis-of-variance summary table containing the SS,
 #'   df, MS, and F statistic for each supplied contrast and its applicable
-#'   error row. The table is attached to the result as `legacy_anova_table`.
+#'   error row, plus printed `F_crit` and `p_adj` values from the selected
+#'   PsyR procedure. The table is attached to the result as `legacy_anova_table`.
 #'   The default is `FALSE`.
 #' @return A list of PsyR contrast tables with confidence intervals added.
-#'   Each table reports `df_num = 1`, `df_error`, the ordinary observed Psy
-#'   `F_value`, its unadjusted `F(1, df_error)` upper-tail `p_value`, the
-#'   procedure-specific `p_value_adjusted`, and an explicit `p_adjustment`
-#'   label. Roy GCR tables additionally report `theta`, calculated as
-#'   `F_value / (df_error + F_value)` for entry into Psy's GCR probability
-#'   calculator. The original `emmeans` `t.ratio` and `p.value` columns are removed.
+#'   Each table reports `df1 = 1`, `df2`, the ordinary observed Psy
+#'   `F_value`, its unadjusted `F(1, df2)` upper-tail `p_value`, the
+#'   procedure-specific `p_adj`, and an explicit `method`
+#'   label. These stored names also serve as printed headings; they replace
+#'   `df_num`, `df_error`, `p_value_adjusted`, and `p_adjustment`, respectively.
+#'   Code accessing the former column names must use the new names.
+#'   `F_crit` is the squared critical constant, replacing `cc`.
+#'   `sig` is `"*"` when the full-precision adjusted p-value is below the table's
+#'   alpha, `""` otherwise, and `NA` when inference is unavailable.
+#'   Roy GCR tables store row-aligned `theta` values, calculated as
+#'   `F_value / (df2 + F_value)`, in `psyr_probability_parameters$theta`
+#'   for entry into Psy's GCR probability calculator.
+#'   The original `emmeans` `t.ratio` and `p.value` columns are removed.
 #'   Non-contrast rows are removed before correction. The attributes
 #'   `psyr_dropped_noncontrasts`, `psyr_orthogonality`, and
 #'   `psyr_family_group` and `psyr_family_size` record filtering and
@@ -207,7 +215,7 @@ psyci <- function(model, contrast_tables, method,
   if (test_summary_emm > 0L) {
     stop(
       paste0(
-        "PsyR requires original emmGrid objects to identify genuine contrasts ",
+        "PsyR requires original emmGrid objects to identify interpretable contrasts ",
         "and assess orthogonality. Pass the original emmeans contrast objects, ",
         "not summary_emm tables."
       ),
@@ -498,7 +506,7 @@ psyci <- function(model, contrast_tables, method,
 
   } else if (method %in% "bf") {
 
-    # Count only genuine contrasts and pool tables according to their group.
+    # Count only interpretable contrasts and pool tables according to their group.
     nk = .bonferroni_group_sizes(
       counts = contrast_preparation$counts,
       groups = correction_groups,
@@ -571,7 +579,7 @@ psyci <- function(model, contrast_tables, method,
     rep(list(NULL), length(contrast_tables))
   }
   contrasts_w_cis <- Map(
-    function(contrast_table, f_value, family, n_k, v_b, v_w) {
+    function(contrast_table, f_value, family, n_k, v_b, v_w, alpha_value) {
       contrast_table[["df"]] <- rep(v_e, nrow(contrast_table))
       contrast_table[["df_num"]] <- rep(1L, nrow(contrast_table))
       contrast_table[["F_value"]] <- unname(f_value)
@@ -605,6 +613,10 @@ psyci <- function(model, contrast_tables, method,
         }
       )
       contrast_table[["p_value_adjusted"]] <- unname(p_value_adjusted)
+      contrast_table[["sig"]] <- ifelse(
+        is.na(p_value_adjusted), NA_character_,
+        ifelse(p_value_adjusted < alpha_value, "*", "")
+      )
       contrast_table[["p_adjustment"]] <- rep(
         .psyci_adjustment_label(method, family),
         nrow(contrast_table)
@@ -616,7 +628,8 @@ psyci <- function(model, contrast_tables, method,
     family_list,
     p_value_nk,
     v_bs,
-    v_ws
+    v_ws,
+    alphas
   )
 
   # now I want to add information about what happened as an attribute to the
@@ -680,6 +693,18 @@ psyci <- function(model, contrast_tables, method,
     adjustments = standardized_adjustments
   )
   if (legacy_summary) {
+    source_rows <- attr(legacy_statistics$table, "psyr_source_rows", exact = TRUE)
+    inference <- data.frame(
+      F_crit = rep(NA_real_, nrow(source_rows)),
+      p_adj = rep(NA_real_, nrow(source_rows))
+    )
+    for (index in which(!is.na(source_rows$table))) {
+      table <- contrasts_w_cis[[source_rows$table[index]]]
+      row <- source_rows$row[index]
+      inference$F_crit[index] <- table$F_crit[row]
+      inference$p_adj[index] <- table$p_adj[row]
+    }
+    attr(legacy_statistics$table, "psyr_inference") <- inference
     attr(result, "legacy_anova_table") <- legacy_statistics$table
   }
   result

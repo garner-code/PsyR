@@ -141,7 +141,7 @@
     if (!all(vapply(contrast_tables, inherits, logical(1), "emmGrid"))) {
         stop(
             paste0(
-                "PsyR requires the original emmGrid objects to identify genuine ",
+                "PsyR requires the original emmGrid objects to identify interpretable ",
                 "contrasts and assess orthogonality. A summary_emm no longer ",
                 "contains the required coefficient information."
             ),
@@ -172,7 +172,7 @@
         if (!any(genuine)) {
             stop(
                 sprintf(
-                    "%s contains no genuine contrasts after non-contrast rows are removed.",
+                    "%s contains no interpretable contrasts after non-contrast rows are removed.",
                     table_ids[[index]]
                 ),
                 call. = FALSE
@@ -289,8 +289,8 @@
     if (!is.na(correction_group) && !is.na(family_size)) {
         messages <- c(messages, sprintf(
             paste0(
-                "PsyR Bonferroni confidence intervals and `p_value_adjusted` use ",
-                "family_group '%s', containing %d genuine contrast(s)."
+                "PsyR Bonferroni confidence intervals and `p_adj` use ",
+                "family_group '%s', containing k=%d interpretable contrast(s)."
             ),
             correction_group, family_size
         ))

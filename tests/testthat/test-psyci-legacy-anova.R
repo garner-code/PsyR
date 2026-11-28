@@ -46,19 +46,19 @@ test_that("psyci exposes the new inferential schema", {
     expect_named(
         table,
         c(
-            "contrast", "is_polynomial", "estimate", "SE", "df_num", "df_error", "F_value",
-            "p_value", "p_value_adjusted", "p_adjustment", "cc", "lower",
+            "contrast", "is_polynomial", "estimate", "SE", "df1", "df2", "F_value", "F_crit",
+            "p_value", "p_adj", "method", "sig", "lower",
             "upper"
         )
     )
     expect_null(attr(result, "legacy_anova_table", exact = TRUE))
-    expect_equal(table$df_num, rep(1L, nrow(table)))
+    expect_equal(table$df1, rep(1L, nrow(table)))
     expect_equal(table$F_value, (table$estimate / table$SE)^2)
     expect_equal(
         table$p_value,
-        stats::pf(table$F_value, 1, table$df_error, lower.tail = FALSE)
+        stats::pf(table$F_value, 1, table$df2, lower.tail = FALSE)
     )
-    expect_equal(table$df_error, rep(40, nrow(table)))
+    expect_equal(table$df2, rep(40, nrow(table)))
 })
 
 test_that("legacy_summary is validated", {
@@ -189,7 +189,7 @@ test_that("Bonferroni p-values are two-tailed probabilities from F", {
         1,
         family_size * 2 * stats::pt(
             -abs(t_value),
-            df = result$df_error
+            df = result$df2
         )
     )
     expected_f <- pmin(
@@ -197,25 +197,25 @@ test_that("Bonferroni p-values are two-tailed probabilities from F", {
         family_size * stats::pf(
             result$F_value,
             df1 = 1,
-            df2 = result$df_error,
+            df2 = result$df2,
             lower.tail = FALSE
         )
     )
-    expect_equal(result$p_value_adjusted, expected_t)
-    expect_equal(result$p_value_adjusted, expected_f)
+    expect_equal(result$p_adj, expected_t)
+    expect_equal(result$p_adj, expected_f)
     expect_equal(
         result$p_value,
         stats::pf(
             result$F_value,
             df1 = 1,
-            df2 = result$df_error,
+            df2 = result$df2,
             lower.tail = FALSE
         )
     )
     expect_equal(result$F_value, individual$F_value)
     expect_equal(result$p_value, individual$p_value)
     expect_true(any(
-        result$p_value_adjusted != individual$p_value_adjusted
+        result$p_adj != individual$p_adj
     ))
 })
 

@@ -9,8 +9,8 @@
 \arguments{
 \item{x}{A result returned by \code{psyci()}.}
 
-\item{...}{Additional arguments passed to the individual table print
-methods.}
+\item{...}{Additional arguments passed to \code{\link[=print.data.frame]{print.data.frame()}} for the
+combined contrast tables.}
 }
 \value{
 \code{x}, invisibly.
@@ -21,9 +21,17 @@ sample standard-deviation units. By default, the scaled tables divide the
 estimate, standard error, and confidence limits by the pooled sample SD used
 by the original Psy program. When Algina-Keselman intervals were requested,
 the standardized limits instead come from noncentral-t inversion and the
-scaling divisor is contrast-specific. The \code{df_num}, \code{df_error}, \code{F_value},
-\code{theta} (when present), \code{p_value}, \code{p_value_adjusted}, and \code{p_adjustment}
+scaling divisor is contrast-specific. The \code{df1}, \code{df2}, \code{F_value},
+\code{F_crit}, \code{sig}, \code{p_value}, \code{p_adj}, and \code{method}
 columns are unchanged.
 When a legacy ANOVA table was
 requested, it is printed once before both confidence-interval sections.
+Each section combines all contrast tables with a \code{family} column. Numeric
+values print to three decimal places, with integer degrees of freedom and
+blank unavailable values. Only the PsyR adjusted p-value is displayed, as
+\code{p_adj}; degrees of freedom are \code{df1} and \code{df2}, and the procedure is
+\code{method}. Stored values
+retain full precision and use the same column names. Polynomial indicators
+are hidden, interaction labels are combined, and family codes print as
+\code{between}, \code{within}, or \code{mixed}.
 }

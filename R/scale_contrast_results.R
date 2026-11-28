@@ -118,7 +118,7 @@
         attr(scaled, "mesg"),
         paste(
             "PsyR scaled estimate, SE, and confidence limits by sample SD:",
-            format(divisor, digits = 7)
+            formatC(divisor, format = "f", digits = 3)
         )
     )
     scaled
@@ -253,7 +253,7 @@
         interval <- algina_keselman_ci(
             estimate = table$estimate[keep],
             se_contrast = table$SE[keep],
-            df = table$df_error[keep],
+            df = table$df2[keep],
             scale = divisor[keep],
             alpha = alpha,
             adjust = adjust
@@ -269,7 +269,7 @@
         attr(scaled, "mesg"),
         paste0(
             "PsyR used Algina-Keselman noncentral-t confidence limits with ",
-            "contrast-specific sample-SD scaling and Bonferroni adjust = ",
+            "contrast-specific sample-SD scaling and Bonferroni k=",
             adjust,
             "."
         )
@@ -331,15 +331,23 @@
 #' estimate, standard error, and confidence limits by the pooled sample SD used
 #' by the original Psy program. When Algina-Keselman intervals were requested,
 #' the standardized limits instead come from noncentral-t inversion and the
-#' scaling divisor is contrast-specific. The `df_num`, `df_error`, `F_value`,
-#' `theta` (when present), `p_value`, `p_value_adjusted`, and `p_adjustment`
+#' scaling divisor is contrast-specific. The `df1`, `df2`, `F_value`,
+#' `F_crit`, `sig`, `p_value`, `p_adj`, and `method`
 #' columns are unchanged.
 #' When a legacy ANOVA table was
 #' requested, it is printed once before both confidence-interval sections.
+#' Each section combines all contrast tables with a `family` column. Numeric
+#' values print to three decimal places, with integer degrees of freedom and
+#' blank unavailable values. Only the PsyR adjusted p-value is displayed, as
+#' `p_adj`; degrees of freedom are `df1` and `df2`, and the procedure is
+#' `method`. Stored values
+#' retain full precision and use the same column names. Polynomial indicators
+#' are hidden, interaction labels are combined, and family codes print as
+#' `between`, `within`, or `mixed`.
 #'
 #' @param x A result returned by `psyci()`.
-#' @param ... Additional arguments passed to the individual table print
-#'   methods.
+#' @param ... Additional arguments passed to [print.data.frame()] for the
+#'   combined contrast tables.
 #'
 #' @return `x`, invisibly.
 #' @export
@@ -371,7 +379,7 @@ print.psyr_ci <- function(x, ...) {
     } else {
         cat(
             "Scaling divisor (pooled sample SD): ",
-            format(scale_info$divisor, digits = 7),
+            formatC(scale_info$divisor, format = "f", digits = 3),
             "\n",
             sep = ""
         )
@@ -381,18 +389,35 @@ print.psyr_ci <- function(x, ...) {
     invisible(x)
 }
 
+.psyci_family_label <- function(family) {
+    labels <- c(b = "between", w = "within", bw = "mixed")
+    if (family %in% names(labels)) unname(labels[[family]]) else family
+}
+
 .print_psyci_tables <- function(tables, ...) {
     table_names <- names(tables)
-    for (index in seq_along(tables)) {
-        if (length(tables) > 1L || !is.null(table_names)) {
-            label <- if (!is.null(table_names) && nzchar(table_names[[index]])) {
-                table_names[[index]]
-            } else {
-                as.character(index)
-            }
-            cat("\n$", label, "\n", sep = "")
+    displays <- lapply(seq_along(tables), function(index) {
+        display <- .psyci_display_table(tables[[index]])
+        family <- if (is.null(table_names)) "" else table_names[[index]]
+        data.frame(family = rep(.psyci_family_label(family), nrow(display)), display,
+                   check.names = FALSE, stringsAsFactors = FALSE)
+    })
+    columns <- unique(unlist(lapply(displays, names), use.names = FALSE))
+    displays <- lapply(displays, function(display) {
+        for (column in setdiff(columns, names(display))) {
+            display[[column]] <- rep("", nrow(display))
         }
-        print(tables[[index]], ...)
+        display[columns]
+    })
+    display <- do.call(rbind, displays)
+    rownames(display) <- NULL
+    print.data.frame(display, ...)
+    for (index in seq_along(tables)) {
+        messages <- attr(tables[[index]], "mesg", exact = TRUE)
+        if (length(messages) == 0L) next
+        family <- if (is.null(table_names)) "" else paste0(" (", .psyci_family_label(table_names[[index]]), ")")
+        cat("\nTable ", index, family, ":\n",
+            paste(messages, collapse = "\n"), "\n", sep = "")
     }
     invisible(tables)
 }

@@ -339,7 +339,9 @@
     SS,
     df,
     MS,
-    F_value
+    F_value,
+    table = NA_integer_,
+    row = NA_integer_
 ) {
     data.frame(
         section = section,
@@ -350,6 +352,8 @@
         df = df,
         MS = MS,
         F_value = F_value,
+        table = table,
+        row = row,
         stringsAsFactors = FALSE
     )
 }
@@ -368,7 +372,8 @@
                 statistics$SS,
                 1,
                 statistics$MS,
-                if (item$estimable) statistics$F_value else NA_real_
+                if (item$estimable) statistics$F_value else NA_real_,
+                item$table, item$row
             )
         }
         error <- between_items[[1L]]$statistics
@@ -400,7 +405,8 @@
                     statistics$SS,
                     1,
                     statistics$MS,
-                    if (item$estimable) statistics$F_value else NA_real_
+                    if (item$estimable) statistics$F_value else NA_real_,
+                    item$table, item$row
                 )
             }
             error <- group[[1L]]$statistics
@@ -414,17 +420,28 @@
     result <- if (length(rows) == 0L) {
         .psyci_legacy_table_row(
             character(), character(), character(), character(),
-            numeric(), integer(), numeric(), numeric()
+            numeric(), integer(), numeric(), numeric(), integer(), integer()
         )
     } else {
         do.call(rbind, rows)
     }
     rownames(result) <- NULL
+    source_rows <- result[c("table", "row")]
+    result[c("table", "row")] <- NULL
+    attr(result, "psyr_source_rows") <- source_rows
     class(result) <- c("psyr_legacy_anova", "data.frame")
     result
 }
 
 .finalize_psyci_table <- function(table) {
+    table$F_crit <- table$cc^2
+    table$cc <- NULL
+    if ("theta" %in% names(table)) {
+        parameters <- attr(table, "psyr_probability_parameters", exact = TRUE)
+        parameters$theta <- table$theta
+        attr(table, "psyr_probability_parameters") <- parameters
+        table$theta <- NULL
+    }
     saved_attributes <- attributes(table)
     if ("df" %in% names(table)) {
         table[["df_error"]] <- table[["df"]]
@@ -434,10 +451,16 @@
     table[["p.value"]] <- NULL
 
     inferential <- c(
-        "estimate", "SE", "df_num", "df_error", "F_value", "theta",
-        "p_value", "p_value_adjusted", "p_adjustment", "cc", "lower",
+        "estimate", "SE", "df_num", "df_error", "F_value", "F_crit",
+        "p_value", "p_value_adjusted", "p_adjustment", "sig", "lower",
         "upper"
     )
+    aliases <- c(df_num = "df1", df_error = "df2",
+                 p_value_adjusted = "p_adj", p_adjustment = "method")
+    matched <- match(names(table), names(aliases))
+    names(table)[!is.na(matched)] <- unname(aliases[matched[!is.na(matched)]])
+    inferential <- ifelse(inferential %in% names(aliases),
+                          aliases[inferential], inferential)
     identifiers <- setdiff(names(table), inferential)
     table <- table[c(identifiers, intersect(inferential, names(table)))]
 
@@ -461,18 +484,19 @@
 
 #' Print a PsyR contrast table
 #'
+#' Numeric values print to three decimal places, with integer degrees of
+#' freedom and blank unavailable values. Polynomial indicators and the
+#' unadjusted p-value are hidden. Interaction component labels are combined
+#' into a single printed `contrast` column when their metadata is available.
+#' Stored column names `df1`, `df2`, `p_adj`, and `method` print unchanged.
+#'
 #' @param x A contrast table returned by [psyci()].
 #' @param ... Additional arguments passed to [print.data.frame()].
 #'
 #' @return `x`, invisibly.
 #' @export
 print.psyr_contrast_table <- function(x, ...) {
-    display <- x
-    for (column in intersect(c("lower", "upper", "ncp_lower", "ncp_upper"), names(x))) {
-        if (!anyNA(x[[column]])) next
-        display[[column]] <- format(x[[column]], digits = list(...)$digits, na.encode = FALSE)
-        display[[column]][is.na(x[[column]])] <- ""
-    }
+    display <- .psyci_display_table(x)
     print.data.frame(display, ...)
     messages <- attr(x, "mesg", exact = TRUE)
     if (length(messages) > 0L) {
@@ -481,7 +505,45 @@ print.psyr_contrast_table <- function(x, ...) {
     invisible(x)
 }
 
+.psyci_format_values <- function(value, integer = FALSE) {
+    display <- if (is.numeric(value) && !integer) {
+        formatC(value, format = "f", digits = 3)
+    } else {
+        as.character(value)
+    }
+    display[is.na(value)] <- ""
+    display
+}
+
+.psyci_display_table <- function(x) {
+    display <- as.data.frame(x)
+    hidden <- c("p_value", "p.value", "is_polynomial", "is.polynomial")
+    if (!"contrast" %in% names(display)) {
+        components <- attr(x, "pri.vars", exact = TRUE)
+        by_columns <- attr(x, "by.vars", exact = TRUE)
+        if (length(components) > 0L &&
+            all(components %in% setdiff(names(display), c(hidden, by_columns)))) {
+            labels <- lapply(display[components], function(value) {
+                paste0("(", as.character(value), ")")
+            })
+            display$contrast <- do.call(paste, c(labels, sep = " \u00d7 "))
+            display <- display[c("contrast", setdiff(names(display),
+                                                     c("contrast", components)))]
+        }
+    }
+    display[intersect(hidden, names(display))] <- NULL
+    for (column in names(display)) {
+        display[[column]] <- .psyci_format_values(
+            display[[column]], integer = column %in% c("df1", "df2", "df")
+        )
+    }
+    display
+}
+
 #' Print a Psy legacy ANOVA contrast table
+#'
+#' Displays `F_crit` and `p_adj` from the selected PsyR procedure alongside
+#' the legacy statistics. Inference cells for error rows are blank.
 #'
 #' @param x A legacy ANOVA table attached to a result from [psyci()].
 #' @param ... Unused.
@@ -506,6 +568,7 @@ print.psyr_legacy_anova <- function(x, ...) {
     for (section in unique(x$section)) {
         cat("\n", section, "\n", sep = "")
         selected <- x[x$section == section, , drop = FALSE]
+        inference <- attr(x, "psyr_inference", exact = TRUE)
         display <- data.frame(
             Label = selected$label,
             Source = selected$source,
@@ -521,6 +584,11 @@ print.psyr_legacy_anova <- function(x, ...) {
             check.names = FALSE,
             stringsAsFactors = FALSE
         )
+        if (!is.null(inference)) {
+            rows <- x$section == section
+            display$F_crit <- .psyci_format_values(inference$F_crit[rows])
+            display$p_adj <- .psyci_format_values(inference$p_adj[rows])
+        }
         print(display, row.names = FALSE, right = TRUE, quote = FALSE)
     }
     invisible(x)

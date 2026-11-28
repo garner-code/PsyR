@@ -152,7 +152,7 @@ output <- psyci(
 output |> 
   unclass() |> 
   bind_rows() |> 
-  select(contrast:F_value, p_value_adjusted, cc:upper) |> 
+  select(contrast, estimate:F_value, p_adj, F_crit, sig, lower, upper) |>
   flextable::flextable() |> 
   flextable::width(j = 1, width = 3, unit = "cm")
 ```
