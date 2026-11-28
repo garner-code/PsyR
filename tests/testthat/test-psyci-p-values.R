@@ -68,7 +68,7 @@ test_that("psyci separates ordinary and adjusted p-values", {
         bonferroni$method,
         rep("Bonferroni", nrow(before))
     )
-    expect_true(any(grepl(
+    expect_false(any(grepl(
         "PsyR simultaneous-inference procedure: Bonferroni",
         attr(bonferroni, "mesg"),
         fixed = TRUE
@@ -88,7 +88,7 @@ test_that("psyci separates ordinary and adjusted p-values", {
         attr(bonferroni, "mesg"),
         fixed = TRUE
     )))
-    expect_true(any(grepl(
+    expect_false(any(grepl(
         paste("PsyR used df error of:", v_e),
         attr(bonferroni, "mesg"),
         fixed = TRUE
@@ -259,7 +259,7 @@ test_that("psyci maps post-hoc p-values to each contrast family", {
             observed[[index]]$method,
             rep(expected_labels[[index]], nrow(observed[[index]]))
         )
-        expect_true(any(grepl(
+        expect_false(any(grepl(
             paste0(
                 "PsyR simultaneous-inference procedure: ",
                 expected_labels[[index]]
@@ -405,7 +405,7 @@ test_that("psyci reuses one seeded SMR distribution for CIs and p-values", {
         expect_identical(probability_parameters$p, smr_params$p)
         expect_identical(probability_parameters$q, smr_params$q)
         expect_equal(probability_parameters$df, v_e)
-        expect_true(any(grepl(
+        expect_false(any(grepl(
             "PsyR simultaneous-inference procedure: SMR",
             attr(table, "mesg"),
             fixed = TRUE
@@ -417,6 +417,9 @@ test_that("psyci reuses one seeded SMR distribution for CIs and p-values", {
         )))
     }
     scaled_tables <- attr(observed, "scaled_tables")
+    output <- paste(capture.output(print(observed)), collapse = "\n")
+    expect_match(output, "parameters for SMR:", fixed = TRUE)
+    expect_false(grepl("ordinary F(1, df2)", output, fixed = TRUE))
     for (index in seq_along(observed)) {
         expect_equal(
             attr(
@@ -467,7 +470,7 @@ test_that("Roy GCR theta reproduces the Psy calculator input", {
 test_that("printed tables show only adjusted probabilities", {
     fixture <- make_between_fixture()
     table <- psyci(fixture$model, fixture$tables, method = "bf")[[1L]]
-    output <- paste(capture.output(print(table)), collapse = "\n")
+    output <- paste(capture.output(print(table, verbose = TRUE)), collapse = "\n")
 
     expect_false(grepl("p_value", output, fixed = TRUE))
     expect_match(output, "p_adj", fixed = TRUE)

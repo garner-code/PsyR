@@ -159,6 +159,88 @@ test_that("legacy inference follows source rows with duplicate labels", {
     expect_match(output, "p_adj", fixed = TRUE)
 })
 
+test_that("legacy ANOVA sections share column widths and preserve results", {
+    table <- structure(data.frame(
+        section = c("Between", "Between", "Within", "Within"),
+        label = c("Short", "", "Much_longer_interaction_label", ""),
+        source = c("B1", "Error", "B12W34", "Error"),
+        SS = c(123456.789, 100, 2, 10), df = c(1, 120, 1, 20),
+        MS = c(123456.789, 0.833, 2345678.901, 0.5),
+        F_value = c(Inf, NA, 12.345, NA)
+    ), class = c("psyr_legacy_anova", "data.frame"))
+    old_options <- options(width = 300)
+    on.exit(options(old_options), add = TRUE)
+
+    for (with_inference in c(FALSE, TRUE)) {
+        if (with_inference) {
+            attr(table, "psyr_inference") <- data.frame(
+                F_crit = c(4.123, NA, 1234.567, NA),
+                p_adj = c(0.125, NA, 0.001, NA)
+            )
+        }
+        before <- serialize(table, NULL)
+        output <- capture.output(returned <- withVisible(print(table)))
+        headers <- grep("Label.*Source.*SS.*df.*MS.*F", output)
+        expect_length(headers, 2L)
+        expect_identical(output[headers[1]], output[headers[2]])
+        expect_identical(output[c(3, 8)], c("Between", "Within"))
+        expect_identical(serialize(table, NULL), before)
+        expect_identical(returned$value, table)
+        expect_false(returned$visible)
+        expect_false(any(grepl("NA|NaN", output)))
+
+        columns <- c("Label", "Source", "SS", "df", "MS", "F")
+        values <- list(
+            c("Short", "B1", "123456.789", "1", "123456.789", "Infinite"),
+            c("", "Error", "100.000", "120", "0.833", ""),
+            c("Much_longer_interaction_label", "B12W34", "2.000", "1",
+              "2345678.901", "12.345"),
+            c("", "Error", "10.000", "20", "0.500", "")
+        )
+        if (with_inference) {
+            columns <- c(columns, "F_crit", "p_adj")
+            inference_values <- list(c("4.123", "0.125"), c("", ""),
+                                     c("1234.567", "0.001"), c("", ""))
+            values <- Map(c, values, inference_values)
+        }
+        # Each cell ends at its header's right edge, including blank error cells.
+        header_tokens <- gregexpr("\\S+", output[headers[1]])[[1]]
+        ends <- header_tokens + attr(header_tokens, "match.length") - 1L
+        expect_length(ends, length(columns))
+        starts <- c(1L, head(ends, -1L) + 1L)
+        lines <- output[c(headers[1] + 1:2, headers[2] + 1:2)]
+        for (row in seq_along(lines)) {
+            cells <- trimws(substring(lines[row], starts, ends))
+            expect_identical(cells, values[[row]])
+        }
+    }
+})
+
+test_that("legacy ANOVA printing handles single and empty sections", {
+    old_options <- options(width = 300)
+    on.exit(options(old_options), add = TRUE)
+    for (section in c("Between", "Within")) {
+        table <- structure(data.frame(
+            section = section, label = "Only", source = "B1", SS = 2,
+            df = 1, MS = 2, F_value = 4
+        ), class = c("psyr_legacy_anova", "data.frame"))
+        output <- capture.output(print(table))
+        expected <- data.frame(Label = "Only", Source = "B1", SS = "2.000",
+                               df = "1", MS = "2.000", F = "4.000")
+        expect_identical(output, c(
+            "Analysis of Variance Summary Table", "", section,
+            capture.output(print(expected, row.names = FALSE, right = TRUE,
+                                 quote = FALSE))
+        ))
+        empty <- table[FALSE, , drop = FALSE]
+        output <- capture.output(returned <- withVisible(print(empty)))
+        expect_identical(output, c("Analysis of Variance Summary Table",
+                                  "No supplied contrasts were available."))
+        expect_identical(returned$value, empty)
+        expect_false(returned$visible)
+    }
+})
+
 test_that("Bonferroni notes show k and interpretable terminology", {
     fixture <- make_between_fixture()
     result <- psyci(fixture$model, fixture$tables, "bf")

@@ -16,5 +16,6 @@
 }
 \description{
 Displays \code{F_crit} and \code{p_adj} from the selected PsyR procedure alongside
-the legacy statistics. Inference cells for error rows are blank.
+the legacy statistics. Inference cells for error rows are blank. Between
+and Within sections use shared column widths.
 }

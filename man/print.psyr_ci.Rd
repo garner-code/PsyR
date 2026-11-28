@@ -4,13 +4,17 @@
 \alias{print.psyr_ci}
 \title{Print PsyR confidence-interval results}
 \usage{
-\method{print}{psyr_ci}(x, ...)
+\method{print}{psyr_ci}(x, ..., verbose = isTRUE(attr(x, "verbose", exact = TRUE)))
 }
 \arguments{
 \item{x}{A result returned by \code{psyci()}.}
 
 \item{...}{Additional arguments passed to \code{\link[=print.data.frame]{print.data.frame()}} for the
 combined contrast tables.}
+
+\item{verbose}{Whether to print detailed explanatory notes. Defaults to the
+preference supplied to \code{psyci()} (\code{FALSE} if absent). Full retained notes
+remain available in table \code{mesg} attributes.}
 }
 \value{
 \code{x}, invisibly.

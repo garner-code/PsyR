@@ -4,12 +4,15 @@
 \alias{print.psyr_contrast_table}
 \title{Print a PsyR contrast table}
 \usage{
-\method{print}{psyr_contrast_table}(x, ...)
+\method{print}{psyr_contrast_table}(x, ..., verbose = isTRUE(attr(x, "verbose", exact = TRUE)))
 }
 \arguments{
 \item{x}{A contrast table returned by \code{\link[=psyci]{psyci()}}.}
 
 \item{...}{Additional arguments passed to \code{\link[=print.data.frame]{print.data.frame()}}.}
+
+\item{verbose}{Whether to print detailed notes. Defaults to the \code{psyci()}
+verbosity preference. Retained notes remain in the \code{mesg} attribute.}
 }
 \value{
 \code{x}, invisibly.

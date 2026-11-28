@@ -346,24 +346,28 @@
 #' `between`, `within`, or `mixed`.
 #'
 #' @param x A result returned by `psyci()`.
+#' @param verbose Whether to print detailed explanatory notes. Defaults to the
+#'   preference supplied to `psyci()` (`FALSE` if absent). Full retained notes
+#'   remain available in table `mesg` attributes.
 #' @param ... Additional arguments passed to [print.data.frame()] for the
 #'   combined contrast tables.
 #'
 #' @return `x`, invisibly.
 #' @export
-print.psyr_ci <- function(x, ...) {
+print.psyr_ci <- function(x, ..., verbose = isTRUE(attr(x, "verbose", exact = TRUE))) {
+    .validate_psyci_verbose(verbose)
     legacy_anova_table <- attr(x, "legacy_anova_table", exact = TRUE)
     if (!is.null(legacy_anova_table)) {
         print(legacy_anova_table)
         cat("\n")
     }
     cat("Raw contrast effects and confidence intervals (dependent-variable units)\n")
-    .print_psyci_tables(x, ...)
+    .print_psyci_tables(x, ..., verbose = verbose)
 
     scale_info <- attr(x, "scale_info", exact = TRUE)
     scaled_tables <- attr(x, "scaled_tables", exact = TRUE)
     standardized_ci <- attr(x, "standardized_ci_method", exact = TRUE)
-    if (identical(standardized_ci, "algina_keselman")) {
+    if (verbose && identical(standardized_ci, "algina_keselman")) {
         cat(paste0(
             "\nScaled contrast effects and Algina-Keselman confidence ",
             "intervals (sample SD units)\n"
@@ -374,16 +378,16 @@ print.psyr_ci <- function(x, ...) {
     if (is.null(scaled_tables) || !isTRUE(scale_info$available)) {
         cat("Unavailable: ", scale_info$reason, ".\n", sep = "")
     } else if (identical(standardized_ci, "algina_keselman")) {
-        cat("Scaling divisors are contrast-specific; see each table's scale column.\n")
-        .print_psyci_tables(scaled_tables, ...)
+        if (verbose) cat("Scaling divisors are contrast-specific; see each table's scale column.\n")
+        .print_psyci_tables(scaled_tables, ..., verbose = verbose)
     } else {
-        cat(
+        if (verbose) cat(
             "Scaling divisor (pooled sample SD): ",
             formatC(scale_info$divisor, format = "f", digits = 3),
             "\n",
             sep = ""
         )
-        .print_psyci_tables(scaled_tables, ...)
+        .print_psyci_tables(scaled_tables, ..., verbose = verbose)
     }
 
     invisible(x)
@@ -394,7 +398,7 @@ print.psyr_ci <- function(x, ...) {
     if (family %in% names(labels)) unname(labels[[family]]) else family
 }
 
-.print_psyci_tables <- function(tables, ...) {
+.print_psyci_tables <- function(tables, ..., verbose = FALSE) {
     table_names <- names(tables)
     displays <- lapply(seq_along(tables), function(index) {
         display <- .psyci_display_table(tables[[index]])
@@ -414,10 +418,29 @@ print.psyr_ci <- function(x, ...) {
     print.data.frame(display, ...)
     for (index in seq_along(tables)) {
         messages <- attr(tables[[index]], "mesg", exact = TRUE)
+        messages <- .psyci_visible_messages(messages, verbose)
         if (length(messages) == 0L) next
         family <- if (is.null(table_names)) "" else paste0(" (", .psyci_family_label(table_names[[index]]), ")")
         cat("\nTable ", index, family, ":\n",
             paste(messages, collapse = "\n"), "\n", sep = "")
     }
     invisible(tables)
+}
+
+.validate_psyci_verbose <- function(verbose) {
+    if (!is.logical(verbose) || length(verbose) != 1L || is.na(verbose)) {
+        stop("`verbose` must be one non-missing logical value.", call. = FALSE)
+    }
+    invisible(verbose)
+}
+
+.psyci_visible_messages <- function(messages, verbose) {
+    if (verbose) return(messages)
+    messages[grepl(
+        paste0("^(PsyR used an alpha rate of:|",
+               "Psy probability-calculator parameters for (SMR|Roy GCR):|",
+               "PsyR used SMR parameter [pq] of:|",
+               "PsyR Bonferroni confidence intervals and `p_adj` use )"),
+        messages
+    )]
 }

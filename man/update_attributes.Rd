@@ -58,7 +58,7 @@ This function adds to the attributes of the contrast table, to let you know
 the methods that have been applied by PsyR to compute confidence intervals
 and, when requested by \code{psyci()}, procedure-specific adjusted p-values.
 The added attributes tell you the key parameters that were used. Specifically,
-the method applied, the family of contrasts (if relevant), factors that were
+the family of contrasts (if relevant), factors that were
 interpreted as between or within factors (where relevant), degrees of freedom
 (between and within post-hoc dimensions, where relevant), the alpha value
 applied, and the critical constant value. The displayed \code{F_value} and

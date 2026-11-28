@@ -87,7 +87,7 @@ test_that("psyci pools SDs over repeated-measure cells for mixed designs", {
 test_that("printing a psyci result shows raw and scaled tables", {
     fixture <- make_between_fixture()
     observed <- psyci(fixture$model, fixture$tables, method = "ind")
-    output <- paste(capture.output(print(observed)), collapse = "\n")
+    output <- paste(capture.output(print(observed, verbose = TRUE)), collapse = "\n")
 
     expect_match(
         output,

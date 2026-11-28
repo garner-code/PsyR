@@ -15,6 +15,7 @@ scripts/*
 !scripts/example-psyci-smr.R
 !scripts/example-psyci-a-priori-between-subjects.R
 !scripts/example-psyci-polynomial.R
+!scripts/example-psyci-multivariate-error.R
 !scripts/Analysis-of-3-between-x-3-within-design.R
 !scripts/between_subjects_2x2_factorial-w-simple.R
 !scripts/J-K-Design_Analysis-allowing-for-inferences-on-simple-effect-contrasts.R

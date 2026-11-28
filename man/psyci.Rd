@@ -20,7 +20,8 @@ psyci(
   family_check = c("error", "warn", "none"),
   family_check_tol = sqrt(.Machine$double.eps),
   standardized_ci = c("bird", "algina_keselman"),
-  legacy_summary = FALSE
+  legacy_summary = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -31,6 +32,11 @@ psyci(
 the retained coefficient information to remove non-contrast rows and assess
 cross-table orthogonality; already summarised \code{summary_emm} inputs are not
 accepted. If there is only one table, it need not be wrapped in a list.
+Within-subject and between-by-within families require tables created with
+\code{emmeans::emmeans(model, ..., model = "multivariate")}. The actual table
+basis is checked by \code{\link[=check_emmeans_model]{check_emmeans_model()}}, even when \code{family_check} is
+\code{"warn"} or \code{"none"}. Changing the global afex option does not update
+existing tables; recreate the marginal means and contrasts instead.
 Standard equally spaced polynomial contrasts over three or more levels,
 including interactions containing a polynomial component, are flagged by
 \code{is_polynomial}. Their estimates and tests are retained, but confidence limits
@@ -128,6 +134,11 @@ df, MS, and F statistic for each supplied contrast and its applicable
 error row, plus printed \code{F_crit} and \code{p_adj} values from the selected
 PsyR procedure. The table is attached to the result as \code{legacy_anova_table}.
 The default is \code{FALSE}.}
+
+\item{verbose}{One non-missing logical value. Defaults to \code{FALSE}, printing
+only alpha, applicable SMR or Roy GCR parameters, and Bonferroni family
+size notes. Set to \code{TRUE} to also print averaging, F-statistic, family,
+factor, row-removal, orthogonality, dimension, and scaling details.}
 }
 \value{
 A list of PsyR contrast tables with confidence intervals added.

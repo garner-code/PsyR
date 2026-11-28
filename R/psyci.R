@@ -25,6 +25,11 @@
 #' the retained coefficient information to remove non-contrast rows and assess
 #' cross-table orthogonality; already summarised `summary_emm` inputs are not
 #' accepted. If there is only one table, it need not be wrapped in a list.
+#' Within-subject and between-by-within families require tables created with
+#' `emmeans::emmeans(model, ..., model = "multivariate")`. The actual table
+#' basis is checked by [check_emmeans_model()], even when `family_check` is
+#' `"warn"` or `"none"`. Changing the global afex option does not update
+#' existing tables; recreate the marginal means and contrasts instead.
 #' Standard equally spaced polynomial contrasts over three or more levels,
 #' including interactions containing a polynomial component, are flagged by
 #' `is_polynomial`. Their estimates and tests are retained, but confidence limits
@@ -94,6 +99,10 @@
 #'   repeated-measure cells involved in each contrast. The latter is available
 #'   only for pairwise within-subject contrasts with `method = "ind"` or
 #'   `method = "bf"`. The default is `"bird"`.
+#' @param verbose One non-missing logical value. Defaults to `FALSE`, printing
+#'   only alpha, applicable SMR or Roy GCR parameters, and Bonferroni family
+#'   size notes. Set to `TRUE` to also print averaging, F-statistic, family,
+#'   factor, row-removal, orthogonality, dimension, and scaling details.
 #' @param legacy_summary A non-missing logical value. When `TRUE`, calculate and
 #'   print a Psy-style analysis-of-variance summary table containing the SS,
 #'   df, MS, and F statistic for each supplied contrast and its applicable
@@ -160,7 +169,10 @@ psyci <- function(model, contrast_tables, method,
                   family_check = c("error", "warn", "none"),
                   family_check_tol = sqrt(.Machine$double.eps),
                   standardized_ci = c("bird", "algina_keselman"),
-                  legacy_summary = FALSE){
+                  legacy_summary = FALSE,
+                  verbose = FALSE){
+
+  .validate_psyci_verbose(verbose)
 
   if(!inherits(model, "afex_aov")){
     stop("Error: model needs to be of class afex_aov")
@@ -250,6 +262,7 @@ psyci <- function(model, contrast_tables, method,
     )
   }
   family_list <- as.list(family_report$families)
+  .check_emmeans_model(contrast_tables, family_report)
   if (standardized_ci == "algina_keselman" &&
       any(unlist(family_list, use.names = FALSE) != "w")) {
     stop(
@@ -676,6 +689,10 @@ psyci <- function(model, contrast_tables, method,
   )
 
   contrasts_w_cis <- lapply(contrasts_w_cis, .finalize_psyci_table)
+  contrasts_w_cis <- lapply(contrasts_w_cis, function(table) {
+    attr(table, "verbose") <- verbose
+    table
+  })
 
   names(contrasts_w_cis) = unlist(families, use.names = FALSE)
 
@@ -692,6 +709,7 @@ psyci <- function(model, contrast_tables, method,
     alphas = alphas,
     adjustments = standardized_adjustments
   )
+  attr(result, "verbose") <- verbose
   if (legacy_summary) {
     source_rows <- attr(legacy_statistics$table, "psyr_source_rows", exact = TRUE)
     inference <- data.frame(

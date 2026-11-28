@@ -491,14 +491,17 @@
 #' Stored column names `df1`, `df2`, `p_adj`, and `method` print unchanged.
 #'
 #' @param x A contrast table returned by [psyci()].
+#' @param verbose Whether to print detailed notes. Defaults to the `psyci()`
+#'   verbosity preference. Retained notes remain in the `mesg` attribute.
 #' @param ... Additional arguments passed to [print.data.frame()].
 #'
 #' @return `x`, invisibly.
 #' @export
-print.psyr_contrast_table <- function(x, ...) {
+print.psyr_contrast_table <- function(x, ..., verbose = isTRUE(attr(x, "verbose", exact = TRUE))) {
+    .validate_psyci_verbose(verbose)
     display <- .psyci_display_table(x)
     print.data.frame(display, ...)
-    messages <- attr(x, "mesg", exact = TRUE)
+    messages <- .psyci_visible_messages(attr(x, "mesg", exact = TRUE), verbose)
     if (length(messages) > 0L) {
         cat("\n", paste(messages, collapse = "\n"), "\n", sep = "")
     }
@@ -543,7 +546,8 @@ print.psyr_contrast_table <- function(x, ...) {
 #' Print a Psy legacy ANOVA contrast table
 #'
 #' Displays `F_crit` and `p_adj` from the selected PsyR procedure alongside
-#' the legacy statistics. Inference cells for error rows are blank.
+#' the legacy statistics. Inference cells for error rows are blank. Between
+#' and Within sections use shared column widths.
 #'
 #' @param x A legacy ANOVA table attached to a result from [psyci()].
 #' @param ... Unused.
@@ -565,31 +569,27 @@ print.psyr_legacy_anova <- function(x, ...) {
         }
         formatC(value, format = "f", digits = 3)
     }
+    inference <- attr(x, "psyr_inference", exact = TRUE)
+    display <- data.frame(
+        Label = x$label,
+        Source = x$source,
+        SS = vapply(x$SS, format_value, character(1)),
+        df = as.character(x$df),
+        MS = vapply(x$MS, format_value, character(1)),
+        F = vapply(x$F_value, format_value, character(1), infinite = TRUE),
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+    )
+    if (!is.null(inference)) {
+        display$F_crit <- .psyci_format_values(inference$F_crit)
+        display$p_adj <- .psyci_format_values(inference$p_adj)
+    }
+    # Pad before splitting so every section retains the full table's widths.
+    display <- format(display, justify = "right")
     for (section in unique(x$section)) {
         cat("\n", section, "\n", sep = "")
-        selected <- x[x$section == section, , drop = FALSE]
-        inference <- attr(x, "psyr_inference", exact = TRUE)
-        display <- data.frame(
-            Label = selected$label,
-            Source = selected$source,
-            SS = vapply(selected$SS, format_value, character(1)),
-            df = as.character(selected$df),
-            MS = vapply(selected$MS, format_value, character(1)),
-            F = vapply(
-                selected$F_value,
-                format_value,
-                character(1),
-                infinite = TRUE
-            ),
-            check.names = FALSE,
-            stringsAsFactors = FALSE
-        )
-        if (!is.null(inference)) {
-            rows <- x$section == section
-            display$F_crit <- .psyci_format_values(inference$F_crit[rows])
-            display$p_adj <- .psyci_format_values(inference$p_adj[rows])
-        }
-        print(display, row.names = FALSE, right = TRUE, quote = FALSE)
+        print(display[x$section == section, , drop = FALSE],
+              row.names = FALSE, right = TRUE, quote = FALSE)
     }
     invisible(x)
 }

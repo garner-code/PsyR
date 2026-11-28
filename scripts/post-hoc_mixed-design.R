@@ -64,5 +64,6 @@ post_hoc_results <- psyci(
     model = mod,
     contrast_tables = all_fx,
     method = "ph",
-    alpha = alphas
+    alpha = alphas,
+    legacy_summary = TRUE
 )

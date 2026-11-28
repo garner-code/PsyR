@@ -4,7 +4,7 @@
 #' the methods that have been applied by PsyR to compute confidence intervals
 #' and, when requested by `psyci()`, procedure-specific adjusted p-values.
 #' The added attributes tell you the key parameters that were used. Specifically,
-#' the method applied, the family of contrasts (if relevant), factors that were
+#' the family of contrasts (if relevant), factors that were
 #' interpreted as between or within factors (where relevant), degrees of freedom
 #' (between and within post-hoc dimensions, where relevant), the alpha value
 #' applied, and the critical constant value. The displayed `F_value` and
@@ -81,8 +81,7 @@ update_attributes <- function(contrast_table, method, family = NA,
     family_full = "unknown family" #prob not necessary as earlier messages should catch this
   }
 
-  # set full names for methods used in messages and attributes
-  method = .psyci_method_label(method, family)
+  # Identify the adjustment for the ordinary-statistic explanatory note.
   p_adjustment = if (is.null(p_value_method)) {
     NULL
   } else {
@@ -100,10 +99,7 @@ update_attributes <- function(contrast_table, method, family = NA,
         "and the confidence interval is individual."
       )
     } else {
-      paste0(
-        "PsyR simultaneous-inference procedure: ", p_adjustment,
-        ". `p_adj` and the confidence interval use this procedure."
-      )
+      character()
     }
     p_value_message <- c(ordinary_message, adjusted_message)
   }
@@ -132,7 +128,6 @@ update_attributes <- function(contrast_table, method, family = NA,
 
   # apply message update that will be applied to all contrast tables
   attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
-                                    paste("PsyR CI method:", method, "has been applied"),
                                     p_value_message,
                                     probability_parameter_message,
                                     paste("Family-wise correction assumes current contrasts are:", family_full),
@@ -177,9 +172,6 @@ update_attributes <- function(contrast_table, method, family = NA,
     }
   }
 
-  attr(contrast_table, "mesg") <- c(attr(contrast_table, "mesg"),
-                                    paste("PsyR used df error of:", v_e)
-  )
   contrast_table
 }
 

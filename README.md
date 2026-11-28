@@ -16,20 +16,22 @@ to directionality and effect size.
 
 ## Installation
 
-Install the latest version of PsyR by running the below code.
+PsyR is currently a development package and is not yet available on
+CRAN. Install it from [GitHub](https://github.com/garner-code/PsyR):
 
 ``` r
-install.packages("PsyR")
-```
-
-Alternatively, you can install the development version of PsyR from
-[GitHub](eventual_link_UNSW_git). Only do so if you want to access early
-features. Warning: this version may contain bugs!
-
-``` r
-# install.packages("devtools")
+install.packages("pak") # Run once to install the installer.
 pak::pak("garner-code/PsyR")
 ```
+
+The development version may contain bugs. Installation requires internet
+access and access to the GitHub repository; a private repository
+requires an authorised GitHub account. PsyR’s required R package
+dependencies are installed automatically, although some dependencies may
+require system libraries or build tools when installed from source.
+
+`install.packages("PsyR")` will work with CRAN only after a release has
+been submitted, accepted, and made available on CRAN and its mirrors.
 
 ## Cheat Sheet
 
@@ -45,7 +47,13 @@ An average workflow will go as follows:
 
 - Use `emmeans::emmeans()` to obtain estimated marginal means.
 
-- Use `base::list()` to define contrasts.
+- Specify user-defined contrast coefficients and use
+  `PsyR::rescale_contrasts()` to scale them as mean-difference contrasts
+  (`mode = "mean_difference"`) or interaction contrasts
+  (`mode = "interaction"`, with the appropriate `interaction_order`).
+  Match the coefficient order to the estimated marginal means. When
+  crossing mean-difference components with `emmeans::contrast()`, their
+  products already have the appropriate interaction scaling.
 
 - Use `emmeans::contrast()` to generate statistical output pertaining to
   each contrast.
@@ -53,6 +61,32 @@ An average workflow will go as follows:
 - Use `psyci()` to generate simultaneous confidence intervals.
 
 ## Example
+
+Within-subject (`"w"`) and between-by-within (`"bw"`) families require
+multivariate emmeans contrast tables. `psyci()` checks the supplied
+objects and stops if their basis is univariate or cannot be established,
+including with `family_check = "warn"` or `"none"`. Between-subject
+families do not have this new restriction. Use `check_emmeans_model()`
+to check tables separately.
+
+Changing `afex_options(emmeans_model = "multivariate")` does not update
+existing tables. Recreate the marginal means and contrasts with the
+original definitions and analysis settings, explicitly selecting the
+multivariate model. The fitted ANOVA normally does not need to be
+re-estimated. For example:
+
+``` r
+data("spacing", package = "PsyR")
+model <- afex::aov_ez(
+  "subj", "yield", spacing, within = "spacing", between = "group"
+)
+definitions <- list("Twenty - Forty" = c(1, -1, 0))
+# Rebuild from the fitted ANOVA, preserving any original weights/by/at settings.
+means <- emmeans::emmeans(model, "spacing", model = "multivariate")
+contrasts <- emmeans::contrast(means, definitions, adjust = "none")
+diagnostics <- PsyR::check_emmeans_model(model, contrasts)
+result <- PsyR::psyci(model, contrasts, method = "individual")
+```
 
 `psyci()` results now use `df1`, `df2`, `p_adj`, and `method` as both
 stored column names and printed headings. This is a breaking change:
@@ -62,18 +96,17 @@ indicator remain stored but are hidden when printing. Printed families
 are labelled `between`, `within`, and `mixed`; interaction component
 labels share one printed `contrast` column.
 
-Below are some basic examples which shows you how to obtain simultaneous
-confidence intervals. All of the following examples will use the
-post-hoc method. See (Bird 2002) for details. Also, check out the
-“Articles” tab for detailed examples of analysis pertaining to various
-designs.
+Below are some basic examples showing how to obtain simultaneous
+confidence intervals. The main examples use the post-hoc method; the
+optional Algina–Keselman example uses Bonferroni intervals. See (Bird
+2002) for details. Also, check out the “Articles” tab for detailed
+examples of analysis pertaining to various designs.
 
 ``` r
 ## load relevant packages
 library(emmeans)
 library(afex)
 library(PsyR)
-library(tidyverse)
 
 # load some data
 dat <- spacing
@@ -181,6 +214,14 @@ win_result <- psyci(
 )
 ```
 
+PsyR identifies polynomial contrasts from their coefficients and
+suppresses their confidence limits in both raw and standardized tables,
+while retaining their estimates and tests. In this example, both
+`20vs60` (equivalent to a linear trend over the three equally spaced
+levels) and `Quad` are flagged. Their stored `lower` and `upper` values
+are `NA` and print as blanks. This suppression is current PsyR behavior,
+rather than a requirement of the original Psy method.
+
 For pairwise correlated within-subject means, PsyR also provides the
 asymmetric noncentral-*t* standardized-effect interval proposed by
 Algina and Keselman (2003). It is opt-in, so existing calls retain the
@@ -232,7 +273,8 @@ psyci(
 
 ## Getting Help
 
-To report a bug, create an issue [here](eventual_link_UNSW_git).
+To report a bug, create an issue on
+[GitHub](https://github.com/garner-code/PsyR/issues).
 
 ------------------------------------------------------------------------
 
